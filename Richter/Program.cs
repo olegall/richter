@@ -107,7 +107,9 @@ namespace Richter
 
             // Периодические вычислительные операции
 
-            // События
+            //Threading.Morph<object, object,>();
+
+            Console.WriteLine("*** События ***");
             threading.Events();
 
             // Блокировка с двойной проверкой

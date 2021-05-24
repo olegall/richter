@@ -889,16 +889,18 @@ namespace Richter
                 // ПРИМЕЧАНИЕ. Здесь поток может быть прерван!
                 // if (target == startVal) target = desiredVal
                 // Возвращение значения, предшествующего потенциальным изменениям
-                currentVal = Interlocked.CompareExchange(
-                ref target, desiredVal, startVal);
+                currentVal = Interlocked.CompareExchange(ref target, desiredVal, startVal);
                 // Если начальное значение на этой итерации изменилось, повторить
             } while (startVal != currentVal);
-         // Возвращаем максимальное значение, когда поток пытается его присвоить
-         return desiredVal;
+            // Возвращаем максимальное значение, когда поток пытается его присвоить
+            return desiredVal;
         }
 
-        delegate Int32 Morpher<TResult, TArgument>(Int32 startValue, TArgument argument, out TResult morphResult);
-        static TResult Morph<TResult, TArgument>( ref Int32 target, TArgument argument, Morpher<TResult, TArgument> morpher)
+        public delegate Int32 Morpher<TResult, TArgument>(Int32 startValue, TArgument argument, out TResult morphResult);
+        /// <summary>
+        /// Morpher
+        /// </summary>
+        public static TResult Morph<TResult, TArgument>(ref Int32 target, TArgument argument, Morpher<TResult, TArgument> morpher)
         {
             TResult morphResult;
             Int32 currentVal = target, startVal, desiredVal;
@@ -906,8 +908,7 @@ namespace Richter
             {
                 startVal = currentVal;
                 desiredVal = morpher(startVal, argument, out morphResult);
-                currentVal = Interlocked.CompareExchange(
-                ref target, desiredVal, startVal);
+                currentVal = Interlocked.CompareExchange(ref target, desiredVal, startVal);
             } while (startVal != currentVal);
             return morphResult;
         }
@@ -917,37 +918,47 @@ namespace Richter
         public void Events() 
         {
             Int32 x = 0;
-            const Int32 iterations = 10000000; // 10 миллионов
-                                               // Сколько времени займет инкремент x 10 миллионов раз?
+            const Int32 iterations = 10000000; // 10 миллионов.
+            
+            // Сколько времени займет инкремент x 10 миллионов раз?
             Stopwatch sw = Stopwatch.StartNew();
             for (Int32 i = 0; i < iterations; i++)
             {
                 x++;
             }
             Console.WriteLine("Incrementing x: {0:N0}", sw.ElapsedMilliseconds);
+            
             // Сколько времени займет инкремент x 10 миллионов раз, если добавить вызов ничего не делающего метода?
             sw.Restart();
             for (Int32 i = 0; i < iterations; i++)
             {
-                M(); x++; M();
+                M(); 
+                x++; 
+                M();
             }
             Console.WriteLine("Incrementing x in M: {0:N0}", sw.ElapsedMilliseconds);
+            
             // Сколько времени займет инкремент x 10 миллионов раз, если добавить вызов неконкурирующего объекта SimpleSpinLock?
             SpinLock sl = new SpinLock(false);
             sw.Restart();
             for (Int32 i = 0; i < iterations; i++)
             {
-                Boolean taken = false; sl.Enter(ref taken); x++; sl.Exit();
+                Boolean taken = false; 
+                sl.Enter(ref taken); 
+                x++; 
+                sl.Exit();
             }
-            Console.WriteLine("Incrementing x in SpinLock: {0:N0}",
-            sw.ElapsedMilliseconds);
+            Console.WriteLine("Incrementing x in SpinLock: {0:N0}", sw.ElapsedMilliseconds);
+            
             // Сколько времени займет инкремент x 10 миллионов раз, если добавить вызов неконкурирующего объекта SimpleWaitLock?
             using (SimpleWaitLock swl = new SimpleWaitLock(1))
             {
                 sw.Restart();
                 for (Int32 i = 0; i < iterations; i++)
                 {
-                    swl.Enter(); x++; swl.Leave();
+                    swl.Enter();
+                    x++; 
+                    swl.Leave();
                 }
                 Console.WriteLine("Incrementing x in SimpleWaitLock: {0:N0}", sw.ElapsedMilliseconds);
             }
@@ -978,7 +989,9 @@ namespace Richter
             }
         }
 
-        void M() { }
+        void M() 
+        { 
+        }
         #endregion
 
         #region Мьютексы
@@ -1014,8 +1027,7 @@ namespace Richter
                 // Вычитаем единицу из рекурсивного счетчика
                 if (--m_recursionCount == 0)
                 {
-                    // Если рекурсивный счетчик равен 0,
-                    // ни один поток не владеет блокировкой
+                    // Если рекурсивный счетчик равен 0, ни один поток не владеет блокировкой
                     m_owningThreadId = 0;
                     m_lock.Set(); // Пробуждаем один ожидающий поток (если такие есть)
                 }
@@ -1039,9 +1051,10 @@ namespace Richter
             {
                 // Поток хочет получить блокировку
                 if (Interlocked.Increment(ref m_waiters) == 1) 
-                { 
-                    return; // Блокировка свободна, конкуренции нет, возвращаем управление
-                            // Блокировка захвачена другим потоком (конкуренция), приходится ждать.
+                {
+                    // Блокировка свободна, конкуренции нет, возвращаем управление
+                    // Блокировка захвачена другим потоком (конкуренция), приходится ждать.
+                    return;
                 }
                 m_waiterLock.WaitOne(); // Значительное снижение производительности. Когда WaitOne возвращет управление, этот поток блокируется
             }
@@ -1069,8 +1082,7 @@ namespace Richter
             // AutoResetEvent — примитивная конструкция режима ядра
             private AutoResetEvent m_waiterLock = new AutoResetEvent(false);
             // Это поле контролирует зацикливание с целью поднять производительность
-            private Int32 m_spincount = 4000; // Произвольно выбранное значение
-                                              // Эти поля указывают, какой поток и сколько раз блокируется
+            private Int32 m_spincount = 4000; // Произвольно выбранное значение. Эти поля указывают, какой поток и сколько раз блокируется
             private Int32 m_owningThreadId = 0, m_recursion = 0;
             public void Enter()
             {
@@ -1086,7 +1098,10 @@ namespace Richter
                 for (Int32 spinCount = 0; spinCount < m_spincount; spinCount++)
                 {
                     // Если блокирование возможно, этот поток блокируется. Задаем некоторое состояние и возвращаем управление
-                    if (Interlocked.CompareExchange(ref m_waiters, 1, 0) == 0) goto GotLock;
+                    if (Interlocked.CompareExchange(ref m_waiters, 1, 0) == 0) 
+                    { 
+                        goto GotLock; 
+                    }
                     // Даем остальным потокам шанс выполниться в надежде на снятие блокировки
                     spinwait.SpinOnce();
                 }
@@ -1099,9 +1114,9 @@ namespace Richter
                                             // Задаем некоторое состояние и возвращаем управление
                 }
             GotLock:
-                // Когда поток блокируется, записываем его идентификатор
-                // и указываем, что он получил право на блокирование впервые
-                m_owningThreadId = threadId; m_recursion = 1;
+                // Когда поток блокируется, записываем его идентификатор и указываем, что он получил право на блокирование впервые
+                m_owningThreadId = threadId; 
+                m_recursion = 1;
             }
             public void Leave()
             {
@@ -1135,6 +1150,7 @@ namespace Richter
         internal sealed class Transaction
         {
             private DateTime m_timeOfLastTrans;
+
             public void PerformTransaction()
             {
                 Monitor.Enter(this);
@@ -1142,6 +1158,7 @@ namespace Richter
                 m_timeOfLastTrans = DateTime.Now;
                 Monitor.Exit(this);
             }
+
             public DateTime LastTransaction
             {
                 get
@@ -1159,6 +1176,7 @@ namespace Richter
         {
             private readonly ReaderWriterLockSlim m_lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
             private DateTime m_timeOfLastTrans;
+
             public void PerformTransaction()
             {
                 m_lock.EnterWriteLock();
@@ -1166,6 +1184,7 @@ namespace Richter
                 m_timeOfLastTrans = DateTime.Now;
                 m_lock.ExitWriteLock();
             }
+
             public DateTime LastTransaction
             {
                 get
@@ -1177,6 +1196,7 @@ namespace Richter
                     return temp;
                 }
             }
+
             public void Dispose() 
             { 
                 m_lock.Dispose(); 
@@ -1187,12 +1207,10 @@ namespace Richter
         #region Блокировка с двойной проверкой
         internal sealed class Singleton
         {
-            // Объект s_lock требуется для обеспечения безопасности
-            // в многопоточной среде. Наличие этого объекта предполагает,
-            // что для создания одноэлементного объекта требуется больше
-            // ресурсов, чем для объекта System.Object и что эта процедура
-            // может вовсе не понадобиться. В противном случае проще и эффективнее
-            // получить одноэлементный объект в конструкторе класса
+            // Объект s_lock требуется для обеспечения безопасности в многопоточной среде. 
+            // Наличие этого объекта предполагает, что для создания одноэлементного объекта требуется больше
+            // ресурсов, чем для объекта System.Object и что эта процедура может вовсе не понадобиться. 
+            // В противном случае проще и эффективнее получить одноэлементный объект в конструкторе класса
             private static readonly Object s_lock = new Object();
             // Это поле ссылается на один объект Singleton
             private static Singleton s_value = null;
@@ -1201,8 +1219,7 @@ namespace Richter
             {
                 // Код инициализации объекта Singleton
             }
-            // Открытый статический метод, возвращающий объект Singleton
-            // (создавая его при необходимости)
+            // Открытый статический метод, возвращающий объект Singleton (создавая его при необходимости)
             public static Singleton GetSingleton()
             {
                 // Если объект Singleton уже создан, возвращаем его
@@ -1210,8 +1227,8 @@ namespace Richter
                 { 
                     return s_value;
                 }
-                Monitor.Enter(s_lock); // Если не создан, позволяем одному
-                                       // потоку сделать это
+                Monitor.Enter(s_lock);
+                // Если не создан, позволяем одному потоку сделать это
                 if (s_value == null)
                 {
                     // Если объекта все еще нет, создаем его
@@ -1228,15 +1245,13 @@ namespace Richter
         internal sealed class Singleton2
         {
             private static Singleton2 s_value = new Singleton2();
-            // Закрытый конструктор не дает коду вне данного класса
-            // создавать экземпляры
+            // Закрытый конструктор не дает коду вне данного класса создавать экземпляры
             private Singleton2()
             {
                 // Код инициализации объекта Singleton
             }
-            // Открытый статический метод, возвращающий объект Singleton
-            // (и создающий его, если это нужно)
-            public static Singleton2 GetSingleton() 
+            // Открытый статический метод, возвращающий объект Singleton (и создающий его, если это нужно)
+            public static Singleton2 GetSingleton()
             { 
                 return s_value; 
             }
@@ -1245,26 +1260,22 @@ namespace Richter
         internal sealed class Singleton3
         {
             private static Singleton3 s_value = null;
-            // Закрытый конструктор не дает коду вне данного
-            // класса создавать экземпляры
+            // Закрытый конструктор не дает коду вне данного класса создавать экземпляры
             private Singleton3()
             {
                 // Код инициализации объекта Singleton
             }
-            // Открытый статический метод, возвращающий объект Singleton
-            // (и создающий его, если это нужно)
+            // Открытый статический метод, возвращающий объект Singleton (и создающий его, если это нужно)
             public static Singleton3 GetSingleton()
             {
-                if (s_value != null) 
+                if (s_value != null)
                 { 
-                    return s_value; 
+                    return s_value;
                 }
-                // Создание нового объекта Singleton и превращение его в корень,
-                // если этого еще не сделал другой поток
+                // Создание нового объекта Singleton и превращение его в корень, если этого еще не сделал другой поток
                 Singleton3 temp = new Singleton3();
                 Interlocked.CompareExchange(ref s_value, temp, null);
-                // При потере этого потока второй объект Singleton
-                // утилизируется сборщиком мусора
+                // При потере этого потока второй объект Singleton утилизируется сборщиком мусора
                 return s_value; // Возвращение ссылки на объект
             }
         }
@@ -1277,6 +1288,11 @@ namespace Richter
             Console.WriteLine(s.IsValueCreated); // Возвращается true, так как был запрос к Value
             Thread.Sleep(10000); // Ждем 10 секунд и снова выводим время
             Console.WriteLine(s.Value); // Теперь делегат НЕ вызывается, результат прежний
+
+            //public class Lazy<T>
+            //{ 
+            //     public override string ToString();
+            //}
         }
         #endregion
 
@@ -1292,18 +1308,16 @@ namespace Richter
                 while (!m_condition)
                 {
                     // Если условие не соблюдается, ждем, что его поменяет другой поток
-                    Monitor.Wait(m_lock); // На время снимаем блокировку,
-                                          // чтобы другой поток мог ее получить
+                    Monitor.Wait(m_lock); // На время снимаем блокировку, чтобы другой поток мог ее получить
                 }
                 // Условие соблюдено, обрабатываем данные...
                 Monitor.Exit(m_lock); // Снятие блокировки
             }
             public void Thread2()
             {
-                Monitor.Enter(m_lock); // Взаимоисключающая блокировка
-                                       // Обрабатываем данные и изменяем условие...
+                Monitor.Enter(m_lock); // Взаимоисключающая блокировка. Обрабатываем данные и изменяем условие...
                 m_condition = true;
-                // Monitor.Pulse(m_lock); // Будим одного ожидающего ПОСЛЕ отмены блокировки
+                Monitor.Pulse(m_lock); // Будим одного ожидающего ПОСЛЕ отмены блокировки
                 Monitor.PulseAll(m_lock); // Будим всех ожидающих ПОСЛЕ отмены блокировки
                 Monitor.Exit(m_lock); // Снятие блокировки
             }
@@ -1316,8 +1330,7 @@ namespace Richter
             public void Enqueue(T item)
             {
                 Monitor.Enter(m_lock);
-                // После постановки элемента в очередь пробуждаем
-                // один/все ожидающие потоки
+                // После постановки элемента в очередь пробуждаем один/все ожидающие потоки
                 m_queue.Enqueue(item);
                 Monitor.PulseAll(m_lock);
                 Monitor.Exit(m_lock);
@@ -1327,7 +1340,9 @@ namespace Richter
                 Monitor.Enter(m_lock);
                 // Выполняем цикл, пока очередь не опустеет (условие)
                 while (m_queue.Count == 0)
+                {
                     Monitor.Wait(m_queue);
+                }
                 // Удаляем элемент из очереди и возвращаем его на обработку
                 T item = m_queue.Dequeue();
                 Monitor.Exit(m_lock);
@@ -1344,8 +1359,7 @@ namespace Richter
             var tfConcurrent = new TaskFactory(cesp.ConcurrentScheduler);
             for (Int32 operation = 0; operation < 5; operation++)
             {
-                var exclusive = operation < 2; // Для демонстрации создаются
-                                               // 2 монопольных и 3 параллельных задания
+                var exclusive = operation < 2; // Для демонстрации создаются 2 монопольных и 3 параллельных задания
                 (exclusive ? tfExclusive : tfConcurrent).StartNew(() => {
                     Console.WriteLine("{0} access", exclusive ? "exclusive" : "concurrent");
                     // TODO: Здесь выполняется монопольная запись или параллельное чтение...
