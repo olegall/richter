@@ -11,12 +11,28 @@ namespace Richter
         {
             #region Threading
             var threading = new Threading();
-            // Потоки для асинхронных вычислительных операций
+
+            Console.WriteLine("\n*** Скоординированная отмена ***");
+            threading.CoordinatedCancel();
+
+            Console.WriteLine("\n*** Завершение задания и получение результата ***");
+            threading.EndTask();
+
+            Console.WriteLine("\n*** Отмена задания ***");
+            threading.CancelTask();
+
+            Console.WriteLine("\n*** Автоматический запуск задания по завершении предыдущего ***");
+            threading.RunTaskAfterEndPrevious();
+            threading.RunTaskAfterEndPrevious2();
+
+
+
+            Console.WriteLine("\n*** Потоки для асинхронных вычислительных операций ***");
             Console.WriteLine("Main thread: starting a dedicated thread " + "to do an asynchronous operation");
             Thread dedicatedThread = new Thread(ComputeBoundOp);
             dedicatedThread.Start(5);
             Console.WriteLine("Main thread: Doing other work here...");
-            Thread.Sleep(10000); // Имитация другой работы (10 секунд)
+            Thread.Sleep(1000); // Имитация другой работы (10 секунд)
             dedicatedThread.Join(); // Ожидание завершения потока
             Console.WriteLine("Hit <Enter> to end this program...");
             /*
@@ -32,7 +48,9 @@ namespace Richter
                 Main thread: Doing other work here...
             */
 
-            // Фоновые и активные потоки
+
+
+            Console.WriteLine("\n*** Фоновые и активные потоки ***");
             // Создание нового потока (по умолчанию активного)
             Thread t = new Thread(Worker);
             // Превращение потока в фоновый
@@ -42,11 +60,13 @@ namespace Richter
                        // В случае фонового потока приложение немедленно прекратит работу
             Console.WriteLine("Returning from Main");
 
-            // Простые вычислительные операции
+
+
+            Console.WriteLine("\n*** Простые вычислительные операции ***");
             Console.WriteLine("Main thread: queuing an asynchronous operation");
             ThreadPool.QueueUserWorkItem(ComputeBoundOp, 5);
             Console.WriteLine("Main thread: Doing other work here...");
-            Thread.Sleep(10000); // Имитация другой работы (10 секунд)
+            Thread.Sleep(1000); // Имитация другой работы (10 секунд)
             Console.WriteLine("Hit <Enter> to end this program...");
             /*
                 Результат компиляции и запуска этого кода:
@@ -64,7 +84,9 @@ namespace Richter
                 многопроцессорном компьютере
             */
 
-            // Контексты исполнения
+
+
+            Console.WriteLine("\n*** Контексты исполнения ***");
             // Помещаем данные в контекст логического вызова потока метода Main
             CallContext.LogicalSetData("Name", "Jeffrey");
             // Заставляем поток из пула работать
@@ -72,34 +94,27 @@ namespace Richter
             ThreadPool.QueueUserWorkItem(state => Console.WriteLine("Name={0}", CallContext.LogicalGetData("Name")));
             // Запрещаем копирование контекста исполнения потока метода Main
             ExecutionContext.SuppressFlow();
-
-            // Заставляем поток из пула выполнить работу.
-            // Поток из пула НЕ имеет доступа к данным контекста логического вызова
+            // Заставляем поток из пула выполнить работу. Поток из пула НЕ имеет доступа к данным контекста логического вызова
             ThreadPool.QueueUserWorkItem(state => Console.WriteLine("Name={0}", CallContext.LogicalGetData("Name")));
-            // Восстанавливаем копирование контекста исполнения потока метода Main
-            // на случай будущей работы с другими потоками из пула
+            // Восстанавливаем копирование контекста исполнения потока метода Main на случай будущей работы с другими потоками из пула
             ExecutionContext.RestoreFlow();
 
-            // Скоординированная отмена
-            threading.CoordinatedCancel();
 
-            // Задания
+
+            Console.WriteLine("\n*** Задания ***");
             ThreadPool.QueueUserWorkItem(ComputeBoundOp, 5); // Вызов QueueUserWorkItem
             new Task(ComputeBoundOp, 5).Start(); // Аналог предыдущей строки
             Task.Run(() => ComputeBoundOp(5)); // Еще один аналог
 
-            // Завершение задания и получение результата
-            threading.EndTask();
-
-            // Отмена задания
-            threading.CancelTask();
-
-            // Автоматический запуск задания по завершении предыдущего
+            Console.WriteLine("\n*** Автоматический запуск задания по завершении предыдущего ***");
             threading.RunTaskAfterEndPrevious();
             threading.RunTaskAfterEndPrevious2();
 
-            // Дочерние задания
+            Console.WriteLine("\n*** Дочерние задания ***");
             threading.ChildTasks();
+            
+            Console.WriteLine("\n*** Фабрика заданий ***");
+            threading.TaskFactory();
 
             // Планировщики заданий - сделать приложение WPF/Winforms
 
@@ -109,41 +124,54 @@ namespace Richter
 
             //Threading.Morph<object, object,>();
 
-            Console.WriteLine("*** События ***");
+            Console.WriteLine("\n*** События ***");
             threading.Events();
 
-            // Блокировка с двойной проверкой
+
+
+            Console.WriteLine("\n*** Блокировка с двойной проверкой ***");
             String name = null;
             // Так как имя равно null, запускается делегат и инициализирует поле имени
             LazyInitializer.EnsureInitialized(ref name, () => "Jeffrey");
-            Console.WriteLine(name); // Выводится "Jeffrey"
-                                     // Так как имя отлично от null, делегат не запускается и имя не меняется
+            Console.WriteLine(name); // Выводится "Jeffrey". Так как имя отлично от null, делегат не запускается и имя не меняется
             LazyInitializer.EnsureInitialized(ref name, () => "Richter");
             Console.WriteLine(name); // Снова выводится "Jeffrey"
+
+
+
+            Console.WriteLine("\n*** Классы коллекций для параллельного доступа ***");
+            threading.BlockingCollection();
+
+            Console.WriteLine("\n*** Расширяемость асинхронных функций ***");
+            Threading.Go();
+
+            Console.WriteLine("\n*** Другие возможности асинхронных функций ***");
+            Threading.GoAnother();
+            Threading.GoAnother2();
+            
+            Console.WriteLine("\n*** Отмена операций ввода-вывода ***");
+            Threading.GoCancelIO();
+            
+            Console.WriteLine("\n*** Блокировка с двойной проверкой ***");
+            threading.Lazy();
             #endregion
 
             Console.ReadLine();
         }
 
-        #region Threading
-        // Сигнатура метода должна совпадать
-        // с сигнатурой делегата ParameterizedThreadStart
+        // Сигнатура метода должна совпадать с сигнатурой делегата ParameterizedThreadStart
         private static void ComputeBoundOp(Object state)
         {
             // Метод, выполняемый выделенным потоком
             Console.WriteLine("In ComputeBoundOp: state={0}", state);
-            Thread.Sleep(1000); // Имитация другой работы (1 секунда)
-                                // После возвращения методом управления выделенный поток завершается
+            Thread.Sleep(1000); // Имитация другой работы (1 секунда). После возвращения методом управления выделенный поток завершается
         }
 
         private static void Worker()
         {
-            Thread.Sleep(10000); // Имитация 10 секунд работы
-                                 // Следующая строка выводится только для кода,
-                                 // исполняемого активным потоком
+            Thread.Sleep(10000); // Имитация 10 секунд работ. Следующая строка выводится только для кода, исполняемого активным потоком
             Console.WriteLine("Returning from Worker");
         }
     }
-    #endregion
 }
 

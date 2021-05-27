@@ -324,7 +324,7 @@ namespace Richter
         public void EndTask() 
         {
             // Создание задания Task (оно пока не выполняется)
-            Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), 1000000000);
+            Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), 10000);
             // Можно начать выполнение задания через некоторое время
             t.Start();
             // Можно ожидать завершения задания в явном виде
@@ -494,25 +494,6 @@ namespace Richter
         #endregion
 
         #region Асинхронные функции в FCL
-        private static async void StartServer()
-        {
-            while (true)
-            {
-                string c_pipeName = null;
-                var pipe = new NamedPipeServerStream(
-                    c_pipeName, 
-                    PipeDirection.InOut, 
-                    1, 
-                    PipeTransmissionMode.Message, 
-                    PipeOptions.Asynchronous | PipeOptions.WriteThrough);
-                // Асинхронный прием клиентского подключения. ПРИМЕЧАНИЕ: NamedPipeServerStream использует старую модель асинхронного программирования.
-                // Я преобразую ее к новой модели Task при помощи метода FromAsync класса TaskFactory.
-                await Task.Factory.FromAsync(pipe.BeginWaitForConnection, pipe.EndWaitForConnection, null);
-                // Начало обслуживания клиента; управление возвращается немедленно, потому что операция выполняется асинхронно.
-                //ServiceClientRequestAsync(pipe);
-            }
-        }
-        
         private static async Task<String> AwaitWebClient(Uri uri)
         {
             // Класс System.Net.WebClient поддерживает событийную модель асинхронного программирования
@@ -535,6 +516,25 @@ namespace Richter
         #endregion
 
         #region Другие возможности асинхронных функций
+        private static async void StartServer()
+        {
+            while (true)
+            {
+                string c_pipeName = null;
+                var pipe = new NamedPipeServerStream(
+                    c_pipeName,
+                    PipeDirection.InOut,
+                    1,
+                    PipeTransmissionMode.Message,
+                    PipeOptions.Asynchronous | PipeOptions.WriteThrough);
+                // Асинхронный прием клиентского подключения. ПРИМЕЧАНИЕ: NamedPipeServerStream использует старую модель асинхронного программирования.
+                // Я преобразую ее к новой модели Task при помощи метода FromAsync класса TaskFactory.
+                await Task.Factory.FromAsync(pipe.BeginWaitForConnection, pipe.EndWaitForConnection, null);
+                // Начало обслуживания клиента; управление возвращается немедленно, потому что операция выполняется асинхронно.
+                //ServiceClientRequestAsync(pipe);
+            }
+        }
+
         public static async Task GoAnother()
         {
             // Запуск сервера немедленно возвращает управление, потому что сервер ожидает клиентские запросы в асинхронном режиме
@@ -812,8 +812,7 @@ namespace Richter
                 }
             }
             // Этот метод ДОЛЖЕН быть вызван ПОСЛЕ инициирования ВСЕХ операций
-            public void AllBegun(Action<CoordinationStatus> callback,
-            Int32 timeout = Timeout.Infinite)
+            public void AllBegun(Action<CoordinationStatus> callback, Int32 timeout = Timeout.Infinite)
             {
                 m_callback = callback;
                 if (timeout != Timeout.Infinite)
@@ -822,14 +821,17 @@ namespace Richter
                 }
                 JustEnded();
             }
+
             private void TimeExpired(Object o)
             {
                 ReportStatus(CoordinationStatus.Timeout);
             }
+
             public void Cancel() 
             { 
                 ReportStatus(CoordinationStatus.Cancel); 
             }
+
             private void ReportStatus(CoordinationStatus status)
             {
                 // Если состояние ни разу не передавалось, передать его; в противном случае оно игнорируется
@@ -847,15 +849,20 @@ namespace Richter
         internal struct SimpleSpinLock
         {
             private Int32 m_ResourceInUse; // 0=false (по умолчанию), 1=true
+            
             public void Enter()
             {
                 while (true)
                 {
                     // Всегда указывать, что ресурс используется. Если поток переводит его из свободного состояния, вернуть управление
-                    if (Interlocked.Exchange(ref m_ResourceInUse, 1) == 0) return;
+                    if (Interlocked.Exchange(ref m_ResourceInUse, 1) == 0) 
+                    { 
+                        return; 
+                    }
                     // Здесь что-то происходит...
                 }
             }
+            
             public void Leave()
             {
                 // Помечаем ресурс, как свободный
@@ -887,7 +894,10 @@ namespace Richter
                 // Вычисление желаемого значения в контексте startVal и value
                 desiredVal = Math.Max(startVal, value);
                 // ПРИМЕЧАНИЕ. Здесь поток может быть прерван!
-                // if (target == startVal) target = desiredVal
+                if (target == startVal) 
+                { 
+                    target = desiredVal; 
+                }
                 // Возвращение значения, предшествующего потенциальным изменениям
                 currentVal = Interlocked.CompareExchange(ref target, desiredVal, startVal);
                 // Если начальное значение на этой итерации изменилось, повторить
@@ -969,7 +979,7 @@ namespace Richter
             private Semaphore m_AvailableResources;
             public SimpleWaitLock(Int32 maximumConcurrentThreads)
             {
-                new Semaphore(maximumConcurrentThreads, maximumConcurrentThreads);
+                m_AvailableResources = new Semaphore(maximumConcurrentThreads, maximumConcurrentThreads);
             }
 
             public void Enter()
@@ -1047,6 +1057,7 @@ namespace Richter
             private Int32 m_waiters = 0;
             // AutoResetEvent - примитивная конструкция режима ядра
             private AutoResetEvent m_waiterLock = new AutoResetEvent(false);
+            
             public void Enter()
             {
                 // Поток хочет получить блокировку
@@ -1058,6 +1069,7 @@ namespace Richter
                 }
                 m_waiterLock.WaitOne(); // Значительное снижение производительности. Когда WaitOne возвращет управление, этот поток блокируется
             }
+            
             public void Leave()
             {
                 // Этот поток освобождает блокировку
@@ -1067,6 +1079,7 @@ namespace Richter
                 }
                 m_waiterLock.Set(); // Значительное снижение производительности
             }
+            
             public void Dispose() 
             { 
                 m_waiterLock.Dispose(); 
@@ -1084,6 +1097,7 @@ namespace Richter
             // Это поле контролирует зацикливание с целью поднять производительность
             private Int32 m_spincount = 4000; // Произвольно выбранное значение. Эти поля указывают, какой поток и сколько раз блокируется
             private Int32 m_owningThreadId = 0, m_recursion = 0;
+
             public void Enter()
             {
                 // Если вызывающий поток уже захватил блокировку, увеличим рекурсивный счетчик на единицу и вернем управление
@@ -1118,6 +1132,7 @@ namespace Richter
                 m_owningThreadId = threadId; 
                 m_recursion = 1;
             }
+
             public void Leave()
             {
                 // Если вызывающий поток не заперт, ошибка
@@ -1139,6 +1154,7 @@ namespace Richter
                 // Остальные потоки заблокированы, пробуждаем один из них
                 m_waiterLock.Set(); // Значительное падение производительности
             }
+
             public void Dispose() 
             { 
                 m_waiterLock.Dispose(); 
@@ -1301,6 +1317,7 @@ namespace Richter
         {
             private readonly Object m_lock = new Object();
             private Boolean m_condition = false;
+            
             public void Thread1()
             {
                 Monitor.Enter(m_lock); // Взаимоисключающая блокировка
@@ -1313,6 +1330,7 @@ namespace Richter
                 // Условие соблюдено, обрабатываем данные...
                 Monitor.Exit(m_lock); // Снятие блокировки
             }
+            
             public void Thread2()
             {
                 Monitor.Enter(m_lock); // Взаимоисключающая блокировка. Обрабатываем данные и изменяем условие...
@@ -1327,6 +1345,7 @@ namespace Richter
         {
             private readonly Object m_lock = new Object();
             private readonly Queue<T> m_queue = new Queue<T>();
+            
             public void Enqueue(T item)
             {
                 Monitor.Enter(m_lock);
@@ -1335,6 +1354,7 @@ namespace Richter
                 Monitor.PulseAll(m_lock);
                 Monitor.Exit(m_lock);
             }
+            
             public T Dequeue()
             {
                 Monitor.Enter(m_lock);
@@ -1367,6 +1387,8 @@ namespace Richter
             }
         }
 
+        public enum OneManyMode { Exclusive, Shared }
+
         private static async Task AccessResourceViaAsyncSynchronization(AsyncOneManyLock asyncLock)
         {
             // TODO: Здесь выполняется любой код...
@@ -1380,24 +1402,26 @@ namespace Richter
             // TODO: Здесь выполняется любой код...
         }
 
-        public enum OneManyMode { Exclusive, Shared }
-
         public sealed class AsyncOneManyLock
         {
             #region Lock code
-            private SpinLock m_lock = new SpinLock(true); // Не используем
-                                                          // readonly с SpinLock
+            private SpinLock m_lock = new SpinLock(true); // Не используем readonly с SpinLock
+
             private void Lock() 
             { 
-                Boolean taken = false; m_lock.Enter(ref taken); 
+                Boolean taken = false; 
+                m_lock.Enter(ref taken); 
             }
+
             private void Unlock() 
             { 
                 m_lock.Exit(); 
             }
             #endregion
+
             #region Lock state and helper methods
             private Int32 m_state = 0;
+
             private Boolean IsFree 
             { 
                 get 
@@ -1405,6 +1429,7 @@ namespace Richter
                     return m_state == 0; 
                 } 
             }
+
             private Boolean IsOwnedByWriter 
             { 
                 get 
@@ -1412,6 +1437,7 @@ namespace Richter
                     return m_state == 1; 
                 } 
             }
+
             private Boolean IsOwnedByReaders 
             { 
                 get 
@@ -1419,27 +1445,34 @@ namespace Richter
                     return m_state > 0; 
                 } 
             }
+
             private Int32 AddReaders(Int32 count) 
             { 
                 return m_state += count; 
             }
+
             private Int32 SubtractReader() 
             { 
                 return m_state; 
             }
+
             private void MakeWriter() 
             { 
                 m_state = 1; 
             }
+
             private void MakeFree() 
             { 
                 m_state = 0; 
             }
             #endregion
+
             // Для отсутствия конкуренции (с целью улучшения производительности и сокращения затрат памяти)
             private readonly Task m_noContentionAccessGranter;
-            // Каждый ожидающий поток записи пробуждается через свой объект. TaskCompletionSource, находящийся в очереди
+
+            // Каждый ожидающий поток записи пробуждается через свой объект TaskCompletionSource, находящийся в очереди
             private readonly Queue<TaskCompletionSource<Object>> m_qWaitingWriters = new Queue<TaskCompletionSource<Object>>();
+
             // Все ожидающие потоки чтения пробуждаются по одному объекту TaskCompletionSource
             private TaskCompletionSource<Object> m_waitingReadersSignal = new TaskCompletionSource<Object>();
             private Int32 m_numWaitingReaders = 0;
@@ -1448,6 +1481,7 @@ namespace Richter
             {
                 m_noContentionAccessGranter = Task.FromResult<Object>(null);
             }
+
             public Task WaitAsync(OneManyMode mode)
             {
                 Task accressGranter = m_noContentionAccessGranter; // Предполагается отсутствие конкуренции
@@ -1475,6 +1509,7 @@ namespace Richter
                         else
                         { 
                             // Конкуренция. Увеличиваем количество ожидающих заданий чтения
+                                                                         // когда срабатывает колбэк?
                             accressGranter = m_waitingReadersSignal.Task.ContinueWith(t => t.Result);
                         }
                         break;
@@ -1482,10 +1517,12 @@ namespace Richter
                 Unlock();
                 return accressGranter;
             }
+
             public void Release()
             {
                 TaskCompletionSource<Object> accessGranter = null;
                 Lock();
+
                 if (IsOwnedByWriter)
                 {
                     MakeFree(); // Ушло задание записи
@@ -1493,7 +1530,8 @@ namespace Richter
                 else 
                 { 
                     SubtractReader(); // Ушло задание чтения
-                } 
+                }
+
                 if (IsFree)
                 {
                     // Если ресурс свободен, пробудить одно ожидающее задание записи или все задания чтения
@@ -1521,7 +1559,7 @@ namespace Richter
         }
         #endregion
 
-        #region
+        #region Классы коллекций для параллельного доступа
         public void BlockingCollection() 
         {
             var bl = new BlockingCollection<Int32>(new ConcurrentQueue<Int32>());
@@ -1567,15 +1605,6 @@ namespace Richter
             и Consuming (потребление) могут быть перемешаны, но строка All items have been
             consumed (все элементы потреблены) всегда будет замыкать список вывода.
          */
-        #endregion
-
-        #region
-        #endregion
-
-        #region
-        #endregion
-
-        #region
         #endregion
     }
 }
