@@ -1,277 +1,16 @@
-﻿using Microsoft.Win32.SafeHandles;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Richter
 {
-    #region Расширяемость асинхронных функций
-    public static class TaskLogger
-    {
-        public enum TaskLogLevel { None, Pending }
-        public static TaskLogLevel LogLevel { get; set; }
-        public sealed class TaskLogEntry
-        {
-            public Task Task { get; internal set; }
-            public String Tag { get; internal set; }
-            public DateTime LogTime { get; internal set; }
-            public String CallerMemberName { get; internal set; }
-            public String CallerFilePath { get; internal set; }
-            public Int32 CallerLineNumber { get; internal set; }
-            public override string ToString()
-            {
-                return String.Format("LogTime={0}, Tag={1}, Member={2}, File={3}({4})",
-                LogTime, Tag ?? "(none)", CallerMemberName, CallerFilePath,
-                CallerLineNumber);
-            }
-        }
-
-        private static readonly ConcurrentDictionary<Task, TaskLogEntry> s_log = new ConcurrentDictionary<Task, TaskLogEntry>();
-        public static IEnumerable<TaskLogEntry> GetLogEntries() 
-        { 
-            return s_log.Values; 
-        }
-        public static Task<TResult> Log<TResult>(
-            this Task<TResult> task,
-            String tag = null,
-            [CallerMemberName] String callerMemberName = null,
-            [CallerFilePath] String callerFilePath = null,
-            [CallerLineNumber] Int32 callerLineNumber = 1)
-        {
-            return (Task<TResult>) Log((Task)task, tag, callerMemberName, callerFilePath, callerLineNumber);
-        }
-        public static Task Log(
-            this Task task, String tag = null,
-            [CallerMemberName] String callerMemberName = null,
-            [CallerFilePath] String callerFilePath = null,
-            [CallerLineNumber] Int32 callerLineNumber = 1)
-        {
-            if (LogLevel == TaskLogLevel.None) return task;
-            var logEntry = new TaskLogEntry
-            {
-                Task = task,
-                LogTime = DateTime.Now,
-                Tag = tag,
-                CallerMemberName = callerMemberName,
-                CallerFilePath = callerFilePath,
-                CallerLineNumber = callerLineNumber
-            };
-            s_log[task] = logEntry;
-            task.ContinueWith(t => {
-                TaskLogEntry entry;
-                s_log.TryRemove(t, out entry);
-            },
-            TaskContinuationOptions.ExecuteSynchronously);
-            return task;
-        }
-    }
-    #endregion
-    internal sealed class Type1 { }
-    internal sealed class Type2 { }
-    class A 
-    {
-        private static async Task<Type1> Method1Async()
-        {
-            // Асинхронная операция, возвращающая объект Type1
-            return null;
-        }
-
-        private static async Task<Type2> Method2Async()
-        {
-            // Асинхронная операция, возвращающая объект Type2
-            return null;
-        }
-
-        // Структура конечного автомата
-        [CompilerGenerated, StructLayout(LayoutKind.Auto)]
-        struct StateMachine : IAsyncStateMachine
-        {
-            // Поля для построителя конечного автомата (Task) и его местонахождения
-            public AsyncTaskMethodBuilder<String> m_builder;
-            public Int32 m_state;
-            // Аргумент и локальные переменные становятся полями:
-            public Int32 m_argument, m_local, m_x;
-            public Type1 m_resultType1;
-            public Type2 m_resultType2;
-            // Одно поле на каждый тип Awaiter.
-            // В любой момент времени важно только одно из этих полей. В нем хранится ссылка на последний выполненный экземпляр await, который завершается асинхронно:
-
-            private TaskAwaiter<Type1> m_awaiterType1;
-            private TaskAwaiter<Type2> m_awaiterType2;
-
-            public void SetStateMachine(IAsyncStateMachine stateMachine)
-            {
-                throw new NotImplementedException();
-            }
-
-            // Сам конечный автомат
-            void IAsyncStateMachine.MoveNext()
-            {
-                String result = null; // Результат Task. Вставленный компилятором блок try гарантирует завершение задания конечного автомата
-                try
-                {
-                    Boolean executeFinally = true; // Логический выход из блока 'try'
-                    if (m_state == 0) {
-                        // Если метод конечного автомата выполняется впервые
-                        m_local = m_argument; // Выполнить начало исходного метода
-                    }
-                    // Блок try из исходного кода
-                    try
-                    {
-                        TaskAwaiter<Type1> awaiterType1;
-                        TaskAwaiter<Type2> awaiterType2;
-                        switch (m_state)
-                        {
-                            case 1:
-                                // Начало исполнения кода в 'try'. вызвать Method1Async и получить его объект ожидания
-                                awaiterType1 = Method1Async().GetAwaiter();
-                                if (!awaiterType1.IsCompleted)
-                                {
-                                    m_state = 0; // 'Method1Async' завершается асинхронно
-                                    m_awaiterType1 = awaiterType1; // Сохранить объект ожидания до возвращения
-                                                                   // Приказать объекту ожидания вызвать MoveNext после завершения операции
-                                    m_builder.AwaitUnsafeOnCompleted(ref awaiterType1, ref this);
-                                    // Предыдущая строка вызывает метод OnCompleted объекта awaiterType1, что приводит к вызову
-                                    // ContinueWith(t => MoveNext()) для Task. При завершении Task ContinueWith вызывает MoveNext
-                                    executeFinally = false; // Без логического выхода из блока 'try'
-                                    return; // Поток возвращает управление вызывающей стороне 'Method1Async' завершается синхронно
-                                } 
-                                  
-                                break;
-                            case 0: // 'Method1Async' завершается асинхронно
-                                awaiterType1 = m_awaiterType1; // Восстановление последнего объекта ожидания
-                                break; 
-                            // case 1:
-                            case 11: // 'Method2Async' завершается асинхронно
-                                awaiterType2 = m_awaiterType2; // Восстановление последнего объекта ожидания
-                                goto ForLoopEpilog; 
-                        }
-                        // После первого await сохраняем результат и запускаем цикл 'for'
-                        
-                        m_resultType1 = awaiterType1.GetResult(); // Получение результата
-                    ForLoopPrologue:
-                        m_x = 0; // Инициализация цикла 'for'
-                        goto ForLoopBody; // Переход к телу цикла 'for'
-                    ForLoopEpilog:
-                        m_resultType2 = awaiterType2.GetResult();
-                        m_x++; // Увеличение x после каждой итерации. Переход к телу цикла 'for'
-                    ForLoopBody:
-                        if (m_x < 3)
-                        { // Условие цикла 'for'. Вызов Method2Async и получение объекта ожидания
-                            awaiterType2 = Method2Async().GetAwaiter();
-                            if (!awaiterType2.IsCompleted)
-                            {
-                                m_state = 1; // 'Method2Async' завершается асинхронно
-                                m_awaiterType2 = awaiterType2; // Сохранение объекта ожидания до возвращения
-                                                               // Приказываем вызвать MoveNext при завершении операции
-                                m_builder.AwaitUnsafeOnCompleted(ref awaiterType2, ref this);
-                                executeFinally = false; // Без логического выхода из блока 'try'
-                                return; // Поток возвращает управление вызывающей стороне. 'Method2Async' завершается синхронно
-                            } 
-                            goto ForLoopEpilog; // Синхронное завершение, возврат
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        Console.WriteLine("Catch");
-                    }
-                    finally
-                    {
-                        // Каждый раз, когда блок физически выходит из 'try', выполняется 'finally'.
-                        // Этот код должен выполняться только при логическом выходе из 'try'.
-                        if (executeFinally)
-                        {
-                            Console.WriteLine("Finally");
-                        }
-                    }
-                    result = "Done"; // То, что в конечном итоге должна вернуть асинхронная функция.
-                } 
-                catch (Exception exception)
-                {
-                    // Необработанное исключение: задание конечного автомата завершается с исключением.
-                    m_builder.SetException(exception);
-                    return;
-                }
-                // Исключения нет: задание конечного автомата завершается с результатом
-
-                m_builder.SetResult(result);
-            }
-        }
-    }
-
-    internal static class ThreadIO
-    {
-        public static BackgroundProcessingDisposer BeginBackgroundProcessing(Boolean process = false)
-        {
-            ChangeBackgroundProcessing(process, true);
-            return new BackgroundProcessingDisposer(process);
-        }
-
-        public static void EndBackgroundProcessing(Boolean process = false)
-        {
-            ChangeBackgroundProcessing(process, false);
-        }
-
-        private static void ChangeBackgroundProcessing(Boolean process, Boolean start)
-        {
-            Boolean ok = process ? SetPriorityClass(GetCurrentWin32ProcessHandle(), start ? ProcessBackgroundMode.Start : ProcessBackgroundMode.End)
-                : SetThreadPriority(GetCurrentWin32ThreadHandle(), start ? ThreadBackgroundgMode.Start : ThreadBackgroundgMode.End);
-            if (!ok) throw new Win32Exception();
-        }
-
-        // Эта структура позволяет инструкции using выйти из режима фоновой обработки
-        public struct BackgroundProcessingDisposer : IDisposable
-        {
-            private readonly Boolean m_process;
-            public BackgroundProcessingDisposer(Boolean process)
-            { 
-                m_process = process; 
-            }
-
-            public void Dispose() 
-            { 
-                EndBackgroundProcessing(m_process); 
-            }
-        }
-
-        // См. Win32-функции THREAD_MODE_BACKGROUND_BEGIN и THREAD_MODE_BACKGROUND_END
-        private enum ThreadBackgroundgMode { Start = 0x10000, End = 0x20000 }
-
-        // См. Win32-функции PROCESS_MODE_BACKGROUND_BEGIN и PROCESS_MODE_BACKGROUND_END
-        private enum ProcessBackgroundMode { Start = 0x100000, End = 0x200000 }
-
-        [DllImport("Kernel32", EntryPoint = "GetCurrentProcess", ExactSpelling = true)]
-        private static extern SafeWaitHandle GetCurrentWin32ProcessHandle();
-
-        [DllImport("Kernel32", ExactSpelling = true, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-
-        private static extern Boolean SetPriorityClass(SafeWaitHandle hprocess, ProcessBackgroundMode mode);
-        [DllImport("Kernel32", EntryPoint = "GetCurrentThread", ExactSpelling = true)]
-
-        private static extern SafeWaitHandle GetCurrentWin32ThreadHandle();
-        [DllImport("Kernel32", ExactSpelling = true, SetLastError = true)]
-
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern Boolean SetThreadPriority(SafeWaitHandle hthread, ThreadBackgroundgMode mode);
-
-        // http://msdn.microsoft.com/en-us/library/aa480216.aspx
-        [DllImport("Kernel32", SetLastError = true, EntryPoint = "CancelSynchronousIo")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-
-        private static extern Boolean CancelSynchronousIO(SafeWaitHandle hThread);
-    }
-
     class Threading
     {
         #region Скоординированная отмена
@@ -288,15 +27,15 @@ namespace Richter
 
             // Создание объекта CancellationTokenSource
             var cts1 = new CancellationTokenSource();
-            cts1.Token.Register(() => Console.WriteLine("cts1 canceled"));
+            cts1.Token.Register(() => Console.WriteLine("cts1 canceled")/* сработает, когда вызовется cts1.Cancel() */); 
 
             // Создание второго объекта CancellationTokenSource
             var cts2 = new CancellationTokenSource();
-            cts2.Token.Register(() => Console.WriteLine("cts2 canceled"));
+            cts2.Token.Register(() => Console.WriteLine("cts2 canceled")/* сработает, когда вызовется cts2.Cancel(), но сначала - linked */);
 
             // Создание нового объекта CancellationTokenSource, отменяемого при отмене cts1 или cts2
             var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts1.Token, cts2.Token);
-            linkedCts.Token.Register(() => Console.WriteLine("linkedCts canceled"));
+            linkedCts.Token.Register(() => Console.WriteLine("linkedCts canceled")/* сработает, когда вызовется cts2.Cancel() */);
 
             // Отмена одного из объектов CancellationTokenSource (я выбрал cts2)
             cts2.Cancel();
@@ -314,33 +53,57 @@ namespace Richter
                     break; // Выход их цикла для остановки операции
                 }
                 Console.WriteLine(count);
-                Thread.Sleep(200); // Для демонстрационных целей просто ждем
+                Thread.Sleep(100); // Для демонстрационных целей просто ждем
             }
             Console.WriteLine("Count is done");
         }
         #endregion
 
+        private static Int32 Sum(Int32 n)
+        {
+            Int32 sum = 0;
+            for (; n > 0; n--)
+            {
+                checked
+                {
+                    sum += n;
+                } // при больших n выдается System.OverflowException
+                Thread.Sleep(100);
+            }
+            return sum;
+        }
+
+        private static Int32 Sum(CancellationToken сt, Int32 n)
+        {
+            Int32 sum = 0;
+            for (; n > 0; n--)
+            {
+                // Следующая строка приводит к исключению OperationCanceledException при вызове метода Cancel для объекта CancellationTokenSource, на который ссылается маркер
+                сt.ThrowIfCancellationRequested();
+                checked { sum += n; } // при больших n появляется исключение System.OverflowException
+            }
+            return sum;
+        }
+
         #region Завершение задания и получение результата
         public void EndTask() 
         {
             // Создание задания Task (оно пока не выполняется)
-            Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), 10000);
+            Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), 10);
             // Можно начать выполнение задания через некоторое время
             t.Start();
             // Можно ожидать завершения задания в явном виде
+            // если закомментировать - результат почему-то тот же
             t.Wait(); // ПРИМЕЧАНИЕ. Существует перегруженная версия, принимающая тайм-аут/CancellationToken
                       // Получение результата (свойство Result вызывает метод Wait)
             Console.WriteLine("The Sum is: " + t.Result); // Значение Int32
         }
 
-        private static Int32 Sum(Int32 n)
+        public void EndTask2()
         {
-            Int32 sum = 0;
-            for (; n > 0; n--) 
-            { 
-                checked { sum += n; } // при больших n выдается System.OverflowException
-            }
-            return sum;
+            Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), 10);
+            //Console.WriteLine("The Sum is: " + t.Result); // зависнет - задача не запущена
+            Console.WriteLine("The Sum is: "); // тут же выполнится - задача просто объявлена
         }
         #endregion
 
@@ -361,22 +124,10 @@ namespace Richter
             {
                 // Считаем обработанными все объекты OperationCanceledException
                 // Все остальные исключения попадают в новый объект AggregateException, состоящий только из необработанных исключений
-                x.Handle(e => e is OperationCanceledException);
+                x.Handle(e => e is OperationCanceledException); // комментирование не повлияет
                 // Строка выполняется, если все исключения уже обработаны
                 Console.WriteLine("Sum was canceled");
             }
-        }
-
-        private static Int32 Sum(CancellationToken сt, Int32 n)
-        {
-            Int32 sum = 0;
-            for (; n > 0; n--)
-            {
-                // Следующая строка приводит к исключению OperationCanceledException при вызове метода Cancel для объекта CancellationTokenSource, на который ссылается маркер
-                сt.ThrowIfCancellationRequested();
-                checked { sum += n; } // при больших n появляется исключение System.OverflowException
-            }
-            return sum;
         }
         #endregion
 
@@ -384,18 +135,24 @@ namespace Richter
         public void RunTaskAfterEndPrevious() 
         {
             // Создание объекта Task с отложенным запуском
-            Task<Int32> t = Task.Run(() => Sum(CancellationToken.None, 10000));
+            Task<Int32> t = Task.Run(() => Sum(CancellationToken.None, 10));
             // Метод ContinueWith возвращает объект Task, но обычно он не используется
             Task cwt = t.ContinueWith(task => Console.WriteLine("The sum is: " + task.Result));
-        }
 
+            //t.Start(); // System.InvalidOperationException: "Start нельзя вызывать для уже запущенной задачи."
+            //t.Wait();
+            //Console.WriteLine("The Sum is: " + t.Result); // Значение Int32
+        }
+                                                           
         public void RunTaskAfterEndPrevious2()
         {
             // Создание и запуск задания с продолжением
-            Task<Int32> t = Task.Run(() => Sum(10000));
+            Task<Int32> t = Task.Run(() => Sum(10));
             // Метод ContinueWith возвращает объект Task, но обычно он не используется
             t.ContinueWith(task => Console.WriteLine("The sum is: " + task.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
+            // обернуть в исключение
             t.ContinueWith(task => Console.WriteLine("Sum threw: " + task.Exception), TaskContinuationOptions.OnlyOnFaulted);
+            // отменить задачу. У task нет метода отмены
             t.ContinueWith(task => Console.WriteLine("Sum was canceled"), TaskContinuationOptions.OnlyOnCanceled);
         }
         #endregion
@@ -412,24 +169,68 @@ namespace Richter
                 return results;
             });
             // Вывод результатов после завершения родительского и дочерних заданий
-            var cwt = parent.ContinueWith(parentTask => Array.ForEach(parentTask.Result, Console.WriteLine));
+            var cwt = parent.ContinueWith(parentTask => { Array.ForEach(parentTask.Result, Console.WriteLine); Console.WriteLine("ContinueWith"); });
             // Запуск родительского задания, которое запускает дочерние
+            Console.WriteLine("parent.Start()");
             parent.Start();
         }
         #endregion
 
         #region Фабрика заданий
-        public void TaskFactory() 
+        const int _1_SEC = 1000;
+        const int _2_SEC = 2000;
+        const int _3_SEC = 3000;
+
+        int Delay1s() { Thread.Sleep(_1_SEC); return _1_SEC; }
+        int Delay2s() { Thread.Sleep(_2_SEC); return _2_SEC; }
+        int Delay3s() { Thread.Sleep(_3_SEC); return _3_SEC; }
+
+        public void TaskFactory()
         {
             Task parent = new Task(() => {
                 var cts = new CancellationTokenSource();
                 var tf = new TaskFactory<Int32>(cts.Token, TaskCreationOptions.AttachedToParent, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                 // Задание создает и запускает 3 дочерних задания
                 var childTasks = new[] {
+                    tf.StartNew(() => Delay1s()),
+                    tf.StartNew(() => Delay2s()),
+                    tf.StartNew(() => Delay3s())
+                };
+                for (Int32 task = 0; task < childTasks.Length; task++)
+                {
+                    // если TaskContinuationOptions.OnlyOnFaulted и нет исключения коллбэк в ContinueWith не сработает
+                    // как поставить точку останова в колбэке?
+                    // всегда показывает 3, потому что к моменту ContinueWhenAll цикл уже прогнан
+                    // как сделать порядковый номер задачи?
+                    // коллбэк сработает после ContinueWhenAll
+                    childTasks[task].ContinueWith(t => Console.WriteLine($"ContinueWith Id: {t.Id} iterator: {task}"), TaskContinuationOptions.None);
+                }
+                // После завершения дочерних заданий получаем максимальное возвращенное значение и передаем его другому заданию для вывода
+                tf.ContinueWhenAll(childTasks, completedTasks => completedTasks.Where(t => !t.IsFaulted && !t.IsCanceled).Max(t => t.Result), CancellationToken.None)
+                  .ContinueWith(t => Console.WriteLine("The maximum is: " + t.Result), TaskContinuationOptions.ExecuteSynchronously);
+            });
+            // Запуск родительского задания, которое может запускать дочерние
+            Console.WriteLine("parent.Start()");
+            parent.Start();
+        }
+
+        int Log()
+        {
+            Console.WriteLine("Log");
+            return 0;
+        }
+
+        public void TaskFactoryException() 
+        {
+            Task parent = new Task(() => {
+                var cts = new CancellationTokenSource();
+                var tf = new TaskFactory<Int32>(cts.Token, TaskCreationOptions.AttachedToParent, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                // Задание создает и запускает 3 дочерних задания
+                var childTasks = new[] {
+                    tf.StartNew(() => Log()), // Thread.Sleep
                     tf.StartNew(() => Sum(cts.Token, 10000)),
                     tf.StartNew(() => Sum(cts.Token, 20000)),
-                    tf.StartNew(() => Sum(cts.Token, Int32.MaxValue)) // Исключение
-                    // OverflowException
+                    tf.StartNew(() => Sum(cts.Token, Int32.MaxValue)) // Исключение OverflowException
                 };
                 // Если дочернее задание становится источником исключения, отменяем все дочерние задания
                 for (Int32 task = 0; task < childTasks.Length; task++)
@@ -437,14 +238,12 @@ namespace Richter
                     childTasks[task].ContinueWith(t => cts.Cancel(), TaskContinuationOptions.OnlyOnFaulted);
                 }
                 // После завершения дочерних заданий получаем максимальное возвращенное значение и передаем его другому заданию для вывода
-                tf.ContinueWhenAll(childTasks, 
-                                   completedTasks => completedTasks.Where(t => !t.IsFaulted && !t.IsCanceled).Max(t => t.Result), 
-                                   CancellationToken.None)
+                tf.ContinueWhenAll(childTasks, completedTasks => completedTasks.Where(t => !t.IsFaulted && !t.IsCanceled).Max(t => t.Result), CancellationToken.None)
                   .ContinueWith(t => Console.WriteLine("The maximum is: " + t.Result), TaskContinuationOptions.ExecuteSynchronously);
             });
-
             // После завершения дочерних заданий выводим, в том числе, и необработанные исключения
             parent.ContinueWith(p => {
+                // p.Result
                 // Текст помещен в StringBuilder и однократно вызван метод Console.WriteLine просто потому, что это задание
                 // может выполняться параллельно с предыдущим, и я не хочу путаницы в выводимом результате
                 StringBuilder sb = new StringBuilder("The following exception(s) occurred:" + Environment.NewLine);
@@ -454,7 +253,9 @@ namespace Richter
                 }
                 Console.WriteLine(sb.ToString());
             }, TaskContinuationOptions.OnlyOnFaulted);
+            //parent.ContinueWith().ContinueWith()...
             // Запуск родительского задания, которое может запускать дочерние
+            Console.WriteLine("parent.Start()");
             parent.Start();
         }
         #endregion
@@ -480,9 +281,10 @@ namespace Richter
             {
                 // Ожидание всех задач с отменой через 3 секунды; только одна задача должна завершиться в указанное время.
                 // Примечание: WithCancellation - мой метод расширения, описанный позднее в этой главе.
-                // await Task.WhenAll(tasks).WithCancellation(new CancellationTokenSource(3000).Token);
+                //await Task.WhenAll(tasks).WithCancellation(new CancellationTokenSource(3000).Token);
+                
             }
-            catch (OperationCanceledException) 
+            catch (OperationCanceledException)
             {
             }
             // Запрос информации о незавершенных задачах и их сортировка по убыванию продолжительности ожидания
@@ -493,7 +295,8 @@ namespace Richter
         }
         #endregion
 
-        #region Асинхронные функции в FCL
+        #region Асинхронные функции в FCL 
+        // нигде не используется, просто описан
         private static async Task<String> AwaitWebClient(Uri uri)
         {
             // Класс System.Net.WebClient поддерживает событийную модель асинхронного программирования
@@ -502,9 +305,18 @@ namespace Richter
             var tcs = new TaskCompletionSource<String>();
             // При завершении загрузки строки объект WebClient инициирует событие DownloadStringCompleted, завершающее TaskCompletionSource
             wc.DownloadStringCompleted += (s, e) => {
-                if (e.Cancelled) tcs.SetCanceled();
-                else if (e.Error != null) tcs.SetException(e.Error);
-                else tcs.SetResult(e.Result);
+                if (e.Cancelled)
+                {
+                    tcs.SetCanceled();
+                }
+                else if (e.Error != null)
+                {
+                    tcs.SetException(e.Error);
+                }
+                else
+                {
+                    tcs.SetResult(e.Result);
+                }
             };
             // Начало асинхронной операции
             wc.DownloadStringAsync(uri);
@@ -515,18 +327,38 @@ namespace Richter
         }
         #endregion
 
+        #region
+        private static async Task<String> IssueClientRequestAsync(String serverName, String message)
+        {
+            using (var pipe = new NamedPipeClientStream(serverName, "PipeName", PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.WriteThrough))
+            {
+                pipe.Connect(); // Прежде чем задавать ReadMode, необходимо
+                pipe.ReadMode = PipeTransmissionMode.Message; // вызвать Connect. Асинхронная отправка данных серверу
+                Byte[] request = Encoding.UTF8.GetBytes(message);
+                await pipe.WriteAsync(request, 0, request.Length);
+                // Асинхронное чтение ответа сервера
+                Byte[] response = new Byte[1000];
+                Int32 bytesRead = await pipe.ReadAsync(response, 0, response.Length);
+                return Encoding.UTF8.GetString(response, 0, bytesRead);
+            } // Закрытие канала
+        }
+        #endregion
+
         #region Другие возможности асинхронных функций
+        // Task.Run вызывается в потоке графического интерфейса
+        /*Task.Run(async () => {
+             // Этот код выполняется в потоке из пула
+             // TODO: Подготовительные вычисления...
+             await XxxAsync(); // Инициирование асинхронной операции
+                               // Продолжение обработки...
+        });*/
+
         private static async void StartServer()
         {
             while (true)
             {
                 string c_pipeName = null;
-                var pipe = new NamedPipeServerStream(
-                    c_pipeName,
-                    PipeDirection.InOut,
-                    1,
-                    PipeTransmissionMode.Message,
-                    PipeOptions.Asynchronous | PipeOptions.WriteThrough);
+                var pipe = new NamedPipeServerStream(c_pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous | PipeOptions.WriteThrough);
                 // Асинхронный прием клиентского подключения. ПРИМЕЧАНИЕ: NamedPipeServerStream использует старую модель асинхронного программирования.
                 // Я преобразую ее к новой модели Task при помощи метода FromAsync класса TaskFactory.
                 await Task.Factory.FromAsync(pipe.BeginWaitForConnection, pipe.EndWaitForConnection, null);
@@ -535,24 +367,25 @@ namespace Richter
             }
         }
 
-        public static async Task GoAnother()
+        public static async Task Go_AnotherAbilitiesOfAsyncFunctions()
         {
             // Запуск сервера немедленно возвращает управление, потому что сервер ожидает клиентские запросы в асинхронном режиме
-            StartServer(); // Возвращает void, компилятор выдает предупреждение. Создание набора асинхронных клиентских запросов;
-                           // сохраняем Task<String> каждого клиента.
+            StartServer(); // Возвращает void, компилятор выдает предупреждение. Создание набора асинхронных клиентских запросов; сохраняем Task<String> каждого клиента.
             List<Task<String>> requests = new List<Task<String>>(10000);
             for (Int32 n = 0; n < requests.Capacity; n++)
             {
-                //requests.Add(IssueClientRequestAsync("localhost", "Request #" + n));
+                requests.Add(IssueClientRequestAsync("localhost", "Request #" + n));
             }
             // Асинхронное ожидание завершения всех клиентских запросов. ВНИМАНИЕ: если 1+ заданий выдадут исключение, WhenAll заново инициирует последнее исключение
             String[] responses = await Task.WhenAll(requests);
             // Обработка всех запросов
             for (Int32 n = 0; n < responses.Length; n++)
+            {
                 Console.WriteLine(responses[n]);
+            }
         }
 
-        public static async Task GoAnother2()
+        public static async Task Go_AnotherAbilitiesOfAsyncFunctions2()
         {
             // Запуск сервера немедленно возвращает управление, потому что сервер ожидает клиентские запросы в асинхронном режиме
             StartServer();
@@ -577,29 +410,7 @@ namespace Richter
         // Потоковые модели приложений (WPF)
 
         #region Отмена операций ввода-вывода
-        private struct Void { } // Из-за отсутствия необобщенного класса
-                                // TaskCompletionSource.
-        //private static async Task<TResult> WithCancellation<TResult>(this Task<TResult> originalTask, CancellationToken ct)
-        //{
-        //    // Создание объекта Task, завершаемого при отмене CancellationToken
-        //    var cancelTask = new TaskCompletionSource<Void>();
-        //    // При отмене CancellationToken завершить Task
-        //    using (ct.Register(t => ((TaskCompletionSource<Void>)t).TrySetResult(new Void()), cancelTask))
-        //    {
-        //        // Создание объекта Task, завершаемого при отмене исходного
-        //        // объекта Task или объекта Task от CancellationToken
-        //        Task any = await Task.WhenAny(originalTask, cancelTask.Task);
-        //        // Если какой-либо объект Task завершается из-за CancellationToken,
-        //        // инициировать OperationCanceledException
-        //        if (any == cancelTask.Task) ct.ThrowIfCancellationRequested();
-        //    }
-        //    // Выполнить await для исходного задания (синхронно); awaiting it
-        //    // если произойдет ошибка, выдать первое внутреннее исключение
-        //    // вместо AggregateException
-        //    return await originalTask;
-        //}
-
-        public static async Task GoCancelIO()
+        public static async Task Go_CancelIO()
         {
             // Создание объекта CancellationTokenSource, отменяющего себя через заданный промежуток времени в миллисекундах
             var cts = new CancellationTokenSource(5000); // Чтобы отменить ранее, вызовите cts.Cancel()
@@ -607,7 +418,9 @@ namespace Richter
             try
             {
                 // Я использую Task.Delay для тестирования; замените другим методом, возвращающим Task
-                // await Task.Delay(10000).WithCancellation(ct);
+                // Delay возвращает Task, а не Task<TResult>, поэтому .WithCancellation(ct) применить не получится
+                //await Task.Delay(10000).WithCancellation(ct);
+                //await Task.Delay(10000).WithCancellationEmpty(ct);
                 Console.WriteLine("Task completed");
             }
             catch (OperationCanceledException)
@@ -629,21 +442,26 @@ namespace Richter
         {
             // Далее вы увидите, что проблема решается объявлением этого поля volatile
             private static Boolean s_stopWorker = false;
+            
             public static void MainStrangeBehavior()
             {
                 Console.WriteLine("Main: letting worker run for 5 seconds");
                 Thread t = new Thread(Worker);
                 t.Start();
-                Thread.Sleep(5000);
+                Thread.Sleep(1);
                 s_stopWorker = true;
                 Console.WriteLine("Main: waiting for worker to stop");
                 t.Join();
             }
-            private static void Worker(Object o)
+
+            private static void Worker(Object o) // почему параметр, new Thread(Worker) - без параметра
             {
-                Int32 x = 0;
-                while (!s_stopWorker) x++;
-                Console.WriteLine("Worker: stopped when x={0}", x);
+                double x = 0;
+                while (!s_stopWorker) 
+                {
+                    x++; 
+                }
+                Console.WriteLine("Worker: stopped when x={0}", x/100000);
             }
         }
 
@@ -714,11 +532,14 @@ namespace Richter
         }
         #endregion
 
-        #region
+        #region MultiWebRequests
+        internal enum CoordinationStatus { AllDone, Timeout, Cancel };
+
         internal sealed class MultiWebRequests
         {
             // Этот класс Helper координирует все асинхронные операции
             private AsyncCoordinator m_ac = new AsyncCoordinator();
+            
             // Набор веб-серверов, к которым будут посылаться запросы. Хотя к этому словарю возможны одновременные обращения,
             // в синхронизации доступа нет необходимости, потому что ключи после создания доступны только для чтения
             private Dictionary<String, Object> m_servers = new Dictionary<String, Object> {
@@ -734,13 +555,13 @@ namespace Richter
                 foreach (var server in m_servers.Keys)
                 {
                     m_ac.AboutToBegin(1);
-                    httpClient.GetByteArrayAsync(server)
-                    .ContinueWith(task => ComputeResult(server, task));
+                    httpClient.GetByteArrayAsync(server).ContinueWith(task => ComputeResult(server, task));
                 }
-                // Сообщаем AsyncCoordinator, что все операции были инициированы и что он должен вызвать AllDone после завершения всех операций,
-                // вызова Cancel или тайм-аута
+                // Сообщаем AsyncCoordinator, что все операции были инициированы и 
+                // что он должен вызвать AllDone после завершения всех операций, вызова Cancel или тайм-аута
                 m_ac.AllBegun(AllDone, timeout);
             }
+
             private void ComputeResult(String server, Task<Byte[]> task)
             {
                 Object result;
@@ -756,11 +577,13 @@ namespace Richter
                 m_servers[server] = result;
                 m_ac.JustEnded();
             }
+
             // При вызове этого метода результаты игнорируются
             public void Cancel() 
             { 
                 m_ac.Cancel(); 
             }
+
             // Этот метод вызывается после получения ответа от всех веб-серверов, вызова Cancel или тайм-аута
             private void AllDone(CoordinationStatus status)
             {
@@ -798,11 +621,13 @@ namespace Richter
             private Int32 m_statusReported = 0; // 0=false, 1=true
             private Action<CoordinationStatus> m_callback;
             private Timer m_timer;
+
             // Этот метод ДОЛЖЕН быть вызван ДО инициирования операции
             public void AboutToBegin(Int32 opsToAdd = 1)
             {
                 Interlocked.Add(ref m_opCount, opsToAdd);
             }
+
             // Этот метод ДОЛЖЕН быть вызван ПОСЛЕ обработки результата
             public void JustEnded()
             {
@@ -811,6 +636,7 @@ namespace Richter
                     ReportStatus(CoordinationStatus.AllDone);
                 }
             }
+
             // Этот метод ДОЛЖЕН быть вызван ПОСЛЕ инициирования ВСЕХ операций
             public void AllBegun(Action<CoordinationStatus> callback, Int32 timeout = Timeout.Infinite)
             {
@@ -841,8 +667,6 @@ namespace Richter
                 }
             }
         }
-
-        internal enum CoordinationStatus { AllDone, Timeout, Cancel };
         #endregion
 
         #region Реализация простой циклической блокировки
@@ -869,7 +693,7 @@ namespace Richter
                 Volatile.Write(ref m_ResourceInUse, 0);
             }
         }
-
+        // создать конкуренцию из нескольких потоков
         public sealed class SomeResource
         {
             private SimpleSpinLock m_sl = new SimpleSpinLock();
@@ -1010,6 +834,7 @@ namespace Richter
             private AutoResetEvent m_lock = new AutoResetEvent(true);
             private Int32 m_owningThreadId = 0;
             private Int32 m_recursionCount = 0;
+            
             public void Enter()
             {
                 // Получаем идентификатор вызывающего потока
@@ -1372,7 +1197,7 @@ namespace Richter
         #endregion
 
         #region Асинхронная синхронизация
-        private static void ConcurrentExclusiveSchedulerDemo()
+        public static void ConcurrentExclusiveSchedulerDemo()
         {
             var cesp = new ConcurrentExclusiveSchedulerPair();
             var tfExclusive = new TaskFactory(cesp.ExclusiveScheduler);
@@ -1422,34 +1247,13 @@ namespace Richter
             #region Lock state and helper methods
             private Int32 m_state = 0;
 
-            private Boolean IsFree 
-            { 
-                get 
-                { 
-                    return m_state == 0; 
-                } 
-            }
+            private Boolean IsFree { get { return m_state == 0; } }
 
-            private Boolean IsOwnedByWriter 
-            { 
-                get 
-                { 
-                    return m_state == 1; 
-                } 
-            }
+            private Boolean IsOwnedByWriter { get { return m_state == 1; } }
 
-            private Boolean IsOwnedByReaders 
-            { 
-                get 
-                { 
-                    return m_state > 0; 
-                } 
-            }
+            private Boolean IsOwnedByReaders { get { return m_state > 0; } }
 
-            private Int32 AddReaders(Int32 count) 
-            { 
-                return m_state += count; 
-            }
+            private Int32 AddReaders(Int32 count) { return m_state += count; }
 
             private Int32 SubtractReader() 
             { 
@@ -1605,6 +1409,41 @@ namespace Richter
             и Consuming (потребление) могут быть перемешаны, но строка All items have been
             consumed (все элементы потреблены) всегда будет замыкать список вывода.
          */
+        #endregion
+
+        #region Microsoft
+        static Thread thread1, thread2;
+
+        public void ThreadingMicrosoft() 
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                Console.WriteLine("\n*********************\n");
+                thread1 = new Thread(ThreadProc);
+                thread1.Name = "Thread1";
+                thread1.Start();
+
+                thread2 = new Thread(ThreadProc);
+                thread2.Name = "Thread2";
+                thread2.Start();
+                Thread.Sleep(1000);
+            }
+        }
+
+        static void ThreadProc()
+        {
+            Console.WriteLine("Current thread: {0}", Thread.CurrentThread.Name);
+            if (Thread.CurrentThread.Name == "Thread1" && thread2.ThreadState != System.Threading.ThreadState.Unstarted)
+            {
+                thread2.Join();
+            }
+            //Console.WriteLine("----- Sleep -----");            
+            Thread.Sleep(500);
+            //Console.WriteLine("\nCurrent thread: {0}", Thread.CurrentThread.Name);
+            Console.WriteLine("Thread1: {0}", thread1.ThreadState);
+            Console.WriteLine("Thread2: {0}\n", thread2.ThreadState);
+            //Thread.ThreadState - методы, классы экземплярного, статического Thread
+        }
         #endregion
     }
 }

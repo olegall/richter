@@ -43,9 +43,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncFuncToStateMachineWrapper.cs" />
+    <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TaskLogger.cs" />
     <Compile Include="Threading.cs" />
+    <Compile Include="ThreadIO.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
