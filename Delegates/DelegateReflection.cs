@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Delegates
 {
@@ -34,22 +31,25 @@ namespace Delegates
                 "{0} TwoInt32s Subtract 123 321" +
                 "{0} OneString NumChars \"Hello there\"" +
                 "{0} OneString Reverse \"Hello there\"";
+
                 Console.WriteLine(usage, Environment.NewLine);
                 return;
             }
+
             // Преобразование аргумента delType в тип делегата
             Type delType = Type.GetType(args[0]);
             if (delType == null)
             {
                 Console.WriteLine("Invalid delType argument: " + args[0]);
-            return;
+                return;
             }
+
             Delegate d;
             try
             {
                 // Преобразование аргумента Arg1 в метод
-                MethodInfo mi =
-                typeof(DelegateReflection).GetTypeInfo().GetDeclaredMethod(args[1]);
+                MethodInfo mi = typeof(DelegateReflection).GetTypeInfo().GetDeclaredMethod(args[1]);
+
                 // Создание делегата, служащего оберткой статического метода
                 d = mi.CreateDelegate(delType);
             }
@@ -58,15 +58,16 @@ namespace Delegates
                 Console.WriteLine("Invalid methodName argument: " + args[1]);
                 return;
             }
-            // Создание массива, содержащего аргументы,
-            // передаваемые методу через делегат
+
+            // Создание массива, содержащего аргументы, передаваемые методу через делегат
             Object[] callbackArgs = new Object[args.Length /*2*/];
             if (d.GetType() == typeof(TwoInt32s))
             {
                 try
                 {
                     // Преобразование аргументов типа String в тип Int32
-                    for (Int32 a = 2; a < args.Length; a++) {
+                    for (Int32 a = 2; a < args.Length; a++) 
+                    {
                         //callbackArgs[a 2] = Int32.Parse(args[a]); 
                     }
                 }
@@ -76,6 +77,7 @@ namespace Delegates
                     return;
                 }
             }
+
             if (d.GetType() == typeof(OneString))
             {
                 // Простое копирование аргумента типа String
@@ -92,6 +94,7 @@ namespace Delegates
                 Console.WriteLine("Incorrect number of parameters specified.");
             }
         }
+
         // Метод обратного вызова, принимающий два аргумента типа Int32
         private static Object Add(Int32 n1, Int32 n2)
         {
@@ -101,8 +104,9 @@ namespace Delegates
         // Метод обратного вызова, принимающий два аргумента типа Int32
         private static Object Subtract(Int32 n1, Int32 n2)
         {
-            return n1 /*n2*/;
+            return n1 - n2;
         }
+
         // Метод обратного вызова, принимающий один аргумент типа String
         private static Object NumChars(String s1)
         {

@@ -1,16 +1,17 @@
 ﻿using System;
 using System.IO;
-using Richter;
 
 namespace Delegates
 {
     public class FamiliarityWithDelegates
     {
+        public delegate void Feedback(Int32 value);
+
         public static void StaticDelegateDemo()
         {
             Console.WriteLine("----- Static Delegate Demo -----");
             Counter(1, 3, null);
-            Counter(1, 3, new Feedback(/*Program.*/FeedbackToConsole));
+            Counter(1, 3, new Feedback(FeedbackToConsole));
             Counter(1, 3, new Feedback(FeedbackToMsgBox)); // Префикс "Program." не обязателен
             Console.WriteLine();
         }
