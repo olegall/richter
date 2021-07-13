@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Events
 {
@@ -11,9 +7,11 @@ namespace Events
     /// Реализация событий компилятором
     /// </summary>
     class RealizationOfEventsByCompiler
+    //class RealizationOfEventsByCompiler<T> where T: EventHandler<NewMailEventArgs>
     {
         // 1. ЗАКРЫТОЕ поле делегата, инициализированное значением null
         private EventHandler<NewMailEventArgs> NewMail = null;
+
         // 2. ОТКРЫТЫЙ метод add_Xxx (где Xxx – это имя события)
         // Позволяет объектам регистрироваться для получения уведомлений о событии
         public void add_NewMail(EventHandler<NewMailEventArgs> value)
@@ -22,15 +20,16 @@ namespace Events
             // делегата способом, безопасным в отношении потоков
             EventHandler<NewMailEventArgs> prevHandler;
             EventHandler<NewMailEventArgs> newMail = this.NewMail;
+
             do
             {
                 prevHandler = newMail;
-                EventHandler<NewMailEventArgs> newHandler =
-                (EventHandler<NewMailEventArgs>)Delegate.Combine(prevHandler, value);
-                newMail = Interlocked.CompareExchange<EventHandler<NewMailEventArgs>>(
-                ref this.NewMail, newHandler, prevHandler);
-            } while (newMail != prevHandler);
+                EventHandler<NewMailEventArgs> newHandler = (EventHandler<NewMailEventArgs>)Delegate.Combine(prevHandler, value);
+                newMail = Interlocked.CompareExchange<EventHandler<NewMailEventArgs>>(ref this.NewMail, newHandler, prevHandler);
+            } 
+            while (newMail != prevHandler);
         }
+
         // 3. ОТКРЫТЫЙ метод remove_Xxx (где Xxx – это имя события)
         // Позволяет объектам отменять регистрацию в качестве
         // получателей уведомлений о cобытии

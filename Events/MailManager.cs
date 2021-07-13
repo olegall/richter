@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Events
 {
@@ -12,25 +8,34 @@ namespace Events
     internal class NewMailEventArgs : EventArgs
     {
         private readonly String m_from, m_to, m_subject;
+
         public NewMailEventArgs(String from, String to, String subject)
         {
-            m_from = from; m_to = to; m_subject = subject;
+            m_from = from; 
+            m_to = to; 
+            m_subject = subject;
         }
+
         public String From { get { return m_from; } }
+
         public String To { get { return m_to; } }
+
         public String Subject { get { return m_subject; } }
     }
 
     public static class EventArgExtensions
     {
-        public static void Raise<TEventArgs>(this TEventArgs e,
-        Object sender, ref EventHandler<TEventArgs> eventDelegate)
+        public static void Raise<TEventArgs>(this TEventArgs e, Object sender, ref EventHandler<TEventArgs> eventDelegate)
         {
             // Копирование ссылки на поле делегата во временное поле
             // для безопасности в отношении потоков
-            EventHandler<TEventArgs> temp = Volatile.Read(ref eventDelegate);
+            EventHandler<TEventArgs> temp = Volatile.Read(ref eventDelegate); // пробрасывается наверх?
+
             // Если зарегистрированный метод заинтересован в событии, уведомите его
-            if (temp != null) temp(sender, e);
+            if (temp != null) 
+            { 
+                temp(sender, e);
+            }
         }
     }
 
@@ -48,9 +53,14 @@ namespace Events
             // Сохранить ссылку на делегата во временной переменной
             // для обеспечения безопасности потоков
             EventHandler<NewMailEventArgs> temp = Volatile.Read(ref NewMail);
+
             // Если есть объекты, зарегистрированные для получения
             // уведомления о событии, уведомляем их
-            if (temp != null) temp(this, e);
+            if (temp != null)
+            {
+                var a = this;
+                temp(this, e);
+            }
         }
 
         // Версия 2

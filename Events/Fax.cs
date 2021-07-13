@@ -5,7 +5,6 @@ namespace Events
     internal sealed class Fax
     {
         // Передаем конструктору объект MailManager
-
         public Fax(MailManager mm)
         {
             // Создаем экземпляр делегата EventHandler<NewMailEventArgs>,
@@ -13,6 +12,16 @@ namespace Events
             // Регистрируем обратный вызов для события NewMail объекта MailManager
             mm.NewMail += FaxMsg;
         }
+
+        // Этот метод может выполняться для отмены регистрации объекта Fax
+        // в качестве получтеля уведомлений о событии NewMail
+        public void Unregister(MailManager mm)
+        {
+            // Отменить регистрацию на уведомление о событии NewMail объекта
+            //MailManager.mm.NewMail -= FaxMsg;
+            mm.NewMail -= FaxMsg;
+        }
+
         // MailManager вызывает этот метод для уведомления
         // объекта Fax о прибытии нового почтового сообщения
         private void FaxMsg(Object sender, NewMailEventArgs e)
@@ -24,16 +33,7 @@ namespace Events
             // Обычно расположенный здесь код отправляет сообщение по факсу
             // Тестовая реализация выводит информацию на консоль
             Console.WriteLine("Faxing mail message:");
-            Console.WriteLine(" From={0}, To={1}, Subject={2}",
-            e.From, e.To, e.Subject);
-        }
-        // Этот метод может выполняться для отмены регистрации объекта Fax
-        // в качестве получтеля уведомлений о событии NewMail
-        public void Unregister(MailManager mm)
-        {
-            // Отменить регистрацию на уведомление о событии NewMail объекта
-            //MailManager.mm.NewMail -= FaxMsg;
+            Console.WriteLine(" From={0}, To={1}, Subject={2}", e.From, e.To, e.Subject);
         }
     }
-    
 }

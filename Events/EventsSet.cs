@@ -4,16 +4,16 @@ using System.Threading;
 
 namespace Events
 {
-    // Этот класс нужен для поддержания безопасности типа
-    // и кода при использовании EventSet
-    public sealed class EventKey : Object { }
+    // Этот класс нужен для поддержания безопасности типа и кода при использовании EventSet
+    public sealed class EventKey : Object 
+    {
+    }
 
     public sealed class EventSet
     {
         // Закрытый словарь служит для отображения EventKey -> Delegate
+        private readonly Dictionary<EventKey, Delegate> m_events = new Dictionary<EventKey, Delegate>();
 
-        private readonly Dictionary<EventKey, Delegate> m_events =
-        new Dictionary<EventKey, Delegate>();
         // Добавление отображения EventKey -> Delegate, если его не существует
         // И компоновка делегата с существующим ключом EventKey
         public void Add(EventKey eventKey, Delegate handler)
@@ -24,32 +24,40 @@ namespace Events
             m_events[eventKey] = Delegate.Combine(d, handler);
             Monitor.Exit(m_events);
         }
-        // Удаление делегата из EventKey (если он существует)
-        // и разрыв связи EventKey -> Delegate при удалении
+
+        // Удаление делегата из EventKey (если он существует) и разрыв связи EventKey -> Delegate при удалении
         // последнего делегата
         public void Remove(EventKey eventKey, Delegate handler)
         {
             Monitor.Enter(m_events);
-            // Вызов TryGetValue предотвращает выдачу исключения
-            // при попытке удаления делегата с отсутствующим ключом EventKey.
+            // Вызов TryGetValue предотвращает выдачу исключения при попытке удаления делегата с отсутствующим ключом EventKey.
             Delegate d;
             if (m_events.TryGetValue(eventKey, out d))
             {
                 d = Delegate.Remove(d, handler);
-                // Если делегат остается, то установить новый ключ EventKey,
-                // иначе – удалить EventKey
-                if (d != null) m_events[eventKey] = d;
-                else m_events.Remove(eventKey);
+
+                // Если делегат остается, то установить новый ключ EventKey, иначе – удалить EventKey
+                if (d != null)
+                {
+                    m_events[eventKey] = d;
+                }
+                else
+                {
+                    m_events.Remove(eventKey);
+                }
             }
             Monitor.Exit(m_events);
         }
+
         // Информирование о событии для обозначенного ключа EventKey
         public void Raise(EventKey eventKey, Object sender, EventArgs e)
         {
-            // Не выдавать исключение при отсутствии ключа EventKey
             Delegate d;
             Monitor.Enter(m_events);
+
+            // Не выдавать исключение при отсутствии ключа EventKey
             m_events.TryGetValue(eventKey, out d);
+
             Monitor.Exit(m_events);
             if (d != null)
             {

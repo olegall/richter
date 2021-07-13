@@ -45,11 +45,13 @@
   <ItemGroup>
     <Compile Include="EventsSet.cs" />
     <Compile Include="Fax.cs" />
+    <Compile Include="ImplementInterfaceEvents.cs" />
     <Compile Include="MailManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RealizationOfEventsByCompiler.cs" />
     <Compile Include="TypeWithLotsOfEvents.cs" />
+    <Compile Include="WrapTwoInterfaceEvents.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
