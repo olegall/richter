@@ -29,6 +29,7 @@ namespace Reflection
             }
         }
 
+        // почему вызывается при запуске?
         public override String ToString()
         {
             return m_someField.ToString();

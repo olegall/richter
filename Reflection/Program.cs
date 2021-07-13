@@ -21,6 +21,8 @@ namespace Reflection
 
         static void Main(string[] args)
         {
+            ExceptionTree.Go();
+
             Console.WriteLine("*** LoadAssemAndShowPublicTypes ***");
             string dataAssembly = "System.Data, version=4.0.0.0, culture=neutral, PublicKeyToken=b77a5c561934e089";
             Wrapper.LoadAssemAndShowPublicTypes(dataAssembly);
@@ -70,14 +72,18 @@ namespace Reflection
             }
 
             Console.WriteLine();
-            Type t_ = typeof(SomeType);
-            BindToMemberThenInvokeTheMember(t_);
+            Type someTypeRefTest = typeof(SomeTypeRefTest);
+            RefTest(someTypeRefTest);
+
+            Type someType = typeof(SomeType);
+            BindToMemberThenInvokeTheMember(someType);
+
             Console.WriteLine();
 
-            BindToMemberCreateDelegateToMemberThenInvokeTheMember(t_);
+            BindToMemberCreateDelegateToMemberThenInvokeTheMember(someType);
             Console.WriteLine();
 
-            UseDynamicToBindAndInvokeTheMember(t_);
+            UseDynamicToBindAndInvokeTheMember(someType);
             Console.WriteLine();
 
             // Выводим размер кучи до отражения
@@ -131,17 +137,34 @@ namespace Reflection
             //Console.WriteLine(new String(' ', 3 * indent) + format, args);
         }
 
+        private static void RefTest(Type type)
+        {
+            // Создание экземпляра
+            Type ctorArgument = Type.GetType("Reflection.Foo");
+
+            ConstructorInfo ctor = type.GetTypeInfo().DeclaredConstructors.First(c => c.GetParameters()[0].ParameterType == ctorArgument);
+
+            Object[] args = new Object[] { new Foo { FooProp = 12 } };
+            var x1 = args[0]; // x before constructor called
+            Console.WriteLine(((Foo)args[0]).FooProp);
+            Object obj = ctor.Invoke(args); // навести мышью на args
+            var x2 = args[0]; // x after constructor called
+            Console.WriteLine(((Foo)args[0]).FooProp);
+            Console.WriteLine();
+        }
+
         private static void BindToMemberThenInvokeTheMember(Type type)
         {
             Console.WriteLine("BindToMemberThenInvokeTheMember");
 
             // Создание экземпляра
-            Type ctorArgument = Type.GetType("System.Int32&");
+            Type ctorArgument = Type.GetType("System.Int32&"); // что такое System.Int32&?
 
             // или typeof(Int32).MakeByRefType();
             ConstructorInfo ctor = type.GetTypeInfo().DeclaredConstructors.First(c => c.GetParameters()[0].ParameterType == ctorArgument);
             Object[] args = new Object[] { 12 }; // Аргументы конструктора
             Console.WriteLine("x before constructor called: " + args[0]); // Откуда watch знает что int? (object {int})
+            
             Object obj = ctor.Invoke(args);
             Console.WriteLine("Type: " + obj.GetType());
             Console.WriteLine("x after constructor returns: " + args[0]);
@@ -180,29 +203,27 @@ namespace Reflection
             ei.RemoveEventHandler(obj, eh);
         }
 
-        // Добавление метода обратного вызова для события
-        private static void EventCallback(Object sender, EventArgs e) 
-        {
-        }
-
-        private static void BindToMemberCreateDelegateToMemberThenInvokeTheMember(Type t)
+        private static void BindToMemberCreateDelegateToMemberThenInvokeTheMember(Type type)
         {
             Console.WriteLine("BindToMemberCreateDelegateToMemberThenInvokeTheMember");
+
             // Создание экземпляра (нельзя создать делегата для конструктора)
             Object[] args = new Object[] { 12 }; // Аргументы конструктора
             Console.WriteLine("x before constructor called: " + args[0]);
-            Object obj = Activator.CreateInstance(t, args);
-            Console.WriteLine("Type: " + obj.GetType().ToString());
+
+            Object someTypeObj = Activator.CreateInstance(type, args);
+            Console.WriteLine("Type: " + someTypeObj.GetType().ToString());
             Console.WriteLine("x after constructor returns: " + args[0]);
-            // ВНИМАНИЕ: нельзя создать делегата для поля.
-            // Вызов метода
-            MethodInfo mi = obj.GetType().GetTypeInfo().GetDeclaredMethod("ToString");
-            var toString = mi.CreateDelegate<Func<String>>(obj);
+
+            // ВНИМАНИЕ: нельзя создать делегата для поля. Вызов метода
+            MethodInfo mi = someTypeObj.GetType().GetTypeInfo().GetDeclaredMethod("ToString");
+            var toString = mi.CreateDelegate<Func<String>>(someTypeObj);
             String s = toString();
             Console.WriteLine("ToString: " + s);
+
             // Чтение и запись свойства
-            PropertyInfo pi = obj.GetType().GetTypeInfo().GetDeclaredProperty("SomeProp");
-            var setSomeProp = pi.SetMethod.CreateDelegate<Action<Int32>>(obj);
+            PropertyInfo pi = someTypeObj.GetType().GetTypeInfo().GetDeclaredProperty("SomeProp");
+            var setSomeProp = pi.SetMethod.CreateDelegate<Action<Int32>>(someTypeObj);
             try
             {
                 setSomeProp(0);
@@ -212,33 +233,34 @@ namespace Reflection
                 Console.WriteLine("Property set catch.");
             }
             setSomeProp(2);
-            var getSomeProp = pi.GetMethod.CreateDelegate<Func<Int32>>(obj);
+            var getSomeProp = pi.GetMethod.CreateDelegate<Func<Int32>>(someTypeObj);
             Console.WriteLine("SomeProp: " + getSomeProp());
+
             // Добавление и удаление делегата для события
-            EventInfo ei = obj.GetType().GetTypeInfo().GetDeclaredEvent("SomeEvent");
-            var addSomeEvent = ei.AddMethod.CreateDelegate<Action<EventHandler>>(obj);
+            EventInfo ei = someTypeObj.GetType().GetTypeInfo().GetDeclaredEvent("SomeEvent");
+            Action<EventHandler> addSomeEvent = ei.AddMethod.CreateDelegate<Action<EventHandler>>(someTypeObj);
             addSomeEvent(EventCallback);
-            var removeSomeEvent =
-            ei.RemoveMethod.CreateDelegate<Action<EventHandler>>(obj);
+            var removeSomeEvent = ei.RemoveMethod.CreateDelegate<Action<EventHandler>>(someTypeObj);
             removeSomeEvent(EventCallback);
         }
 
-        private static void UseDynamicToBindAndInvokeTheMember(Type t)
+        private static void UseDynamicToBindAndInvokeTheMember(Type type)
         {
             Console.WriteLine("UseDynamicToBindAndInvokeTheMember");
 
             // Создание экземпляра (dynamic нельзя использовать для вызова конструктора)
             Object[] args = new Object[] { 12 }; // Аргументы конструктора
             Console.WriteLine("x before constructor called: " + args[0]);
-            dynamic obj = Activator.CreateInstance(t, args);
-            Console.WriteLine("Type: " + obj.GetType().ToString());
+
+            dynamic someTypeObj = Activator.CreateInstance(type, args);
+            Console.WriteLine("Type: " + someTypeObj.GetType().ToString());
             Console.WriteLine("x after constructor returns: " + args[0]);
 
             // Чтение и запись поля
             try
             {
-                obj.m_someField = 5;
-                Int32 v = (Int32)obj.m_someField;
+                someTypeObj.m_someField = 5;
+                Int32 v = (Int32)someTypeObj.m_someField;
                 Console.WriteLine("someField: " + v);
             }
             catch (RuntimeBinderException e)
@@ -246,25 +268,32 @@ namespace Reflection
                 // Получает управление, потому что поле является приватным
                 Console.WriteLine("Failed to access field: " + e.Message);
             }
+
             // Вызов метода
-            String s = (String)obj.ToString();
+            String s = (String)someTypeObj.ToString();
             Console.WriteLine("ToString: " + s);
+
             // Чтение и запись свойства
             try
             {
-                obj.SomeProp = 0;
+                someTypeObj.SomeProp = 0; // если поставить точку останова в SomeType напротив throw new ArgumentOutOfRangeException("value");, то остановится, если нет - то нет
             }
-            catch (ArgumentOutOfRangeException)
+            catch (ArgumentOutOfRangeException) 
             {
                 Console.WriteLine("Property set catch.");
             }
-            obj.SomeProp = 2;
-            Int32 val = (Int32)obj.SomeProp;
+            someTypeObj.SomeProp = 2;
+            Int32 val = (Int32)someTypeObj.SomeProp;
             Console.WriteLine("SomeProp: " + val);
+
             // Добавление и удаление делегата для события
-            obj.SomeEvent += new EventHandler(EventCallback);
+            someTypeObj.SomeEvent += new EventHandler(EventCallback);
             //obj.SomeEvent = new EventHandler(EventCallback); // ошибка
         }
-    }
 
+        // Добавление метода обратного вызова для события
+        private static void EventCallback(Object sender, EventArgs e)
+        {
+        }
+    }
 }
