@@ -22,7 +22,8 @@ namespace Generics
 
             Console.WriteLine("\n*** Обобщенные методы ***");
             GenericMethods.CallingSwap();
-
+            GenericMethods.CallingSwapUsingInference();
+            GenericMethods.RunDisplays();
             Console.ReadLine();
         }
     }

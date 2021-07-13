@@ -62,6 +62,7 @@ namespace Generics
         {
             Display("Jeff"); // Вызывает Display(String)
             Display(123); // Вызывает Display<T>(T)
+            Display<int>(123); // Вызывает Display<T>(T)
             Display<String>("Aidan"); // Вызывает Display<T>(T)
         }
     }

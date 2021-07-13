@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Generics
 {
@@ -26,13 +23,16 @@ namespace Generics
             // Создает и инициализирует тип List<String> (реализующий IList<String>)
             IList<String> ls = new List<String>();
             ls.Add("A String");
+
             // Преобразует IList<String> в IList<Object>
             IList<Object> lo = ConvertIList<String, Object>(ls);
+
             // Преобразует IList<String> в IList<IComparable>
             IList<IComparable> lc = ConvertIList<String, IComparable>(ls);
+
             // Преобразует IList<String> в IList<IComparable<String>>
-            IList<IComparable<String>> lcs =
-            ConvertIList<String, IComparable<String>>(ls);
+            IList<IComparable<String>> lcs = ConvertIList<String, IComparable<String>>(ls);
+
             // Преобразует IList<String> в IList<String>
             IList<String> ls2 = ConvertIList<String, String>(ls);
             

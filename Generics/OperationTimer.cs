@@ -8,6 +8,7 @@ namespace Generics
         private Int64 m_startTime;
         private String m_text;
         private Int32 m_collectionCount;
+
         public OperationTimer(String text)
         {
             PrepareForOperation();

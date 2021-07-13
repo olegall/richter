@@ -19,10 +19,8 @@ namespace Generics
         {
             List<DateTime> dt = new List<DateTime>();
             //DateTimeList dt = new DateTimeList();
-            Boolean sameType = (typeof(List<DateTime>) == typeof(DateTimeList));
-
-            
-            Boolean sameType2 = (typeof(List<DateTime>) == typeof(DateTimeList));
+            Boolean sameType = typeof(List<DateTime>) == typeof(DateTimeList);
+            Boolean sameType2 = typeof(List<DateTime>) == typeof(DateTimeList);
         }
     }
 
@@ -35,12 +33,11 @@ namespace Generics
             var dtl = List<DateTime>();
         
         }
+
         // сгенерирован
         private static object List<T>()
         {
             throw new NotImplementedException();
         }
     }
-
-
 }

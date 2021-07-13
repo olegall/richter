@@ -18,9 +18,17 @@ namespace Generics
         private Point[] m_vertices;
 
         // Тип свойства Current в IEnumerator<Point> - это Point
-        public Point Current { get { return new Point(); } }
+        public Point Current 
+        { 
+            get 
+            { 
+                return new Point(); 
+            } 
+        }
 
-        public void Dispose() { }
+        public void Dispose() 
+        { 
+        }
     }
 
     class GenericInterfaces

@@ -1,4 +1,6 @@
-﻿namespace Generics
+﻿using System;
+
+namespace Generics
 {
     /// <summary>
     /// Ограничения конструктора
@@ -12,6 +14,18 @@
             // это ограничение требует, чтобы у всех указанных ссылочных типов
             // также был открытый конструктор без параметров
             return new T();
+        }
+
+        public static void Foo()
+        {
+        }
+    }
+    
+    internal sealed class ConstructorConstraint
+    {
+        public static Int32 Factory2()
+        {
+            return new Int32();
         }
     }
 }

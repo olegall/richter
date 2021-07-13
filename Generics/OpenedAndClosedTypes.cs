@@ -8,6 +8,18 @@ namespace Generics
     {
     }
 
+    internal sealed class DictionaryStringKey<TKey, TValue> : Dictionary<String, TValue>
+    {
+    }
+
+    //internal sealed class DictionaryStringKey : Dictionary<String, TValue>
+    //{
+    //}
+
+    //internal sealed class DictionaryStringKey2<>
+    //{
+    //}
+
     /// <summary>
     /// Открытые и закрытые типы
     /// </summary>
@@ -18,19 +30,24 @@ namespace Generics
             Object o = null;
             // Dictionary<,> — открытый тип с двумя параметрами типа
             Type t = typeof(Dictionary<,>);
-            // Попытка создания экземпляра этого типа (неудачная)
-            o = CreateInstance(t);
-            Console.WriteLine();
-            // DictionaryStringKey<> — открытый тип с одним параметром типа
 
-            t = typeof(DictionaryStringKey<>);
             // Попытка создания экземпляра этого типа (неудачная)
             o = CreateInstance(t);
             Console.WriteLine();
+
+            // DictionaryStringKey<> — открытый тип с одним параметром типа
+            t = typeof(DictionaryStringKey<>);
+
+            // Попытка создания экземпляра этого типа (неудачная)
+            o = CreateInstance(t);
+            Console.WriteLine();
+
             // DictionaryStringKey<Guid> — это закрытый тип
             t = typeof(DictionaryStringKey<Guid>);
+            
             // Попытка создания экземпляра этого типа (удачная)
             o = CreateInstance(t);
+
             // Проверка успешности попытки
             Console.WriteLine("Object type=" + o.GetType());
         }
