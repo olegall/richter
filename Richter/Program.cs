@@ -3,7 +3,6 @@ using System.Threading;
 
 namespace Richter
 {
-    public delegate void Feedback(Int32 value);
     public class Program
     {
         static void Main(string[] args)
