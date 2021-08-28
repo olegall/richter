@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Exceptions
 {
@@ -149,7 +144,7 @@ namespace Exceptions
 
         // throw new Exception() в разных частях программы (конструктор, try, catch, ...)
 
-        public static void ExceptionWithoutTry()
+        public void ExceptionWithoutTry()
         { 
             throw new Exception();
             // следующий код будет недостижимым
@@ -199,7 +194,7 @@ namespace Exceptions
             }
         }
 
-        public static void TextException()
+        public void TextException()
         {
             try
             {

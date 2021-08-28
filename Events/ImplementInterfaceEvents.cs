@@ -20,14 +20,14 @@ namespace ImplementInterfaceEvents
         void ChangeShape()
         {
             // Do something here before the event…  
-
             OnShapeChanged(new MyEventArgs(/*arguments*/));
-
             // or do something here after the event.
         }
 
         protected virtual void OnShapeChanged(MyEventArgs e)
         {
+            // ?. - если ShapeChanged != null вызовется? иначе не вызовется?
+            // this тут что?
             ShapeChanged?.Invoke(this, e);
         }
     }

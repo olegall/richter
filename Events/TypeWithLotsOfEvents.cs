@@ -3,7 +3,9 @@
 namespace Events
 {
     // Определение типа, унаследованного от EventArgs для этого события
-    public class FooEventArgs : EventArgs { }
+    public class FooEventArgs : EventArgs 
+    {
+    }
 
     public class TypeWithLotsOfEvents
     {
@@ -23,21 +25,23 @@ namespace Events
 
         #region Code to support the Foo event (repeat this pattern for additional events)
         // Определение членов, необходимых для события Foo.
+
         // 2a. Создайте статический, доступный только для чтения объект для идентификации события.
         // Каждый объект имеет свой хеш-код для нахождения связанного списка делегатов события в коллекции.
         protected static readonly EventKey s_fooEventKey = new EventKey();
 
         // 2b. Определение для события методов доступа для добавления или удаления делегата из коллекции.
+        // когда сработает?
         public event EventHandler<FooEventArgs> Foo
         {
             // обязательно и add и remove
-            add 
-            { 
+            add
+            {
                 m_eventSet.Add(s_fooEventKey, value); 
             }
 
-            remove 
-            { 
+            remove
+            {
                 m_eventSet.Remove(s_fooEventKey, value); 
             }
         }
@@ -49,9 +53,9 @@ namespace Events
         }
 
         // 2d. Определение метода, преобразующего входные данные этого события
-        public void SimulateFoo() 
-        { 
-            OnFoo(new FooEventArgs()); 
+        public void SimulateFoo()
+        {
+            OnFoo(new FooEventArgs());
         }
         #endregion
     }

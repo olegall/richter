@@ -25,8 +25,7 @@ namespace Events
             Monitor.Exit(m_events);
         }
 
-        // Удаление делегата из EventKey (если он существует) и разрыв связи EventKey -> Delegate при удалении
-        // последнего делегата
+        // Удаление делегата из EventKey (если он существует) и разрыв связи EventKey -> Delegate при удалении последнего делегата
         public void Remove(EventKey eventKey, Delegate handler)
         {
             Monitor.Enter(m_events);
@@ -35,7 +34,6 @@ namespace Events
             if (m_events.TryGetValue(eventKey, out d))
             {
                 d = Delegate.Remove(d, handler);
-
                 // Если делегат остается, то установить новый ключ EventKey, иначе – удалить EventKey
                 if (d != null)
                 {
@@ -54,10 +52,8 @@ namespace Events
         {
             Delegate d;
             Monitor.Enter(m_events);
-
             // Не выдавать исключение при отсутствии ключа EventKey
             m_events.TryGetValue(eventKey, out d);
-
             Monitor.Exit(m_events);
             if (d != null)
             {
