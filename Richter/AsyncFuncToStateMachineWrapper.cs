@@ -29,15 +29,21 @@ namespace Richter
         {
             // Поля для построителя конечного автомата (Task) и его местонахождения
             public AsyncTaskMethodBuilder<String> m_builder;
+
             public Int32 m_state;
+
             // Аргумент и локальные переменные становятся полями:
             public Int32 m_argument, m_local, m_x;
-            public Type1 m_resultType1;
-            public Type2 m_resultType2;
-            // Одно поле на каждый тип Awaiter.
-            // В любой момент времени важно только одно из этих полей. В нем хранится ссылка на последний выполненный экземпляр await, который завершается асинхронно:
 
+            public Type1 m_resultType1;
+            
+            public Type2 m_resultType2;
+
+            // Одно поле на каждый тип Awaiter.
+            // В любой момент времени важно только одно из этих полей. 
+            // В нем хранится ссылка на последний выполненный экземпляр await, который завершается асинхронно:
             private TaskAwaiter<Type1> m_awaiterType1;
+            
             private TaskAwaiter<Type2> m_awaiterType2;
 
             public void SetStateMachine(IAsyncStateMachine stateMachine)
@@ -45,8 +51,10 @@ namespace Richter
                 throw new NotImplementedException();
             }
 
+            void MoveNext() { } // родной метод этого класса. конфликта с интерфейсным нет - почему?
+
             // Сам конечный автомат
-            void IAsyncStateMachine.MoveNext()
+            void IAsyncStateMachine.MoveNext() // интерфейсный метод
             {
                 String result = null; // Результат Task. Вставленный компилятором блок try гарантирует завершение задания конечного автомата
                 try
@@ -128,7 +136,7 @@ namespace Richter
                     }
                     result = "Done"; // То, что в конечном итоге должна вернуть асинхронная функция.
                 }
-                catch (Exception exception)
+                catch (Exception exception) // когда сработает catch?
                 {
                     // Необработанное исключение: задание конечного автомата завершается с исключением.
                     m_builder.SetException(exception);

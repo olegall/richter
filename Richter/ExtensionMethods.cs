@@ -16,11 +16,12 @@ namespace Richter
         {
             // Создание объекта Task, завершаемого при отмене CancellationToken
             var cancelTask = new TaskCompletionSource<Void>();
+
             // При отмене CancellationToken завершить Task
             using (ct.Register(t => ((TaskCompletionSource<Void>)t).TrySetResult(new Void()), cancelTask))
             {
                 // Создание объекта Task, завершаемого при отмене исходного объекта Task или объекта Task от CancellationToken
-                Task any = await Task.WhenAny(originalTask, cancelTask.Task);
+                Task any = await Task.WhenAny(originalTask, cancelTask.Task); // почему originalTask, cancelTask одного типа, а согласованы?
                 // Если какой-либо объект Task завершается из-за CancellationToken, инициировать OperationCanceledException
                 if (any == cancelTask.Task)
                 {

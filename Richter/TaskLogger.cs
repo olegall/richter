@@ -10,7 +10,9 @@ namespace Richter
     public static class TaskLogger
     {
         public enum TaskLogLevel { None, Pending }
+
         public static TaskLogLevel LogLevel { get; set; }
+
         public sealed class TaskLogEntry
         {
             public Task Task { get; internal set; }
@@ -21,13 +23,12 @@ namespace Richter
             public Int32 CallerLineNumber { get; internal set; }
             public override string ToString()
             {
-                return String.Format("LogTime={0}, Tag={1}, Member={2}, File={3}({4})",
-                LogTime, Tag ?? "(none)", CallerMemberName, CallerFilePath,
-                CallerLineNumber);
+                return String.Format("LogTime={0}, Tag={1}, Member={2}, File={3}({4})", LogTime, Tag ?? "(none)", CallerMemberName, CallerFilePath, CallerLineNumber);
             }
         }
 
         private static readonly ConcurrentDictionary<Task, TaskLogEntry> s_log = new ConcurrentDictionary<Task, TaskLogEntry>();
+
         public static IEnumerable<TaskLogEntry> GetLogEntries()
         {
             return s_log.Values;
@@ -50,7 +51,9 @@ namespace Richter
             [CallerFilePath] String callerFilePath = null,
             [CallerLineNumber] Int32 callerLineNumber = 1)
         {
-            if (LogLevel == TaskLogLevel.None) return task;
+            if (LogLevel == TaskLogLevel.None) 
+                return task;
+
             var logEntry = new TaskLogEntry
             {
                 Task = task,
@@ -60,12 +63,14 @@ namespace Richter
                 CallerFilePath = callerFilePath,
                 CallerLineNumber = callerLineNumber
             };
+
             s_log[task] = logEntry;
-            task.ContinueWith(t => {
-                TaskLogEntry entry;
-                s_log.TryRemove(t, out entry);
-            },
-            TaskContinuationOptions.ExecuteSynchronously);
+
+            task.ContinueWith(t => { 
+                TaskLogEntry entry; 
+                s_log.TryRemove(t, out entry); 
+            }, TaskContinuationOptions.ExecuteSynchronously);
+
             return task;
         }
     }

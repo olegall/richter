@@ -14,35 +14,6 @@ namespace Richter
     class Threading
     {
         #region Скоординированная отмена
-        public void CoordinatedCancel() 
-        {
-            CancellationTokenSource cts = new CancellationTokenSource();
-            // Передаем операции CancellationToken и число
-            ThreadPool.QueueUserWorkItem(o => Count(cts.Token, 10));
-            Console.WriteLine("Press <Enter> to cancel the operation.");
-            Console.ReadLine();
-            cts.Cancel();
-            // Если метод Count уже вернул управления. Cancel не оказывает никакого эффекта.
-            // Cancel немедленно возвращает управление, метод продолжает работу...
-
-            // Создание объекта CancellationTokenSource
-            var cts1 = new CancellationTokenSource();
-            cts1.Token.Register(() => Console.WriteLine("cts1 canceled")/* сработает, когда вызовется cts1.Cancel() */); 
-
-            // Создание второго объекта CancellationTokenSource
-            var cts2 = new CancellationTokenSource();
-            cts2.Token.Register(() => Console.WriteLine("cts2 canceled")/* сработает, когда вызовется cts2.Cancel(), но сначала - linked */);
-
-            // Создание нового объекта CancellationTokenSource, отменяемого при отмене cts1 или cts2
-            var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts1.Token, cts2.Token);
-            linkedCts.Token.Register(() => Console.WriteLine("linkedCts canceled")/* сработает, когда вызовется cts2.Cancel() */);
-
-            // Отмена одного из объектов CancellationTokenSource (я выбрал cts2)
-            cts2.Cancel();
-            // Показываем, какой из объектов CancellationTokenSource был отменен
-            Console.WriteLine("cts1 canceled={0}, cts2 canceled={1}, linkedCts={2}", cts1.IsCancellationRequested, cts2.IsCancellationRequested, linkedCts.IsCancellationRequested);
-        }
-
         private static void Count(CancellationToken token, Int32 countTo)
         {
             for (Int32 count = 0; count < countTo; count++)
@@ -53,10 +24,60 @@ namespace Richter
                     break; // Выход их цикла для остановки операции
                 }
                 Console.WriteLine(count);
-                Thread.Sleep(100); // Для демонстрационных целей просто ждем
+                Thread.Sleep(1000); // Для демонстрационных целей просто ждем
             }
             Console.WriteLine("Count is done");
         }
+
+        public void CancelCount()
+        {
+            CancellationTokenSource cts = new CancellationTokenSource();
+            // Передаем операции CancellationToken и число
+            ThreadPool.QueueUserWorkItem(o => Count(cts.Token, 10));
+            Console.WriteLine("Press <Enter> to cancel the operation.");
+            Console.ReadLine();
+            cts.Cancel();
+            // Если метод Count уже вернул управления. Cancel не оказывает никакого эффекта.
+            // Cancel немедленно возвращает управление, метод продолжает работу...            
+            Console.WriteLine("Подождите...");
+            Thread.Sleep(3000);
+        }
+
+        public void CoordinatedCancel()
+        {
+            // Создание объекта CancellationTokenSource
+            var cts1 = new CancellationTokenSource();
+            Action a1 = () => // не сработает, т.к. не вызывается cts1.Cancel()
+            {
+                Console.WriteLine("cts1 canceled");
+            };
+            cts1.Token.Register(a1);
+
+            // Создание второго объекта CancellationTokenSource
+            var cts2 = new CancellationTokenSource();
+            Action a2 = () => // сработает, когда вызовется cts2.Cancel(), но сначала - linked
+            {
+                Console.WriteLine("cts2 canceled");
+            };
+            cts2.Token.Register(a2);
+
+            // Создание нового объекта CancellationTokenSource, отменяемого при отмене cts1 или cts2
+            CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts1.Token, cts2.Token);
+            Action linked = () => // сработает, когда вызовется cts1.Cancel() или cts2.Cancel()
+            {
+                Console.WriteLine("linkedCts canceled");
+            };
+            linkedCts.Token.Register(linked);
+
+            // Отмена одного из объектов CancellationTokenSource (я выбрал cts2)
+            cts1.Cancel(); // сработает коллбэк linked
+            //cts2.Cancel(); // сработает коллбэк linked
+
+            // Показываем, какой из объектов CancellationTokenSource был отменен
+            Console.WriteLine("cts1 canceled={0}, cts2 canceled={1}, linkedCts={2}", cts1.IsCancellationRequested, cts2.IsCancellationRequested, linkedCts.IsCancellationRequested);
+        }
+
+
         #endregion
 
         private static Int32 Sum(Int32 n)
@@ -89,9 +110,11 @@ namespace Richter
         public void EndTask() 
         {
             // Создание задания Task (оно пока не выполняется)
-            Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), 10);
+            Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), 10); 
+
             // Можно начать выполнение задания через некоторое время
             t.Start();
+
             // Можно ожидать завершения задания в явном виде
             // если закомментировать - результат почему-то тот же
             t.Wait(); // ПРИМЕЧАНИЕ. Существует перегруженная версия, принимающая тайм-аут/CancellationToken

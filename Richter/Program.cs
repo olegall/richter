@@ -8,8 +8,13 @@ namespace Richter
         static void Main(string[] args)
         {
             #region Threading
+            // TaskCreationOptions
+            // TaskScheduler
+
             var threading = new Threading();
 
+            //Console.WriteLine("\n*** CancelCount ***");
+            //threading.CancelCount();
             //Console.WriteLine("\n*** Скоординированная отмена ***");
             //threading.CoordinatedCancel();
 
