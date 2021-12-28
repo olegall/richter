@@ -21,21 +21,25 @@ namespace Richter
 
         private static void ChangeBackgroundProcessing(Boolean process, Boolean start)
         {
-            Boolean ok = process ? SetPriorityClass(GetCurrentWin32ProcessHandle(), start ? ProcessBackgroundMode.Start : ProcessBackgroundMode.End)
-                : SetThreadPriority(GetCurrentWin32ThreadHandle(), start ? ThreadBackgroundgMode.Start : ThreadBackgroundgMode.End);
-            if (!ok) throw new Win32Exception();
+            Boolean ok = process ? 
+                SetPriorityClass(GetCurrentWin32ProcessHandle(), start ? ProcessBackgroundMode.Start : ProcessBackgroundMode.End) :
+                SetThreadPriority(GetCurrentWin32ThreadHandle(), start ? ThreadBackgroundgMode.Start : ThreadBackgroundgMode.End);
+
+            if (!ok) 
+                throw new Win32Exception();
         }
 
         // Эта структура позволяет инструкции using выйти из режима фоновой обработки
         public struct BackgroundProcessingDisposer : IDisposable
         {
             private readonly Boolean m_process;
+
             public BackgroundProcessingDisposer(Boolean process)
             {
                 m_process = process;
             }
 
-            public void Dispose()
+            public void Dispose() // называется Dispose, т.к. общепринятое название. Будут искать по имени этого метода
             {
                 EndBackgroundProcessing(m_process);
             }

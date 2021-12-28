@@ -26,12 +26,13 @@ namespace Reflection
             Console.WriteLine("*** LoadAssemAndShowPublicTypes ***");
             string dataAssembly = "System.Data, version=4.0.0.0, culture=neutral, PublicKeyToken=b77a5c561934e089";
             Wrapper.LoadAssemAndShowPublicTypes(dataAssembly);
+            Wrapper.SomeMethod(new object());
 
-            //var a1 = new Dictionary<,>();
-            var a2 = new Dictionary<object,object>();
-            var a3 = new Dictionary<string,string>();
-            var a4 = typeof(Dictionary<,>);
-            var a5 = typeof(Dictionary<object,object>);
+            //var res1 = new Dictionary<,>();
+            var res2 = new Dictionary<object, object>();
+            var res3 = new Dictionary<string, string>();
+            var res4 = typeof(Dictionary<,>);
+            var res5 = typeof(Dictionary<object, object>);
 
             // Получаем ссылку на объект Type обобщенного типа
             // если закомментировать объявленный здесь Dictionary - перейдёт на System.Collections.Generic.Dictionary. Почему?
@@ -52,6 +53,7 @@ namespace Reflection
             foreach (Assembly a in assemblies.Where(x => x.FullName.Contains("System.Data")))
             {
                 Show(0, "Assembly: {0}", a);
+
                 // Поиск типов в сборке
                 foreach (Type t in a.ExportedTypes)
                 {
@@ -77,7 +79,6 @@ namespace Reflection
 
             Type someType = typeof(SomeType);
             BindToMemberThenInvokeTheMember(someType);
-
             Console.WriteLine();
 
             BindToMemberCreateDelegateToMemberThenInvokeTheMember(someType);
@@ -94,9 +95,8 @@ namespace Reflection
             {
                 // Игнорируем обобщенные типы
                 if (t.IsGenericTypeDefinition) 
-                { 
                     continue; 
-                }
+
                 MethodBase[] mb = t.GetMethods(c_bf);
                 methodInfos.AddRange(mb);
             }
@@ -105,8 +105,7 @@ namespace Reflection
             Console.WriteLine("# of methods={0:N0}", methodInfos.Count);
             Show("After building cache of MethodInfo objects");
 
-            // Создаем кэш дескрипторов RuntimeMethodHandles
-            // для всех объектов MethodInfo
+            // Создаем кэш дескрипторов RuntimeMethodHandles для всех объектов MethodInfo
             List<RuntimeMethodHandle> methodHandles = methodInfos.ConvertAll<RuntimeMethodHandle>(mb => mb.MethodHandle);
             Show("Holding MethodInfo and RuntimeMethodHandle cache");
 
@@ -145,9 +144,11 @@ namespace Reflection
             ConstructorInfo ctor = type.GetTypeInfo().DeclaredConstructors.First(c => c.GetParameters()[0].ParameterType == ctorArgument);
 
             Object[] args = new Object[] { new Foo { FooProp = 12 } };
+
             var x1 = args[0]; // x before constructor called
             Console.WriteLine(((Foo)args[0]).FooProp);
             Object obj = ctor.Invoke(args); // навести мышью на args
+
             var x2 = args[0]; // x after constructor called
             Console.WriteLine(((Foo)args[0]).FooProp);
             Console.WriteLine();
@@ -181,18 +182,19 @@ namespace Reflection
 
             // Чтение и запись свойства
             PropertyInfo pi = obj.GetType().GetTypeInfo().GetDeclaredProperty("SomeProp");
+
             try
             {
                 pi.SetValue(obj, 0, null);
             }
             catch (TargetInvocationException e)
             {
-                if (e.InnerException.GetType() != typeof(ArgumentOutOfRangeException)) 
-                { 
-                    throw; 
-                }
+                if (e.InnerException.GetType() != typeof(ArgumentOutOfRangeException))
+                    throw;
+
                 Console.WriteLine("Property set catch.");
             }
+
             pi.SetValue(obj, 2, null);
             Console.WriteLine("SomeProp: " + pi.GetValue(obj, null));
             
@@ -232,15 +234,19 @@ namespace Reflection
             {
                 Console.WriteLine("Property set catch.");
             }
+
             setSomeProp(2);
+
             var getSomeProp = pi.GetMethod.CreateDelegate<Func<Int32>>(someTypeObj);
             Console.WriteLine("SomeProp: " + getSomeProp());
 
             // Добавление и удаление делегата для события
-            EventInfo ei = someTypeObj.GetType().GetTypeInfo().GetDeclaredEvent("SomeEvent");
-            Action<EventHandler> addSomeEvent = ei.AddMethod.CreateDelegate<Action<EventHandler>>(someTypeObj);
+            EventInfo eventInfo = someTypeObj.GetType().GetTypeInfo().GetDeclaredEvent("SomeEvent");
+
+            Action<EventHandler> addSomeEvent = eventInfo.AddMethod.CreateDelegate<Action<EventHandler>>(someTypeObj);
             addSomeEvent(EventCallback);
-            var removeSomeEvent = ei.RemoveMethod.CreateDelegate<Action<EventHandler>>(someTypeObj);
+
+            Action<EventHandler> removeSomeEvent = eventInfo.RemoveMethod.CreateDelegate<Action<EventHandler>>(someTypeObj);
             removeSomeEvent(EventCallback);
         }
 
@@ -282,7 +288,8 @@ namespace Reflection
             {
                 Console.WriteLine("Property set catch.");
             }
-            someTypeObj.SomeProp = 2;
+
+            someTypeObj.SomeProp = 2; // можно навесить любое св-во, т.к. dynamic
             Int32 val = (Int32)someTypeObj.SomeProp;
             Console.WriteLine("SomeProp: " + val);
 

@@ -33,9 +33,8 @@ namespace Delegates
         }
     }
 
-    // нельзя объявить в пространстве
-    // private delegate String GetStatusNamespace();
-    
+    // private delegate String GetStatusNamespace(); // нельзя объявить в пространстве
+
     public class AdditionalMeans
     {
         // объявляется только в классе. в методе нельзя

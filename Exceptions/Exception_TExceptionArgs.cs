@@ -9,10 +9,10 @@ namespace Exceptions
     {
         public virtual String Message 
         { 
-            get 
+            get
             { 
-                return String.Empty; 
-            } 
+                return String.Empty;
+            }
         }
     }
 
@@ -20,6 +20,7 @@ namespace Exceptions
     public sealed class Exception<TExceptionArgs> : Exception, ISerializable where TExceptionArgs : ExceptionArgs
     {
         private const String c_args = "Args"; // Для (де)сериализации
+
         private readonly TExceptionArgs m_args;
         
         public TExceptionArgs Args 
@@ -29,8 +30,9 @@ namespace Exceptions
                 return m_args; 
             } 
         }
-        
+                        // 2 параметра                                                  // 3 параметра
         public Exception(String message = null, Exception innerException = null) : this(null, message, innerException) 
+                                                                                   // по F12 переходим в основной конструктор
         {
         }
 
@@ -39,7 +41,7 @@ namespace Exceptions
             m_args = args;
         }
 
-        // Конструктор для десериализации; так как класс запечатан, конструктор закрыт. Для незапечатанного класса конструктор должен быть защищенным
+        // Конструктор для десериализации; так как класс запечатан, конструктор закрыт. (я. почему?) Для незапечатанного класса конструктор должен быть защищенным
         [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
         private Exception(SerializationInfo info, StreamingContext context) : base(info, context)
         {
@@ -66,7 +68,10 @@ namespace Exceptions
         public override Boolean Equals(Object obj)
         {
             Exception<TExceptionArgs> other = obj as Exception<TExceptionArgs>;
-            if (obj == null) return false;
+
+            if (obj == null) 
+                return false;
+
             return Object.Equals(m_args, other.m_args) && base.Equals(obj);
         }
 

@@ -7,11 +7,12 @@ namespace Exceptions
     public static class SomeType
     {
         private static Object s_myLockObject = new Object();
+
         public static void SomeMethod()
         {
-            Monitor.Enter(s_myLockObject); // В случае исключения произойдет ли
-                                           // блокировка? Если да, то этот режим
-                                           // будет невозможно отключить!
+            // В случае исключения произойдет ли блокировка? Если да, то этот режим будет невозможно отключить!
+            Monitor.Enter(s_myLockObject); // операции над объектом, который между Enter и Exit потокобезопасны
+
             try
             {
                 // Безопасная в отношении потоков операция
@@ -27,13 +28,16 @@ namespace Exceptions
     public static class SomeType2
     {
         private static Object s_myLockObject = new Object();
+
         public static void SomeMethod()
         {
             Boolean lockTaken = false; // Предполагаем, что блокировки нет
+
             try
             {
                 // Это работает вне зависимости от наличия исключения!
-                Monitor.Enter(s_myLockObject, ref lockTaken);
+                Monitor.Enter(s_myLockObject, ref lockTaken); // раз передаём ref lockTaken, значит модифицируется?
+
                 // Потокобезопасная операция
             }
             finally
@@ -61,8 +65,7 @@ namespace Exceptions
             }
             finally
             {
-                // В блоке finally размещается код очистки, гарантирующий
-                // закрытие файла независимо от того, возникло исключение
+                // В блоке finally размещается код очистки, гарантирующий закрытие файла независимо от того, возникло исключение
                 // (например, если первый байт файла равен 0) или нет
                 fs.Close();
             }

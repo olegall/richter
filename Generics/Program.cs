@@ -6,6 +6,8 @@ namespace Generics
     {
         static void Main(string[] args)
         {
+            AdditionalRestrictions.CallingConvertIList();
+
             Console.WriteLine("Initial");
             Wrapper.ValueTypePerfTest();
             Wrapper.ReferenceTypePerfTest();
@@ -18,13 +20,15 @@ namespace Generics
             
             Console.WriteLine("\n*** Обобщенные типы и наследование ***");
             GenericsAndInheritance.SameDataLinkedList();
-            GenericsAndInheritance.DifferentDataLinkedList();
+            //GenericsAndInheritance.DifferentDataLinkedList();
 
             Console.WriteLine("\n*** Обобщенные методы ***");
             GenericMethods.CallingSwap();
             GenericMethods.CallingSwapUsingInference();
             GenericMethods.RunDisplays();
-            Console.ReadLine();
+            //Console.ReadLine();
+
+            new IdentificationOfGenerics().Run();
         }
     }
 }

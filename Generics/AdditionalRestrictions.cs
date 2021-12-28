@@ -6,19 +6,21 @@ namespace Generics
     /// <summary>
     /// Дополнительные ограничения
     /// </summary>
-    class AdditionalRestrictions
+    public class AdditionalRestrictions
     {
         private static List<TBase> ConvertIList<T, TBase>(IList<T> list) where T : TBase
         {
             List<TBase> baseList = new List<TBase>(list.Count);
+
             for (Int32 index = 0; index < list.Count; index++)
             {
                 baseList.Add(list[index]);
             }
+
             return baseList;
         }
 
-        private static void CallingConvertIList()
+        public static void CallingConvertIList()
         {
             // Создает и инициализирует тип List<String> (реализующий IList<String>)
             IList<String> ls = new List<String>();
@@ -37,7 +39,7 @@ namespace Generics
             IList<String> ls2 = ConvertIList<String, String>(ls);
             
             // Преобразует IList<String> в IList<Exception>
-            IList<Exception> le = ConvertIList<String, Exception>(ls); // Ошибка
+            //IList<Exception> le = ConvertIList<String, Exception>(ls); // Ошибка
         }
     }
 }

@@ -13,9 +13,7 @@ namespace Reflection
             var assem = Assembly.GetExecutingAssembly();
             string resourceName = assem.GetManifestResourceNames().FirstOrDefault(rn => rn.EndsWith(dllName));
             if (resourceName == null) 
-            { 
-                return null; 
-            }
+                return null;
 
             // Not found, maybe another handler will find it
             using (Stream stream = assem.GetManifestResourceStream(resourceName))
@@ -44,14 +42,15 @@ namespace Reflection
             return o1.GetType() == o2.GetType();
         }
 
-        private static void SomeMethod(Object o)
+        public static void SomeMethod(Object o)
         {
-            // GetType возвращает тип объекта во время выполнения
-            // (позднее связывание)
-            // typeof возвращает тип указанного класса
-            // (раннее связывание)
+            // GetType возвращает тип объекта во время выполнения (позднее связывание)
+            // typeof возвращает тип указанного класса (раннее связывание)
+
             if (o.GetType() == typeof(FileInfo)) {  }
             if (o.GetType() == typeof(DirectoryInfo)) {  }
+            
+            var false1 = new DirectoryInfo("C:/").GetType() == typeof(FileInfo);
         }
 
         static Type typeReference /*...*/ ; // Например: o.GetType() или typeof(Object)

@@ -6,6 +6,7 @@ namespace Exceptions
     public sealed class DiskFullExceptionArgs : ExceptionArgs
     {
         private readonly String m_diskpath; // закрытое поле, задается во время создания
+
         public DiskFullExceptionArgs(String diskpath) 
         { 
             m_diskpath = diskpath; 

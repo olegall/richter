@@ -14,12 +14,9 @@ namespace Reflection
             LoadAssemblies();
 
             // Фильтрация и сортировка всех типов
-            var allTypes =
-            (from a in AppDomain.CurrentDomain.GetAssemblies()
-             from t in a.ExportedTypes
-             where typeof(Exception).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo())
-             orderby t.Name
-             select t).ToArray();
+            var allTypes = (from a in AppDomain.CurrentDomain.GetAssemblies() from t in a.ExportedTypes
+                            where typeof(Exception).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()) orderby t.Name
+                            select t).ToArray();
 
             // Построение и вывод иерархического дерева наследования
             Console.WriteLine(WalkInheritanceHierarchy(new StringBuilder(), 0, typeof(Exception), allTypes));
@@ -29,12 +26,12 @@ namespace Reflection
         {
             String spaces = new String(' ', indent * 3);
             sb.AppendLine(spaces + baseType.FullName);
+
             foreach (var t in allTypes)
             {
                 if (t.GetTypeInfo().BaseType != baseType)
-                {
                     continue;
-                }
+
                 WalkInheritanceHierarchy(sb, indent + 1, t, allTypes);
             }
             return sb;

@@ -9,17 +9,20 @@ namespace Generics
     {
         private static void CastingAGenericTypeVariable1<T>(T obj)
         {
-            Int32 x = (Int32)obj; // Ошибка
-            String s = (String)obj; // Ошибка
+            //Int32 x = (Int32)obj; // Ошибка
+            //String s = (String)obj; // Ошибка
         }
 
         private static void CastingAGenericTypeVariable2<T>(T obj)
         {
             T t = obj;
             //bool b1 = t == obj;
+
+            //bool b1 = t == obj;
             bool b2 = (object)t == (object)obj;
             object o1 = obj;
             object o2 = (Object)obj;
+
             Int32 x = (Int32)(Object)obj; // Ошибки нет
             String s = (String)(Object)obj; // Ошибки нет
         }
@@ -31,7 +34,7 @@ namespace Generics
 
         private static void SettingAGenericTypeVariableToNull<T>()
         {
-            T temp = null; // CS0403: нельзя привести null к параметру типа T because it could be a value type...
+            //T temp = null; // CS0403: нельзя привести null к параметру типа T because it could be a value type...
                            // (Ошибка CS0403: нельзя привести null к параметру типа Т, поскольку T может иметь значимый тип...)
         }
         
@@ -50,9 +53,9 @@ namespace Generics
             //T temp2 = T; 
         }
 
-        private static void ComparingAGenericTypeVariableWithNull<T>(T obj)
+        private static void ComparingAGenericTypeVariableWithNull<T>(T obj) 
         {
-            if (obj == null)
+            if (obj == null) // если тип значения - упадёт?
             { 
                 /* Этот код никогда не исполняется для значимого типа */ 
             }
@@ -60,18 +63,13 @@ namespace Generics
 
         private static void ComparingTwoGenericTypeVariables<T>(T o1, T o2)
         {
-            if (o1 == o2) // Ошибка
-            {
-            } 
+            //if (o1 == o2) { }
         }
 
         private static T Sum<T>(T num) where T : struct
         {
             T sum = default(T);
-            for (T n = default(T); n < num; n++)
-            {
-                sum += n;
-            }
+            //for (T n = default(T); n < num; n++) { sum += n; }
             return sum;
         }
     }

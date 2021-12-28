@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 
 namespace Exceptions
 {
-    class ConstrainedExecutionRegion
+    public class ConstrainedExecutionRegion
     {
-        private static void Demo1()
+        public static void Demo1()
         {
             try
             {
@@ -30,14 +30,18 @@ namespace Exceptions
             {
             }
         }
+
         /*  Вот результат работы этого кода:
         In try
         Type1's static ctor called*/
 
-        private static void Demo2()
+
+
+        public static void Demo2()
         {
             // Подготавливаем код в блоке finally
             RuntimeHelpers.PrepareConstrainedRegions(); // Пространство имен System.Runtime.CompilerServices
+
             try
             {
                 Console.WriteLine("In try");
@@ -64,6 +68,8 @@ namespace Exceptions
         }
         /*После запуска этой версии кода получаем:
         Type2's static ctor called
-        In try*/
+        In try
+        - наоборот
+         */
     }
 }

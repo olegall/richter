@@ -53,11 +53,9 @@
     <Compile Include="GenericsAndInheritance.cs" />
     <Compile Include="GenericsInFCLLibrary.cs" />
     <Compile Include="IdentificationOfGenerics.cs" />
-    <Compile Include="IRunnable.cs" />
     <Compile Include="MainRestrictions.cs" />
     <Compile Include="OpenedAndClosedTypes.cs" />
     <Compile Include="OperationTimer.cs" />
-    <Compile Include="ValueTypePerfTest.cs" />
     <Compile Include="VerificationAndRestrictions.cs" />
     <Compile Include="Wrapper.cs" />
     <Compile Include="Program.cs" />

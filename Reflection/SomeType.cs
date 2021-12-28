@@ -6,11 +6,13 @@ namespace Reflection
     internal sealed class SomeType
     {
         private Int32 m_someField;
-        
+
         public SomeType(ref Int32 x)
-        { 
+        {
             x *= 2;
         }
+
+        //public SomeType(ref Int32 x) => x *= 2; 
         
         public Int32 SomeProp
         {
@@ -22,9 +24,8 @@ namespace Reflection
             set
             {
                 if (value < 1)
-                {
                     throw new ArgumentOutOfRangeException("value");
-                }
+
                 m_someField = value;
             }
         }

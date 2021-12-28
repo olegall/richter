@@ -6,15 +6,20 @@ namespace Exceptions
     {
         static void Main(string[] args)
         {
-            var wrapper = new Wrapper();
-            // throw vs throw e
-            wrapper.TextException();
-            wrapper.ExceptionWithoutTry();
-            var s = new Sentence(null);
-            Console.WriteLine($"The first character is {s.GetFirstCharacter()}");
-            Sentence.GetFirstCharacterNullable();
+            //var wrapper = new Wrapper();
+            //// throw vs throw e
+            //wrapper.TextException();
+            //wrapper.ExceptionWithoutTry();
+            //var s = new Sentence(null);
+            //s.GetFirstCharacter();
+            //Sentence.GetFirstCharacterNullable();
 
-            wrapper.MultipleThrows();
+            //wrapper.MultipleThrows();
+
+            //ConstrainedExecutionRegion.Demo1();
+            ConstrainedExecutionRegion.Demo2();
+
+            new ShoppingCart().AddItem(new Item());
         }
     }
 }

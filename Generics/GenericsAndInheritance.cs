@@ -13,11 +13,14 @@ namespace Generics
      
         public Node(T data, Node<T> next)
         {
-            m_data = data; 
+            m_data = data;
             m_next = next;
         }
 
+        // результат 1 и тот же
         public override String ToString()
+        //public String ToString()
+        //public new String ToString()
         {
             return m_data.ToString() + ((m_next != null) ? m_next.ToString() : null);
         }
@@ -46,11 +49,10 @@ namespace Generics
             m_data = data;
         }
 
-        public override String ToString()
-        {
-            return m_data.ToString() + ((m_next != null) ? m_next.ToString() : String.Empty);
-        }
-
+        //public override String ToString()
+        //{
+        //    return m_data.ToString() + ((m_next != null) ? m_next.ToString() : String.Empty);
+        //}
     }
 
     public class GenericsAndInheritance
@@ -60,7 +62,8 @@ namespace Generics
             Node<Char> head = new Node<Char>('C');
             head = new Node<Char>('B', head);
             head = new Node<Char>('A', head);
-            Console.WriteLine(head.ToString()); // Выводится "ABC"
+            var res1 = head.ToString(); // Выводится "ABC"
+            // объект m_next всегда состоит из m_data и m_next
         }
 
         public static void DifferentDataLinkedList()
@@ -68,7 +71,7 @@ namespace Generics
             Node head = new TypedNode<Char>('.');
             head = new TypedNode<DateTime>(DateTime.Now, head);
             head = new TypedNode<String>("Today is ", head);
-            Console.WriteLine(head.ToString());
+            var res1 = head.ToString();
         }
     }
 }

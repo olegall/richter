@@ -19,9 +19,11 @@ namespace Events
         public void Add(EventKey eventKey, Delegate handler)
         {
             Monitor.Enter(m_events);
+
             Delegate d;
             m_events.TryGetValue(eventKey, out d);
             m_events[eventKey] = Delegate.Combine(d, handler);
+
             Monitor.Exit(m_events);
         }
 
@@ -29,11 +31,14 @@ namespace Events
         public void Remove(EventKey eventKey, Delegate handler)
         {
             Monitor.Enter(m_events);
+
             // Вызов TryGetValue предотвращает выдачу исключения при попытке удаления делегата с отсутствующим ключом EventKey.
             Delegate d;
+
             if (m_events.TryGetValue(eventKey, out d))
             {
                 d = Delegate.Remove(d, handler);
+
                 // Если делегат остается, то установить новый ключ EventKey, иначе – удалить EventKey
                 if (d != null)
                 {
@@ -44,6 +49,7 @@ namespace Events
                     m_events.Remove(eventKey);
                 }
             }
+
             Monitor.Exit(m_events);
         }
 
@@ -51,10 +57,14 @@ namespace Events
         public void Raise(EventKey eventKey, Object sender, EventArgs e)
         {
             Delegate d;
+
             Monitor.Enter(m_events);
+
             // Не выдавать исключение при отсутствии ключа EventKey
             m_events.TryGetValue(eventKey, out d);
+
             Monitor.Exit(m_events);
+
             if (d != null)
             {
                 // Из-за того что словарь может содержать несколько разных типов

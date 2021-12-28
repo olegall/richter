@@ -179,6 +179,8 @@ namespace Richter
 
             //Console.WriteLine("\n*** Классы коллекций для параллельного доступа ***");
             //threading.BlockingCollection();
+
+            threading.TaskRunUI();
             #endregion
 
             Console.ReadLine();

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using DateTimeList = System.Collections.Generic.List<System.DateTime>;
 
 namespace Generics
@@ -13,14 +12,20 @@ namespace Generics
         // Здесь никакой код добавлять не нужно!
     }
 
+    interface IRunnable
+    {
+        void Run();
+    }
+
     class IdentificationOfGenerics : IRunnable
     {
         public void Run() 
         {
             List<DateTime> dt = new List<DateTime>();
             //DateTimeList dt = new DateTimeList();
-            Boolean sameType = typeof(List<DateTime>) == typeof(DateTimeList);
-            Boolean sameType2 = typeof(List<DateTime>) == typeof(DateTimeList);
+            Boolean false1 = typeof(List<DateTime>) == typeof(DateTimeList);
+            Boolean true1 = typeof(List<DateTime>) == typeof(List<DateTime>);
+            Boolean true2 = typeof(DateTimeList) == typeof(DateTimeList);
         }
     }
 
@@ -28,10 +33,8 @@ namespace Generics
     {
         private static void SomeMethod()
         {
-            // Компилятор определяет, что dtl имеет тип
-            // System.Collections.Generic.List<System.DateTime>
+            // Компилятор определяет, что dtl имеет тип System.Collections.Generic.List<System.DateTime>
             var dtl = List<DateTime>();
-        
         }
 
         // сгенерирован

@@ -29,14 +29,16 @@ namespace Exceptions
             // Предусловия:
             Contract.Requires(newItem != null);
             Contract.Requires(Contract.ForAll(m_cart, s => s != newItem));
+
             // Постусловия:
             Contract.Ensures(Contract.Exists(m_cart, s => s == newItem));
             Contract.Ensures(totalCost >= Contract.OldValue(totalCost));
-            Contract.EnsuresOnThrow<IOException>(
-            totalCost == Contract.OldValue(totalCost));
+            Contract.EnsuresOnThrow<IOException>(totalCost == Contract.OldValue(totalCost));
+
             // Какие-то операции (способные сгенерировать IOException)
             m_cart.Add(newItem);
             totalCost += 1.00M;
+            // почему-то срабатывает ложно AddItem, new ShoppingCart().AddItem(new Item());
         }
 
         // Инвариант

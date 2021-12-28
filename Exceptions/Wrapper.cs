@@ -11,11 +11,7 @@ namespace Exceptions
         public Consistency ConsistencyGuarantee { get; }
     }
 
-    public enum Consistency
-    {
-        MayCorruptProcess, MayCorruptAppDomain,
-        MayCorruptInstance, WillNotCorruptState
-    }
+    public enum Consistency { MayCorruptProcess, MayCorruptAppDomain, MayCorruptInstance, WillNotCorruptState  }
 
     public enum Cer { None, MayFail, Success }
 
@@ -25,41 +21,38 @@ namespace Exceptions
         {
             try
             {
-                // Код, требующий корректного восстановления
-                // или очистки ресурсов
+                // Код, требующий корректного восстановления или очистки ресурсов
             }
             catch (InvalidOperationException)
             {
-                // Код восстановления работоспособности
-                // после исключения InvalidOperationException
+                // Код восстановления работоспособности после исключения InvalidOperationException
             }
             catch (IOException)
             {
-                // Код восстановления работоспособности
-                // после исключения IOException
+                // Код восстановления работоспособности после исключения IOException
             }
             catch
             {
                 // Код восстановления работоспособности после остальных исключений.
-                // После перехвата исключений их обычно генерируют повторно
+                // После перехвата исключений их обычно генерируют повторно (зачем?)
                 // Эта тема будет рассмотрена позже
                 throw;
             }
             finally
             {
-                // Здесь находится код, выполняющий очистку ресурсов
-                // после операций, начатых в блоке try. Этот код
-                // выполняется ВСЕГДА вне зависимости от наличия исключения
+                // Здесь находится код, выполняющий очистку ресурсов после операций, начатых в блоке try. 
+                // Этот код выполняется ВСЕГДА вне зависимости от наличия исключения
             }
             
- // Код, следующий за блоком finally, выполняется, если в блоке try
- // не генерировалось исключение или если исключение было перехвачено
- // блоком catch, а новое не генерировалось
+            // Код, следующий за блоком finally, выполняется, если в блоке try
+            // не генерировалось исключение или если исключение было перехвачено
+            // блоком catch, а новое не генерировалось
         }
 
         private void ReadData(String pathname)
         {
             FileStream fs = null;
+
             try
             {
                 fs = new FileStream(pathname, FileMode.Open);
@@ -72,7 +65,8 @@ namespace Exceptions
             finally
             {
                 // Файл обязательно следует закрыть
-                if (fs != null) fs.Close();
+                if (fs != null) 
+                    fs.Close();
             }
         }
 
@@ -128,6 +122,7 @@ namespace Exceptions
         private void SomeMethod5()
         {
             Boolean trySucceeds = false;
+
             try
             {
                 //...
@@ -147,8 +142,10 @@ namespace Exceptions
         public void ExceptionWithoutTry()
         { 
             throw new Exception();
+
             // следующий код будет недостижимым
             var a1 = 0;
+
             if (a1 == 0)
             {
             }
@@ -171,6 +168,8 @@ namespace Exceptions
         
         // не важно какой возвращаемый тип. почему?
         public int NoMatterType()
+        //public void NoMatterType()
+        //public string NoMatterType()
         {
             try
             {
@@ -194,7 +193,7 @@ namespace Exceptions
             }
         }
 
-        public void TextException()
+        public void TextGenericException()
         {
             try
             {
@@ -220,47 +219,24 @@ namespace Exceptions
             //{
             //}
 
-            //try
-            //{
-            //    throw new Exception();
-            //}
-            //catch (Exception e)
-            //{
-            //}
-            //catch (Exception e)
-            //{
-            //}
+            //try { throw new Exception(); }
+            //catch (Exception e) { }
+            //catch (Exception e) { }// повторно нельзя
 
-            //try
-            //{
-            //    throw new Exception();
-            //}
-            //catch (Exception e)
-            //{
-            //}
-            //catch (ArgumentNullException e)
-            //{
-            //}
+            //try { throw new Exception(); }
+            //catch (Exception e) { }
+            //catch (ArgumentNullException e) { } // нельзя - Exception всё перехватил
+
+            //try { throw new Exception(); }
+            //catch (ArgumentNullException e) { }
+            //catch (FileNotFoundException e) { } // обязательно производные?
+            //catch (Exception e) { }
 
             try
             {
-                throw new Exception();
+                throw new Exception(); 
             }
-            catch (ArgumentNullException e)
-            {
-            }
-            catch (FileNotFoundException e) // обязательно производные?
-            {
-            }
-            catch (Exception e)
-            {
-            }
-
-            try
-            {
-                //throw new Exception(); 
-            }
-            catch (Exception<DiskFullExceptionArgs> e)// не сработает
+            catch (Exception<DiskFullExceptionArgs> e)// не сработает - Exception<DiskFullExceptionArgs> более специфично чем Exception
             {
                 Console.WriteLine(e.Message);
             }
@@ -269,9 +245,8 @@ namespace Exceptions
             {
                 //throw new Exception(); 
             }
-            catch (ArgumentException e)// не сработает
+            catch (ArgumentException e)// не сработает - ArgumentException более специфична чем Exception
             {
-                
             }
             
             try
@@ -280,7 +255,6 @@ namespace Exceptions
             }
             catch (Exception e) // сработает
             {
-                
             }
 
             try
@@ -293,18 +267,20 @@ namespace Exceptions
                 {
                     //var a1 = throw new Exception(); // нельзя приравнять
                     throw new Exception(); // сработает catch
-                    //new Exception(); // в catch не попадёт
+                    new Exception(); // в catch не попадёт
                 }
                 catch (Exception e2)
                 {
                     var a1 = e.Message;
                     var a2 = e2.Message;
                     var a3 = e;
+
                     /* 
-                     * когда создаёшь объект, сразу исключение бросается? пытаюсь увидеть просто объект. 
+                     * когда создаёшь объект, сразу исключение бросается? пытаюсь увидеть просто объект new Exception(). 
                      * Скорее всего да - это объект. Что происходит с программой после new Exception()? 
-                     * Какая разница - бросить в try или без try?
+                     * Какая разница - бросить в try или без try? в try - обратоется в catch, программа продолжит выполняться, без try - программа упадёт
                      */
+
                     var a4 = new Exception();
                     //var a5 = throw new Exception(); // в catch нельзя бросать исключения. Почему?
                     //throw e; // а так можно. хотя объект тот же. "Выдано исключение типа "System.Exception"."
@@ -319,7 +295,6 @@ namespace Exceptions
             }
             catch (Exception)
             {
-                
             }
 
             try
@@ -328,7 +303,6 @@ namespace Exceptions
             }
             catch
             {
-                
             }
 
             try
@@ -346,35 +320,19 @@ namespace Exceptions
             }
             catch (Exception e)
             {
-                //throw e;
-                //throw e.InnerException;
-                //throw e.Message;
-                //throw new Exception();
-                //throw new Exception();
-                //throw;
-            }
-
-            try
-            {
-                throw new Exception();
-            }
-            catch (Exception e)
-            {
                 throw e;
-                //throw e.InnerException;
-                //throw e.Message;
-                //throw new Exception();
-                //throw new Exception();
-
-                // сразу 2 throw
-                //throw e;
-                //throw new Exception();
+                throw e.InnerException;
+                throw new Exception();
+                throw new Exception();
+                throw;
+                var res1 = e.Message;
             }
         }
 
         public String CalculateSpreadsheetCell(Int32 row, Int32 column)
         {
             String result = null;
+
             try
             {
                 //result = /* Код для расчета значения ячейки электронной таблицы */
@@ -387,6 +345,7 @@ namespace Exceptions
             {
                 result = "Нельзя отобразить значение: оно слишком большое";
             }
+
             return result;
         }
 
@@ -394,6 +353,7 @@ namespace Exceptions
         {
             // Сохранение текущей позиции в файле
             Int64 beforeSerialization = fs.Position;
+
             try
             {
                 // Попытка сериализовать граф объекта и записать его в файл
@@ -431,7 +391,7 @@ namespace Exceptions
             try
             {
                 // Вызов метода DoSomething для этого объекта
-                var mi = o.GetType().GetMethod("DoSomething");
+                System.Reflection.MethodInfo mi = o.GetType().GetMethod("DoSomething");
                 mi.Invoke(o, null); // Метод DoSomething может сгенерировать исключение
             }
             catch (System.Reflection.TargetInvocationException e)
@@ -443,9 +403,7 @@ namespace Exceptions
 
         private static void DisplayFirstNumber(string[] args)
         {
-            string arg = args.Length >= 1 ? 
-                args[0] : 
-                throw new ArgumentException("You must supply an argument");
+            string arg = args.Length >= 1 ? args[0] : throw new ArgumentException("You must supply an argument");
 
             if (Int64.TryParse(arg, out var number))
             //if (Int64.TryParse(arg, out long number))

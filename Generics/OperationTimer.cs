@@ -14,19 +14,20 @@ namespace Generics
             PrepareForOperation();
             m_text = text;
             m_collectionCount = GC.CollectionCount(0);
-            // Эта команда должна быть последней в этом методе для максимально точной оценки быстродействия
-            //m_startTime = Stopwatch.StartNew();
+            // Эта команда должна быть последней в этом методе для максимально точной оценки быстродействия m_startTime = Stopwatch.StartNew();
         }
-        public void Dispose()
-        {
-            //Console.WriteLine("{0} (GCs={1,3}) {2}", (m_stopwatch.Elapsed),
-            //GC.CollectionCount(0), ­ m_collectionCount, m_text);
-        }
+
         private static void PrepareForOperation()
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
+        }
+
+        public void Dispose()
+        {
+            //Console.WriteLine("{0} (GCs={1,3}) {2}", (m_stopwatch.Elapsed), GC.CollectionCount(0), ­ m_collectionCount, m_text);
+            //Console.WriteLine(m_stopwatch.Elapsed, GC.CollectionCount(0), m_collectionCount, m_text);
         }
     }
 }

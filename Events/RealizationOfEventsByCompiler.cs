@@ -7,7 +7,7 @@ namespace Events
     /// Реализация событий компилятором
     /// </summary>
     class RealizationOfEventsByCompiler
-    //class RealizationOfEventsByCompiler<T> where T: EventHandler<NewMailEventArgs> // от себя. пробую избавиться от <NewMailEventArgs> повсюду
+    //class RealizationOfEventsByCompiler<T> where T: EventHandler<NewMailEventArgs> // я. пробую избавиться от <NewMailEventArgs> повсюду
     {
         // 1. ЗАКРЫТОЕ поле делегата, инициализированное значением null
         private EventHandler<NewMailEventArgs> NewMail = null;
@@ -19,6 +19,7 @@ namespace Events
             // Цикл и вызов CompareExchange – хитроумный способ добавления делегата способом, безопасным в отношении потоков
             EventHandler<NewMailEventArgs> prevHandler;
             EventHandler<NewMailEventArgs> newMail = this.NewMail;
+
             do
             {
                 prevHandler = newMail;
@@ -35,6 +36,7 @@ namespace Events
             // Цикл и вызов CompareExchange – хитроумный способ удаления делегата способом, безопасным в отношении потоков
             EventHandler<NewMailEventArgs> prevHandler;
             EventHandler<NewMailEventArgs> newMail = this.NewMail;
+
             do
             {
                 prevHandler = newMail;

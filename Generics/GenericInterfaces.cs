@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Generics
 {
+                                      
     public interface IEnumerator<T> : IDisposable//, IEnumerator
     {
         T Current { get; }
@@ -26,7 +23,7 @@ namespace Generics
             } 
         }
 
-        public void Dispose() 
+        public void Dispose()
         { 
         }
     }
