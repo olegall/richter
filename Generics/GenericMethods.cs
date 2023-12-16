@@ -24,6 +24,7 @@ namespace Generics
         {
             Int32 n1 = 1, n2 = 2;
             Swap<Int32>(ref n1, ref n2); // n1 = 2, n2 = 1 - значения поменялись
+            //Swap<int>(ref n1, ref n2); // тип значения aleek
 
             String s1 = "Aidan", s2 = "Grant";
             Swap<String>(ref s1, ref s2); // s1 = Grant, s2 = Aidan - значения поменялись
@@ -51,7 +52,7 @@ namespace Generics
             Display("Jeff"); // Вызывает Display(String)
             Display(123); // Вызывает Display<T>(T)
             Display<int>(123); // Вызывает Display<T>(T)
-            Display<String>("Aidan"); // Вызывает Display<T>(T)
+            Display<String>("Aidan"); // Вызывает Display<T>(T). потому что типизируем, срабатывает по перегрузке дженерика
         }
 
         private static void Display<T>(T o)

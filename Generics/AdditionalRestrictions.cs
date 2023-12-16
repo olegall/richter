@@ -19,6 +19,18 @@ namespace Generics
 
             return baseList;
         }
+        
+        //private static List<TDest> ConvertIList<TSource, TDest>(IList<TSource> list) where TSource : TDest // aleek
+        //{
+        //    List<TDest> baseList = new List<TDest>(list.Count);
+
+        //    for (Int32 index = 0; index < list.Count; index++)
+        //    {
+        //        baseList.Add(list[index]);
+        //    }
+
+        //    return baseList;
+        //}
 
         public static void CallingConvertIList()
         {

@@ -17,8 +17,6 @@ namespace Generics
         {
             T t = obj;
             //bool b1 = t == obj;
-
-            //bool b1 = t == obj;
             bool b2 = (object)t == (object)obj;
             object o1 = obj;
             object o2 = (Object)obj;
@@ -42,10 +40,8 @@ namespace Generics
         {
             T temp = null;
         }
-        
-        //private void Foo<T>() where T : Int32
-        //{
-        //}
+
+        //private void Foo<T>() where T : Int32 {}
 
         private static void SettingAGenericTypeVariableToDefaultValue<T>()
         {
@@ -55,7 +51,7 @@ namespace Generics
 
         private static void ComparingAGenericTypeVariableWithNull<T>(T obj) 
         {
-            if (obj == null) // если тип значения - упадёт?
+            if (obj == null) // если тип значения - упадёт? aleek
             { 
                 /* Этот код никогда не исполняется для значимого типа */ 
             }

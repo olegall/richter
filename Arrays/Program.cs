@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
+using System.Windows.Forms;
 
 namespace Arrays
 {
@@ -11,6 +13,22 @@ namespace Arrays
             return 0;
         }
     }
+
+    #region aleek
+    interface IFoo { }
+
+    class Point { }
+
+    struct StrEmpty { }
+
+    struct StrIComparable : IComparable
+    {
+        public Int32 CompareTo(Object obj)
+        {
+            return 0;
+        }
+    }
+    #endregion
 
     class Program
     {
@@ -51,21 +69,22 @@ namespace Arrays
             for (Int32 x = 0; x < myPolygons[0].Length; x++)
                 Console.WriteLine(myPolygons[0][x]);
 
-            String[] names = new String[] { "Aidan", "Grant" };
+            { String[] names = new String[] { "Aidan", "Grant" }; }
 
             // Использование локальной переменной неявного типа:
-            var names = new String[] { "Aidan", "Grant" };
+            { var names = new String[] { "Aidan", "Grant" }; }
 
             // Задание типа массива с помощью локальной переменной неявного типа:
-            var names = new[] { "Aidan", "Grant", null };
+            { var names = new[] { "Aidan", "Grant", null }; }
 
-            // Ошибочное задание типа массива с помощью локальной переменной неявного типа. я - тк есть int
-            var names = new[] { "Aidan", "Grant", 123 }; 
-            
-            String[] names = { "Aidan", "Grant" };
+            // Ошибочное задание типа массива с помощью локальной переменной неявного типа. тк есть int aleek
+            //{ var names = new[] { "Aidan", "Grant", 123 }; } // new[] ожидает, что все будут одного типа
+            { var names = new object[] { "Aidan", "Grant", 123 }; }
+
+            { String[] names = { "Aidan", "Grant" }; }
 
             // Ошибочное использование локальной переменной
-            var names = { "Aidan", "Grant" };
+            //{ var names = { "Aidan", "Grant" }; }
 
             // Применение переменных и массивов неявно заданного типа, а также анонимного типа:
             var kids = new[] { new { Name = "Aidan" }, new { Name = "Grant" } };
@@ -82,22 +101,22 @@ namespace Arrays
 
             // Невозможно приведение двухмерного массива к одномерному. 
             // Ошибка компиляции CS0030: невозможно преобразовать тип 'object[*,*]' в 'System.IO.Stream[]'
-            Stream[] s1dim = (Stream[])o2dim;
+            //Stream[] s1dim = (Stream[])o2dim;
 
             // Явное приведение к двухмерному массиву Stream
             Stream[,] s2dim = (Stream[,])o2dim;
 
             // Явное приведение к двухмерному массиву String. Компилируется, но во время выполнения возникает исключение InvalidCastException
-            String[,] st2dim = (String[,])o2dim;
+            //String[,] st2dim = (String[,])o2dim;
 
             // Создание одномерного массива Int32 (значимый тип)
             Int32[] i1dim = new Int32[5];
 
             // Невозможно приведение массива значимого типа. Ошибка компиляции CS0030: невозможно преобразовать тип 'int[]' в 'object[]'
-            Object[] o1dim = (Object[])i1dim;
+            //Object[] o1dim = (Object[])i1dim;
 
-            // я - ссылочный тип stream к object можно
-            Object[] o1dim2 = (Object[])s1dim;
+            // ссылочный тип stream к object можно aleek
+            //Object[] o1dim = (Object[])s1dim;
 
             // Создание нового массива и приведение элементов к нужному типу при помощи метода Array.Copy
             // Создаем массив ссылок на упакованные элементы типа Int32
@@ -109,6 +128,25 @@ namespace Arrays
 
             // Создание массива ссылок IComparable
             IComparable[] dest = new IComparable[src.Length];
+            
+            #region aleek
+            IFoo[] ifoo = new IFoo[1];
+            //ifoo[0] = new IFoo[1];
+
+            var a1 = new Point[0];
+            var a2 = new Point();
+            var a3 = new Point { };
+
+            var a4_true = new StrEmpty().GetType().IsValueType;
+            var a5_false = new StrEmpty[0].GetType().IsValueType; // почему структура как массив? неявно реализует IEnumerable?
+            var a6_true = new StrIComparable().GetType().IsValueType; // интерфейс не влияет на () vs []
+            var a7_false = new StrIComparable[0].GetType().IsValueType;
+
+            var a8 = dest.GetType().IsValueType;
+            var a9 = src.GetType().IsValueType;
+            var a10_true = dest is Object;
+            var a11_true = src is Object; // структура объект?
+            #endregion
 
             // Присваивание элементам массива IComparable ссылок на упакованные версии элементов исходного массива
             Array.Copy(src, dest, src.Length);

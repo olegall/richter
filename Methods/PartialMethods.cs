@@ -2,7 +2,7 @@
 
 namespace Methods
 {
-    class PartialMethods
+    namespace A1
     {
         // Сгенерированный код в некотором файле с исходным кодом:
         internal class Base
@@ -36,9 +36,12 @@ namespace Methods
                     throw new ArgumentNullException("value");
             }
         }
+    }
 
+    namespace A2
+    {
         // Сгенерированный при помощи инструмента программный код
-        internal sealed partial class Base2
+        internal sealed partial class Base
         {
             private String m_name;
 
@@ -58,7 +61,7 @@ namespace Methods
         }
 
         // Написанный программистом код, содержащийся в другом файле
-        internal sealed partial class Base3
+        internal sealed partial class Base
         {
             // Это объявление с реализацией частичного метода вызывается перед тем, как будет изменено поле m_name
             partial void OnNameChanging(String value) // чтобы не было ошибки - убрать partial либо реализацию (скобки)
@@ -67,24 +70,26 @@ namespace Methods
                     throw new ArgumentNullException("value");
             }
         }
+    }
 
-        // Логический эквивалент сгенерированного инструментом кода в случае, когда нет объявления выполняемого частичного метода
-        internal sealed class Base4
+    // Логический эквивалент сгенерированного инструментом кода в случае, когда нет объявления выполняемого частичного метода
+    internal sealed class Base
+    {
+        private String m_name;
+
+        public String Name
         {
-            private String m_name;
-
-            public String Name
+            get { return m_name; }
+            set
             {
-                get { return m_name; }
-                set
-                {
-                    m_name = value; // Измените поле
-                }
+                m_name = value; // Измените поле
             }
         }
+    }
 
-
-        public void Main() 
+    class PartialMethods
+    { 
+        public void Main()
         {
             
         }

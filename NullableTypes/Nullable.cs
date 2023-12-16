@@ -9,8 +9,11 @@ namespace NullableTypes
     public struct Nullable<T> where T : struct
     {
         // Эти два поля представляют состояние
-        private Boolean hasValue = false; // Предполагается наличие null
-        internal T value = default(T); // Предполагается, что все биты равны нулю
+        //private Boolean hasValue = false; // Предполагается наличие null
+        private Boolean hasValue;
+
+        //internal T value = default(T); // Предполагается, что все биты равны нулю
+        internal T value;
 
         public Nullable(T value)
         {
@@ -26,8 +29,7 @@ namespace NullableTypes
             {
                 if (!hasValue)
                 {
-                    throw new InvalidOperationException(
-                    "Nullable object must have a value.");
+                    throw new InvalidOperationException("Nullable object must have a value.");
                 }
                 return value;
             }
@@ -38,25 +40,30 @@ namespace NullableTypes
         public T GetValueOrDefault(T defaultValue)
         {
             if (!HasValue) return defaultValue;
+
             return value;
         }
 
         public override Boolean Equals(Object other)
         {
             if (!HasValue) return (other == null);
+
             if (other == null) return false;
+
             return value.Equals(other);
         }
 
         public override int GetHashCode()
         {
             if (!HasValue) return 0;
+
             return value.GetHashCode();
         }
 
         public override string ToString()
         {
             if (!HasValue) return "";
+
             return value.ToString();
         }
 

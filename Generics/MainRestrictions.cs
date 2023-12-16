@@ -9,23 +9,18 @@ namespace Generics
             stream.Close(); // OK
         }
     }
+
+    internal sealed class PrimaryConstraintOfStream_<Object> where Object : Stream // aleek
+    {
+        public void M(object stream)
+        {
+            //stream.Close();
+        }
+    }
     
-    // нельзя
-    //internal sealed class PrimaryConstraintOfStream<object> where object : Stream
-    //{
-    //    public void M(object stream)
-    //    {
-    //        stream.Close(); // OK
-    //    }
-    //}
-
-    /*
-        если в исходном тексте явно указать System.Object, компилятор C# выдаст ошибку
-        (ошибка CS0702: в ограничении не может использоваться специальный класс object):
-        error CS0702: Constraint cannot be special class 'object'     
-     */
-
-
+    //если в исходном тексте явно указать System.Object, компилятор C# выдаст ошибку
+    //(ошибка CS0702: в ограничении не может использоваться специальный класс object):
+    //error CS0702: Constraint cannot be special class 'object'
 
     internal sealed class PrimaryConstraintOfClass1<T> where T : class
     {
@@ -35,7 +30,7 @@ namespace Generics
         }
     }
 
-    internal sealed class PrimaryConstraintOfClass2<T> where T : class, new()
+    internal sealed class PrimaryConstraintOfClass2<T> where T : class, new() // что значит new()? aleek
     {
         public static T Factory()
         {

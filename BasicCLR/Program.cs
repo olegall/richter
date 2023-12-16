@@ -9,6 +9,7 @@ namespace BasicCLR
 
         // Предупреждение: идентификаторы 'SomeLibrary.SomeLibraryType.abc()', отличающиеся только регистром символов, не являются CLS-совместимыми
         public void abc() { }
+        //public void ABC() { } // ok
 
         // Предупреждения нет: закрытый метод
         private UInt32 ABC() { return 0; }

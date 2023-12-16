@@ -1,7 +1,6 @@
 ﻿using BoxingUnboxingPoint3;
 using System;
 using System.Collections;
-using System.Dynamic;
 
 namespace BoxingUnboxing
 {
@@ -11,11 +10,9 @@ namespace BoxingUnboxing
         public Int32 x, y;
     }
 
- 
-
     internal static class DynamicDemo
     {
-        public static void Main()
+        public static void Main_()
         {
             dynamic value;
             for (Int32 demo = 0; demo < 2; demo++)
@@ -26,13 +23,8 @@ namespace BoxingUnboxing
             }
         }
 
-        private static void M(Int32 n) { Console.WriteLine("M(Int32): " + n); }
-        private static void M(String s) { Console.WriteLine("M(String): " + s); }
-
-        /*
-        M(Int32) : 10
-        M(String) : AA
-        */
+        private static void M(Int32 n) { Console.WriteLine("M(Int32): " + n); } // M(Int32) : 10
+        private static void M(String s) { Console.WriteLine("M(String): " + s); } // M(String) : AA
     }
 
     class Program
@@ -50,7 +42,8 @@ namespace BoxingUnboxing
 
             Int32 x = 5;
             Object o = x; // Упаковка x; o указывает на упакованный объект
-            Int16 y = (Int16)o; // Генерируется InvalidCastException
+            //Int16 y = (Int16)o; // Генерируется InvalidCastException
+            Int32 y = (Int32)o; // ok. aleek
 
             p = (Point)o; // Распаковка o и копирование полей из экземпляра в переменную в стеке
             p.x = 2; // Изменение состояния переменной в стеке
@@ -71,21 +64,21 @@ namespace BoxingUnboxing
             IComparable c = p1;
             Console.WriteLine(c.GetType()); // "Point"
                                             // p1 НЕ пакуется для вызова CompareTo
-                                            // Поскольку в CompareTo не передается переменная Point, вызывается CompareTo(Object), которому нужна ссылка
-                                            // на упакованный Point c НЕ пакуется, потому что уже ссылается на упакованный Point
+                                            // Поскольку в CompareTo не передается переменная Point, вызывается CompareTo(Object), которому нужна ссылка на упакованный Point
+                                            // c НЕ пакуется, потому что уже ссылается на упакованный Point
 
-            Console.WriteLine(p1.CompareTo(c)); // "0"
-                                                // c НЕ пакуется, потому что уже ссылается на упакованный Point p2 ПАКУЕТСЯ, потому что вызывается CompareTo(Object)
+            Console.WriteLine(p1.CompareTo(c)); // "0". c НЕ пакуется, потому что уже ссылается на упакованный. Point p2 ПАКУЕТСЯ, потому что вызывается CompareTo(Object)
 
-            Console.WriteLine(c.CompareTo(p2));// "-1"
-                                               // c пакуется, а поля копируются в p2
+            Console.WriteLine(c.CompareTo(p2)); // "-1". c пакуется, а поля копируются в p2
+
+            // все передаваемые параметры в CompareTo - структуры. Какой именно CompareTo вызывается - определяется объектом p1 или интерфейсной переменной c
 
             p2 = (BoxingUnboxingPoint.Point)c;
 
             // Убеждаемся, что поля скопированы в p2
             Console.WriteLine(p2.ToString());// "(10, 10)"
 
-            DynamicDemo.Main();
+            DynamicDemo.Main_();
         }
 
         void _1()
@@ -126,12 +119,11 @@ namespace BoxingUnboxing
             Console.WriteLine(v); // Отображает "123"
             v = (Int32)o; // Распаковывает и копирует o в v
             Console.WriteLine(v); // Отображает "5"
-
-            //Int32 v = 5; // Создаем переменную упакованного значимого типа
         }
 
         void _6()
         {
+            Int32 v = 5; // Создаем переменную упакованного значимого типа
             #if INEFFICIENT
                 // При компиляции следующей строки v упакуется
                 // три раза, расходуя и время, и память

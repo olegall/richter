@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Strings
 {
-    class Encoding
+    class Encoding_
     {
-        void Main() 
+        public Encoding_()
         {
             // Кодируемая строка
             String s = "Hi there.";

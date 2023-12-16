@@ -7,7 +7,9 @@ namespace Generics
     internal sealed class DictionaryStringKey<TValue> : Dictionary<String, TValue> { }
     internal sealed class DictionaryStringKey<TKey, TValue> : Dictionary<String, TValue> { } // перегрузка по TKey
     //internal sealed class DictionaryStringKey : Dictionary<String, TValue> { }
-    //internal sealed class DictionaryStringKey2<> {}
+    //internal sealed class DictionaryStringKey<> {}
+    //internal sealed class DictionaryStringKey<TValue> {}
+    internal sealed class DictionaryStringKey<T1, T2, T3, TValue> : Dictionary<String, TValue> { } // д.б. как минимум TValue
 
     /// <summary>
     /// Открытые и закрытые типы
@@ -33,7 +35,7 @@ namespace Generics
             // DictionaryStringKey<Guid> — это закрытый тип
             t = typeof(DictionaryStringKey<Guid>);
             
-            // Попытка создания экземпляра этого типа (удачная) - почему?
+            // Попытка создания экземпляра этого типа (удачная). почему? типизирован? aleek
             o = CreateInstance(t);
 
             // Проверка успешности попытки

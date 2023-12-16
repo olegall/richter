@@ -17,11 +17,8 @@ namespace Exceptions
         public Boolean Handled { get; } // Верно, если хоть один обработчик
       
         // вызвал SetHhandled
-        //public void SetHandled(); // Присваивает Handled значение true,
-                                  // позволяя игнорировать нарушение
-        public Boolean Unwind { get; } // Верно, если хоть один обработчик
-                                       // вызвал SetUnwind или threw
-        //public void SetUnwind(); // Присваивает Unwind значение true,
-                                 // принудительно генерируя ContractException
+        //public void SetHandled(); // Присваивает Handled значение true, позволяя игнорировать нарушение
+        public Boolean Unwind { get; } // Верно, если хоть один обработчик вызвал SetUnwind или threw
+        //public void SetUnwind(); // Присваивает Unwind значение true, принудительно генерируя ContractException
     }
 }

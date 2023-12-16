@@ -4,12 +4,14 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization.Formatters.Soap;
 using System.Security;
 using System.Security.Permissions;
 
 namespace Serialization
 {
     class Customer { }
+
     class Order { }
 
     internal struct Point 
@@ -28,6 +30,7 @@ namespace Serialization
         public Circle(Double radius)
         {
             m_radius = radius;
+
             m_area = Math.PI * m_radius * m_radius;
         }
 
@@ -48,7 +51,8 @@ namespace Serialization
         public MyType(Int32 x, Int32 y)
         {
             this.x = x; 
-            this.y = y; 
+            this.y = y;
+
             sum = x + y;
         }
 
@@ -137,11 +141,76 @@ namespace Serialization
                 new BinaryFormatter().Serialize(stream, pt); // исключение SerializationException
             }
         }
+
+        private static void SingletonSerializationTest()
+        {
+            // Создание массива с несколькими ссылками на один объект Singleton
+            Singleton[] a1 = { Singleton.GetSingleton(), Singleton.GetSingleton() };
+
+            Console.WriteLine("Do both elements refer to the same object? " + (a1[0] == a1[1])); // "True"
+
+            using (var stream = new MemoryStream())
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+
+                // Сериализация и десериализация элементов массива
+                formatter.Serialize(stream, a1);
+                stream.Position = 0;
+                Singleton[] a2 = (Singleton[])formatter.Deserialize(stream);
+
+                // Проверяем, что все работает, как нужно:
+                Console.WriteLine("Do both elements refer to the same object? " + (a2[0] == a2[1])); // "True"
+                Console.WriteLine("Do all elements refer to the same object? " + (a1[0] == a2[0])); // "True"
+            }
+        }
+
+        private static void SerializationSurrogateDemo()
+        {
+            using (var stream = new MemoryStream())
+            {
+                // 1. Создание желаемого модуля форматирования
+                IFormatter formatter = new SoapFormatter();
+
+                // 2. Создание объекта SurrogateSelector
+                SurrogateSelector ss = new SurrogateSelector();
+
+                // 3. Селектор выбирает наш суррогат для объекта DateTime
+                ss.AddSurrogate(typeof(DateTime), formatter.Context, new UniversalToLocalTimeSerializationSurrogate());
+                // ПРИМЕЧАНИЕ. AddSurrogate можно вызывать более одного раза для регистрации нескольких суррогатов
+
+                // 4. Модуль форматирования использует наш селектор
+                formatter.SurrogateSelector = ss;
+
+                // Создание объекта DateTime с локальным временем машины и его сериализация
+                DateTime localTimeBeforeSerialize = DateTime.Now;
+                formatter.Serialize(stream, localTimeBeforeSerialize);
+
+                // Поток выводит универсальное время в виде строки, проверяя, что все работает
+                stream.Position = 0;
+                Console.WriteLine(new StreamReader(stream).ReadToEnd());
+
+                // Десериализация универсального времени и преобразование объекта DateTime в локальное время
+                stream.Position = 0;
+                DateTime localTimeAfterDeserialize = (DateTime)formatter.Deserialize(stream);
+
+                // Проверка корректности работы
+                Console.WriteLine("LocalTimeBeforeSerialize ={0}", localTimeBeforeSerialize);
+                Console.WriteLine("LocalTimeAfterDeserialize={0}", localTimeAfterDeserialize);
+            }
+        }
     }
 
     [Serializable]
     public class Dictionary<TKey, TValue> : ISerializable, IDeserializationCallback
     {
+        //private IEqualityComparer<TKey> m_comparer = new EqualityComparer<TKey>();
+        private IEqualityComparer<TKey> m_comparer;
+        private object m_version = new object();
+        private Int32[] m_buckets = new Int32[] { };
+        private const int Count = 0;
+        private int m_freeList = 0;
+        IEnumerable<Entry<TKey, TValue>> m_entries;
+
         // Здесь закрытые поля (не показанные)
         private SerializationInfo m_siInfo; // Только для десериализации
                                             // Специальный конструктор (необходимый интерфейсу ISerializable) для управления десериализацией
@@ -159,25 +228,28 @@ namespace Serialization
         {
             info.AddValue("Version", m_version);
             info.AddValue("Comparer", m_comparer, typeof(IEqualityComparer<TKey>));
-            info.AddValue("HashSize", (m_ buckets == null) ? 0 : m_buckets.Length);
+            info.AddValue("HashSize", (m_buckets == null) ? 0 : m_buckets.Length);
             if (m_buckets != null)
             {
                 KeyValuePair<TKey, TValue>[] array = new KeyValuePair<TKey, TValue>[Count];
-                CopyTo(array, 0);
+                //CopyTo(array, 0);
                 info.AddValue("KeyValuePairs", array, typeof(KeyValuePair<TKey, TValue>[]));
             }
         }
 
         // Метод, вызываемый после десериализации всех ключей/значений объектов
-        public virtual void IDeserializationCallback.OnDeserialization(Object sender)
+        //public virtual void IDeserializationCallback.OnDeserialization(Object sender)
+        void IDeserializationCallback.OnDeserialization(Object sender) // фикс ошибки Рихтера
         {
             if (m_siInfo == null) 
                 return; // Никогда не присваивается, возвращение управления
 
             Int32 num = m_siInfo.GetInt32("Version");
             Int32 num2 = m_siInfo.GetInt32("HashSize");
+
             m_comparer = (IEqualityComparer<TKey>)
             m_siInfo.GetValue("Comparer", typeof(IEqualityComparer<TKey>));
+
             if (num2 != 0)
             {
                 m_buckets = new Int32[num2];
@@ -192,13 +264,13 @@ namespace Serialization
 
                 KeyValuePair<TKey, TValue>[] pairArray = (KeyValuePair<TKey, TValue>[])m_siInfo.GetValue("KeyValuePairs", typeof(KeyValuePair<TKey, TValue>[]));
                 
-                if (pairArray == null)
-                    ThrowHelper.ThrowSerializationException(ExceptionResource.Serialization_MissingKeys);
+                //if (pairArray == null)
+                //    ThrowHelper.ThrowSerializationException(ExceptionResource.Serialization_MissingKeys);
 
                 for (Int32 j = 0; j < pairArray.Length; j++)
                 {
-                    if (pairArray[j].Key == null)
-                        ThrowHelper.ThrowSerializationException(ExceptionResource.Serialization_NullKey);
+                    //if (pairArray[j].Key == null)
+                    //    ThrowHelper.ThrowSerializationException(ExceptionResource.Serialization_NullKey);
 
                     Insert(pairArray[j].Key, pairArray[j].Value, true);
                 }
@@ -211,9 +283,18 @@ namespace Serialization
             m_version = num;
             m_siInfo = null;
         }
+
+        #region aleek
+        private void Insert(TKey key, TValue value, bool v)
+        {
+            throw new NotImplementedException();
+        }
+
+        private class Entry<TKey, TValue>
+        {
+        }
+        #endregion
     }
-
-
 
     [Serializable]
     internal class Base
@@ -313,28 +394,6 @@ namespace Serialization
         // ПРИМЕЧАНИЕ. Специальный конструктор НЕ НУЖЕН, потому что он нигде не вызывается
     }
 
-    private static void SingletonSerializationTest()
-    {
-        // Создание массива с несколькими ссылками на один объект Singleton
-        Singleton[] a1 = { Singleton.GetSingleton(), Singleton.GetSingleton() };
-
-        Console.WriteLine("Do both elements refer to the same object? " + (a1[0] == a1[1])); // "True"
-
-        using (var stream = new MemoryStream())
-        {
-            BinaryFormatter formatter = new BinaryFormatter();
-
-            // Сериализация и десериализация элементов массива
-            formatter.Serialize(stream, a1);
-            stream.Position = 0;
-            Singleton[] a2 = (Singleton[])formatter.Deserialize(stream);
-
-            // Проверяем, что все работает, как нужно:
-            Console.WriteLine("Do both elements refer to the same object? " + (a2[0] == a2[1])); // "True"
-            Console.WriteLine("Do all elements refer to the same object? " + (a1[0] == a2[0])); // "True"
-        }
-    }
-
     internal sealed class UniversalToLocalTimeSerializationSurrogate : ISerializationSurrogate
     {
         public void GetObjectData(Object obj, SerializationInfo info, StreamingContext context)
@@ -350,43 +409,10 @@ namespace Serialization
         }
     }
 
-    private static void SerializationSurrogateDemo()
-    {
-        using (var stream = new MemoryStream())
-        {
-            // 1. Создание желаемого модуля форматирования
-            IFormatter formatter = new SoapFormatter();
-
-            // 2. Создание объекта SurrogateSelector
-            SurrogateSelector ss = new SurrogateSelector();
-
-            // 3. Селектор выбирает наш суррогат для объекта DateTime
-            ss.AddSurrogate(typeof(DateTime), formatter.Context, new UniversalToLocalTimeSerializationSurrogate());
-            // ПРИМЕЧАНИЕ. AddSurrogate можно вызывать более одного раза для регистрации нескольких суррогатов
-            
-            // 4. Модуль форматирования использует наш селектор
-            formatter.SurrogateSelector = ss;
-
-            // Создание объекта DateTime с локальным временем машины и его сериализация
-            DateTime localTimeBeforeSerialize = DateTime.Now;
-            formatter.Serialize(stream, localTimeBeforeSerialize);
-
-            // Поток выводит универсальное время в виде строки, проверяя, что все работает
-            stream.Position = 0;
-            Console.WriteLine(new StreamReader(stream).ReadToEnd());
-
-            // Десериализация универсального времени и преобразование объекта DateTime в локальное время
-            stream.Position = 0;
-            DateTime localTimeAfterDeserialize = (DateTime)formatter.Deserialize(stream);
-            
-            // Проверка корректности работы
-            Console.WriteLine("LocalTimeBeforeSerialize ={0}", localTimeBeforeSerialize);
-            Console.WriteLine("LocalTimeAfterDeserialize={0}", localTimeAfterDeserialize);
-        }
-    }
-
     internal sealed class Ver1ToVer2SerializationBinder : SerializationBinder
     {
+        class Ver2 { };
+
         public override Type BindToType(String assemblyName, String typeName)
         {
             // Десериализация объекта Ver1 из версии 1.0.0.0 в объект Ver2. Вычисление имени сборки, определяющей тип Ver1

@@ -8,7 +8,7 @@ using System.Linq;
 namespace Attributes
 {
     
-    [assembly: CLSCompliant(true)]
+    //[assembly: CLSCompliant(true)]
     [Serializable]
     [DefaultMemberAttribute("Main")]
     [DebuggerDisplayAttribute("Richter", Name = "Jeff", Target = typeof(Program))]
@@ -24,7 +24,7 @@ namespace Attributes
 
         [CLSCompliant(true)]
         [STAThread]
-        public static void Main()
+        public static void Main_()
         {
             // Вывод набора атрибутов, примененных к типу
             ShowAttributes(typeof(Program));
@@ -34,6 +34,7 @@ namespace Attributes
                 from m in typeof(Program).GetTypeInfo().DeclaredMembers.OfType<MethodBase>()
                 where m.IsPublic
                 select m;
+
             foreach (MemberInfo member in members)
             {
                 // Вывод набора атрибутов, примененных к члену

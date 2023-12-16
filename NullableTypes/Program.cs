@@ -5,7 +5,9 @@ namespace NullableTypes
     internal struct Point
     {
         private Int32 m_x, m_y;
+
         public Point(Int32 x, Int32 y) { m_x = x; m_y = y; }
+
         public static Boolean operator ==(Point p1, Point p2)
         {
             return (p1.m_x == p2.m_x) && (p1.m_y == p2.m_y);
@@ -22,31 +24,37 @@ namespace NullableTypes
         static void Main(string[] args)
         {
             Nullable<Int32> x = 5;
-            Nullable<Int32> y = null;
+            //Int32? x = 5; // эквивалентно aleek
+
+            //Nullable<Int32> y = null;
+            Nullable<Int32> y = 0;
+
             Console.WriteLine("x: HasValue={0}, Value={1}", x.HasValue, x.Value);
             Console.WriteLine("y: HasValue={0}, Value={1}", y.HasValue, y.GetValueOrDefault());
             Console.WriteLine("Hello World!");
 
-            Int32? x2 = 5;
-            Int32? y2 = null;
+            //Int32? x = 5;
+            //Int32? y = null;
 
             Point? p1 = new Point(1, 1);
             Point? p2 = new Point(2, 2);
+
             Console.WriteLine("Are points equal? " + (p1 == p2).ToString());
             Console.WriteLine("Are points not equal? " + (p1 != p2).ToString());
 
-            Func<String> f = () => SomeMethod() ?? "Untitled";
+            //Func<String> f = () => SomeMethod() ?? "Untitled";
 
-            Func<String> f2 = () => {
+            Func<String> f = () => {
                 var temp = SomeMethod();
                 return temp != null ? temp : "Untitled";
             };
             
-            String s_ = SomeMethod1() ?? SomeMethod2() ?? "Untitled";
+            //String s = SomeMethod1() ?? SomeMethod2() ?? "Untitled";
             
-
             String s;
+
             var sm1 = SomeMethod1();
+
             if (sm1 != null) s = sm1;
             else
             {
@@ -55,35 +63,44 @@ namespace NullableTypes
                 else s = "Untitled";
             }
 
-            // После упаковки Nullable<T> возвращается null или упакованный тип T
-            Int32? n = null;
-            Object o = n; // o равно null
-            Console.WriteLine("o is null={0}", o == null); // "True"
+            { 
+                // После упаковки Nullable<T> возвращается null или упакованный тип T
+                Int32? n = null;
             
-            n = 5;
-            o = n; // o ссылается на упакованный тип Int32
-            Console.WriteLine("o's type={0}", o.GetType()); // "System.Int32"
+                Object o = n; // o равно null
+                Console.WriteLine("o is null={0}", o == null); // "True"
 
+                n = 5;
+                o = n; // o ссылается на упакованный тип Int32. почему упакованный? изначально ведь был?
+                Console.WriteLine("o's type={0}", o.GetType()); // "System.Int32"
+            }
             // Создание упакованного типа Int32
-            Object o2 = 5;
-            // Распаковка этого типа в Nullable<Int32> и в Int32
-            Int32? a = (Int32?)o2; // a = 5
-            Int32 b = (Int32)o2; // b = 5
-                                // Создание ссылки, инициализированной значением null
-            o = null;
-            // "Распаковка" ее в Nullable<Int32> и в Int32
-            a = (Int32?)o2; // a = null
-            b = (Int32)o2; // NullReferenceException
+            {
+                Object o = 5;
 
-            Int32? x3 = 5;
-            // Эта строка выводит "System.Int32", а не "System.Nullable<Int32>"
-            Console.WriteLine(x3.GetType());
+                // Распаковка этого типа в Nullable<Int32> и в Int32
+                Int32? a = (Int32?)o; // a = 5
+                Int32 b = (Int32)o; // b = 5
 
-            Int32? n2 = 5;
-            Int32 result = ((IComparable)n2).CompareTo(5); // Компилируется и выполняется
-            Console.WriteLine(result); // 0
+                // Создание ссылки, инициализированной значением null
+                o = null;
 
-            Int32 result2 = ((IComparable)(Int32)n2).CompareTo(5); // Громоздкий код
+                // "Распаковка" ее в Nullable<Int32> и в Int32
+                a = (Int32?)o; // a = null
+                b = (Int32)o; // NullReferenceException
+
+                Int32? x3 = 5;
+                // Эта строка выводит "System.Int32", а не "System.Nullable<Int32>"
+                Console.WriteLine(x3.GetType());
+
+                Int32? n = 5;
+                {
+                    Int32 result = ((IComparable)n).CompareTo(5); // Компилируется и выполняется
+                    Console.WriteLine(result); // 0
+                }
+
+                { Int32 result = ((IComparable)(Int32)n).CompareTo(5); } // Громоздкий код
+            }
         }
 
         private static string SomeMethod() 
@@ -156,14 +173,18 @@ namespace NullableTypes
         private static void NullCoalescingOperator()
         {
             Int32? b = null;
+
             // Приведенная далее инструкция эквивалентна следующей:
-            // x = (b.HasValue) ? b.Value : 123
             Int32 x = b ?? 123;
+            x = (b.HasValue) ? b.Value : 123;
             Console.WriteLine(x); // "123"
-                                  // Приведенная далее в инструкции строка эквивалентна следующему коду: String temp = GetFilename();
-         
-            // filename = (temp != null) ? temp : "Untitled";
+
+            // Приведенная далее в инструкции строка эквивалентна следующему коду:
+            String temp = GetFilename();
             String filename = GetFilename() ?? "Untitled";
+            filename = (temp != null) ? temp : "Untitled";
         }
+
+        private static string GetFilename() => ""; // aleek
     }
 }

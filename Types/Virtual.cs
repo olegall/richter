@@ -100,8 +100,7 @@ namespace CompanyB
     public class BetterPhone : CompanyA.Phone
     {
         // Метод Dial удален (так как он наследуется от базового типа)
-        // Здесь ключевое слово new удалено, а модификатор virtual заменен на override, чтобы указать, что этот метод связан с методом
-        // EstablishConnection из базового типа
+        // Здесь ключевое слово new удалено, а модификатор virtual заменен на override, чтобы указать, что этот метод связан с методом EstablishConnection из базового типа
         protected override void EstablishConnection()
         {
             Console.WriteLine("BetterPhone.EstablishConnection");
@@ -114,7 +113,7 @@ namespace Types
 {
     public class Virtual
     {
-        public void Main()
+        public void Main_()
         {
             CompanyB.BetterPhone phone = new CompanyB.BetterPhone();
             phone.Dial();
@@ -136,10 +135,6 @@ namespace Types
              Phone.Dial
              BetterPhone.EstablishConnection
              */
-
-            /**/
-
-            /**/
         }
     }
 }

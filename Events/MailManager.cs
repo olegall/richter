@@ -5,14 +5,14 @@ namespace Events
 {
     public static class EventArgExtensions
     {
-        public static void Raise<TEventArgs>(this TEventArgs e, Object sender, ref EventHandler<TEventArgs> eventDelegate)
+        public static void Raise<TEventArgs>(this TEventArgs e, Object sender, ref EventHandler<TEventArgs> eventDelegate) // что расширяем? класса TEventArgs нет aleek
         {
             // Копирование ссылки на поле делегата во временное поле для безопасности в отношении потоков
             EventHandler<TEventArgs> temp = Volatile.Read(ref eventDelegate); // пробрасывается наверх?
 
             // Если зарегистрированный метод заинтересован в событии, уведомите его
             if (temp != null) 
-            { 
+            {
                 temp(sender, e);
             }
         }
@@ -47,13 +47,13 @@ namespace Events
         protected virtual void OnNewMail(NewMailEventArgs e)
         {
             // Сохранить ссылку на делегата во временной переменной для обеспечения безопасности потоков
-            EventHandler<NewMailEventArgs> temp = Volatile.Read(ref NewMail);
+            EventHandler<NewMailEventArgs> temp = Volatile.Read(ref NewMail); // одновременно возвращает и пробрасывает через ref aleek
 
             // Если есть объекты, зарегистрированные для получения уведомления о событии, уведомляем их
             if (temp != null)
             {
-                var a = this;
                 temp(this, e);
+                //NewMail(this, e); // aleek
             }
         }
 
@@ -61,7 +61,7 @@ namespace Events
         //protected void OnNewMail(NewMailEventArgs e)
         //{
         //    EventHandler<NewMailEventArgs> temp = NewMail;
-        //    if (temp != null) 
+        //    if (temp != null)
         //        temp(this, e);
         //}
 
@@ -69,7 +69,7 @@ namespace Events
         //protected void OnNewMail(NewMailEventArgs e)
         //{
         //    EventHandler<NewMailEventArgs> temp = Thread.VolatileRead(ref NewMail);
-        //    if (temp != null) 
+        //    if (temp != null)
         //        temp(this, e);
         //}
 

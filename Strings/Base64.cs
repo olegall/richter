@@ -4,7 +4,7 @@ namespace Strings
 {
     class Base64
     {
-        void Main() 
+        public Base64()
         {
             // Получаем набор из 10 байт, сгенерированных случайным образом
             Byte[] bytes = new Byte[10];

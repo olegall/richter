@@ -431,7 +431,7 @@ namespace Richter
 
         static async Task OuterAsyncFunctionNoWarning()
         {
-            InnerAsyncFunction().NoWarning(); // Строка без await
+            //InnerAsyncFunction().NoWarning(); // Строка без await
                                               // Код продолжает выполняться, как и InnerAsyncFunction...
         }
 
@@ -525,7 +525,10 @@ namespace Richter
         #region Потоковые модели приложений
         private sealed class MyWpfWindow : Window
         {
-            public MyWpfWindow() { Title = "WPF Window"; }
+            public MyWpfWindow() { Title = "WPF Window"; } // почему присваивается?
+
+            public string Title { get; }
+
             protected override void OnActivated(EventArgs e)
             {
                 // Запрос свойства Result не позволяет GUI-потоку вернуть управление;
@@ -1674,23 +1677,24 @@ namespace Richter
         #endregion
 
         #region Классы коллекций для параллельного доступа
-        public class BlockingCollection<T> : IEnumerable<T>, ICollection, IEnumerable, IDisposable
-        {
-            public BlockingCollection(IProducerConsumerCollection<T> collection, Int32 boundedCapacity);
-            public void Add(T item);
-            public Boolean TryAdd(T item, Int32 msTimeout, CancellationToken cancellationToken);
-            public void CompleteAdding();
-            public T Take();
-            public Boolean TryTake(out T item, Int32 msTimeout, CancellationToken cancellationToken);
-            public Int32 BoundedCapacity { get; }
-            public Int32 Count { get; }
-            public Boolean IsAddingCompleted { get; } // true, если вызван метод AddingComplete
-            public Boolean IsCompleted { get; } // true, если вызван метод IsAddingComplete и Count==0
-            public IEnumerable<T> GetConsumingEnumerable(CancellationToken cancellationToken);
-            public void CopyTo(T[] array, int index);
-            public T[] ToArray();
-            public void Dispose();
-        }
+        
+        //public class BlockingCollection<T> : IEnumerable<T>, ICollection, IEnumerable, IDisposable // defined in FCL aleek
+        //{
+        //    public BlockingCollection(IProducerConsumerCollection<T> collection, Int32 boundedCapacity);
+        //    public void Add(T item);
+        //    public Boolean TryAdd(T item, Int32 msTimeout, CancellationToken cancellationToken);
+        //    public void CompleteAdding();
+        //    public T Take();
+        //    public Boolean TryTake(out T item, Int32 msTimeout, CancellationToken cancellationToken);
+        //    public Int32 BoundedCapacity { get; }
+        //    public Int32 Count { get; }
+        //    public Boolean IsAddingCompleted { get; } // true, если вызван метод AddingComplete
+        //    public Boolean IsCompleted { get; } // true, если вызван метод IsAddingComplete и Count==0
+        //    public IEnumerable<T> GetConsumingEnumerable(CancellationToken cancellationToken);
+        //    public void CopyTo(T[] array, int index);
+        //    public T[] ToArray();
+        //    public void Dispose();
+        //}
 
         public void MainConsumeItems() 
         {
@@ -1865,6 +1869,14 @@ namespace Richter
                     // Здесь размещается код проверки состояния... В конце цикла создается 2-секундная задержка без блокировки потока
                     await Task.Delay(2000); // await ожидает возвращения управления потоком
                 }
+            }
+        }
+
+        private class Window // aleek
+        {
+            protected virtual void OnActivated(EventArgs e)
+            {
+                throw new NotImplementedException();
             }
         }
         #endregion

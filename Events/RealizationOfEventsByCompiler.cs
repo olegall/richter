@@ -7,7 +7,7 @@ namespace Events
     /// Реализация событий компилятором
     /// </summary>
     class RealizationOfEventsByCompiler
-    //class RealizationOfEventsByCompiler<T> where T: EventHandler<NewMailEventArgs> // я. пробую избавиться от <NewMailEventArgs> повсюду
+    //class RealizationOfEventsByCompiler<T> where T: EventHandler<NewMailEventArgs> // пробую избавиться от <NewMailEventArgs> повсюду - aleek
     {
         // 1. ЗАКРЫТОЕ поле делегата, инициализированное значением null
         private EventHandler<NewMailEventArgs> NewMail = null;

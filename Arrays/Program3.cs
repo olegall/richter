@@ -6,7 +6,7 @@ namespace Arrays
     {
         private const Int32 c_numElements = 10000;
 
-        public static void Main()
+        public static void Main_()
         {
             // Объявление двухмерного массива
             Int32[,] a2Dim = new Int32[c_numElements, c_numElements];

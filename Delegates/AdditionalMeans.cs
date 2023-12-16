@@ -39,7 +39,7 @@ namespace Delegates
     {
         // объявляется только в классе. в методе нельзя
         // делегат - это класс. объявляется класс. не принимает параметров, возвращает string
-        private delegate String GetStatus();
+        private delegate String GetStatus(); // GetStatus - микс класса и метода с сигнатурой aleek
         //private delegate Object GetStatus();
         //private Delegate Object GetStatus();
 

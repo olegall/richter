@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Strings
 {
     class OwnFormat
     {
-        void Main()
+        public OwnFormat()
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat(new BoldInt32s(), "{0} {1} {2:M}", "Jeff", 123, DateTime.Now);
@@ -21,6 +18,7 @@ namespace Strings
             public Object GetFormat(Type formatType)
             {
                 if (formatType == typeof(ICustomFormatter)) return this;
+
                 return Thread.CurrentThread.CurrentCulture.GetFormat(formatType);
             }
             
@@ -28,10 +26,13 @@ namespace Strings
             {
                 String s;
                 IFormattable formattable = arg as IFormattable;
+
                 if (formattable == null) s = arg.ToString();
                 else s = formattable.ToString(format, formatProvider);
+
                 if (arg.GetType() == typeof(Int32))
                     return "<B>" + s + "</B>";
+
                 return s;
             }
         }
@@ -40,19 +41,21 @@ namespace Strings
         {
             // Если параметр IFormatProvider передан, выясним, предоставляет ли он объект ICustomFormatter
             ICustomFormatter cf = null;
+
             if (formatProvider != null)
                 cf = (ICustomFormatter)
 
             formatProvider.GetFormat(typeof(ICustomFormatter));
+
             // Продолжаем добавлять литеральные символы (не показанные в этом псевдокоде) и замещаемые параметры в массив символов объекта StringBuilder.
             Boolean MoreReplaceableArgumentsToAppend = true;
             while (MoreReplaceableArgumentsToAppend)
             {
             // argFormat ссылается на замещаемую строку форматирования, полученную из параметра format
-                String argFormat = /* ... */;
+                String argFormat = /* ... */null;
                 
                 // argObj ссылается на соответствующий элемент параметра-массива args
-                Object argObj = /* ... */;
+                Object argObj = /* ... */null;
                 
                 // argStr будет указывать на отформатированную строку, которая добавляется к результирующей строке
                 String argStr = null;
@@ -84,10 +87,11 @@ namespace Strings
                 // Добавляем символы из argStr в массив символов (поле - член класса)
                 /* ... */
                 // Проверяем, есть ли еще параметры, нуждающиеся в форматировании
-                MoreReplaceableArgumentsToAppend = /* ... */;
+                MoreReplaceableArgumentsToAppend = /* ... */false;
             }
 
-            return this;
+            //return this;
+            return null; // aleek
         }
     }
 }

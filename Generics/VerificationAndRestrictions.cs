@@ -27,6 +27,8 @@ namespace Generics
         //private static void M<T3, T4>() { }
     }
 
+    class Foo { }
+
     class Base
     {
         public virtual void M<T1, T2>() where T1 : struct
@@ -35,20 +37,15 @@ namespace Generics
         }
     }
 
-    class Derived : Base // если убрать 2 строки where - скомпилируется
+    class Derived : Base
     {
-        public override void M<T3, T4>()
-            //where T3 : EventArgs // точный класс нельзя
-            //where T3: Foo // точный класс нельзя
-            //where T3 : struct // Ошибка
-            //where T4 : class // Ошибка
+        public override void M<T3, T4>() // ошибки c where
+        //public void M<T3, T4>()
+            //where T3 : EventArgs
+            //where T3 : Foo
+            //where T3 : struct
+            //where T4 : class
         { 
-        }
-        
-        // убрал override - ошибки нет
-        void M1<T3, T4>() where T3 : EventArgs 
-                          where T4 : class
-        {
         }
     }
 
@@ -61,21 +58,17 @@ namespace Generics
 
     internal sealed class DerivedOneWhere : BaseOneWhere
     {
-        public override void M<T1>() //where T1 : class
+        //public override void M<T1>() where T1 : class
+        //public override void M<T2>() where T2 : class
+        public override void M<T1>()
         {
         }
     }
 
     class OverrideTest : Base
     {
-        public override void M<T1, T2>()
-        {
-        }
-
-        // ошибка. override не перегружает
-        //public void M<T1, T2>()
-        //{
-        //}
+        public override void M<T1, T2>() { }
+        //public void M<T1, T2>() {} // ошибка
     }
 
     /// <summary>
@@ -94,8 +87,8 @@ namespace Generics
         {
             T temp = o;
 
-            //T t1, t2 = null; // нельзя
-            T t1, t2 = default(T); // смысл default - не зная в дизайн тайме тип, в рантайме компилятор присвоит ставшему известным типу дефолтное значение
+            //T t1, t2 = null; // ошибка
+            T t1, t2 = default(T);
             t1 = t2;
         }
 
@@ -105,20 +98,24 @@ namespace Generics
             return o2;
         }
 
-        public static T Min2<T>(T o1, T o2) where T : IComparable<T>
-        {
-            if (o1.CompareTo(o2) < 0) // если убрать where T : IComparable<T>, то ошибка
-            {
-                return o1; 
-            }
-            return o2;
-        }
+        //public static T Min<T>(T o1, T o2) where T : IComparable<T>
+        ////public static T Min<T>(T o1, T o2) // ошибка
+        //{
+        //    if (o1.CompareTo(o2) < 0)
+        //    {
+        //        return o1; 
+        //    }
+        //    return o2;
+        //}
 
         private static void CallMin()
         {
             Object o1 = "Jeff", o2 = "Richter";
             Object oMin = Min<Object>(o1, o2); // Ошибка CS0311
-            Object oMin2 = Min2((IComparable<object>)o1, (IComparable<object>)o2);
+            //Object oMinError = Min<string>(o1, o2); // ошибка
+            Object oMin2 = Min<string>((string)o1, (string)o2);
+            Object oMin3 = Min<object>((string)o1, (string)o2);
+            Object oMin4 = Min((IComparable<object>)o1, (IComparable<object>)o2);
         }
     }
 }

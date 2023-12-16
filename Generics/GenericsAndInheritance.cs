@@ -5,6 +5,7 @@ namespace Generics
     internal sealed class Node<T>
     {
         public T m_data;
+
         public Node<T> m_next;
 
         public Node(T data) : this(data, null)

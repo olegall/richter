@@ -71,6 +71,7 @@ namespace Methods
         internal struct Point
         {
             public Int32 m_x, m_y;
+
             public Point(Int32 x, Int32 y)
             {
                 m_x = x;
@@ -94,6 +95,7 @@ namespace Methods
         //{
         //    // В значимый тип нельзя подставлять инициализацию экземплярных полей
         //    private Int32 m_x = 5;
+        //    //private Int32 m_x;
         //}
 
         internal struct SomeValType
@@ -112,7 +114,6 @@ namespace Methods
             {
                 // Выглядит необычно, но компилируется прекрасно, и все поля инициализируются значениями 0 или null
                 this = new SomeValType();
-                var res1 = this;
 
                 m_x = x; // Присваивает m_x значение x. Обратите внимание, что поле m_y было инициализировано нулем
             }
@@ -126,38 +127,46 @@ namespace Methods
             }
         }
 
-        internal struct SomeValTypeStatic
-        {
-            // C# на самом деле допускает определять для значимых типов конструкторы без параметров
-            static SomeValTypeStatic()
-            {
-                // Исполняется при первом обращении к значимому типу SomeValType
-            }
-        }
+        //internal struct SomeValType // ошибка в Рихтере?
+        //{
+        //    // C# на самом деле допускает определять для значимых типов конструкторы без параметров
+        //    static SomeValType()
+        //    {
+        //        // Исполняется при первом обращении к значимому типу SomeValType
+        //    }
+        //}
 
-        /* Хотя конструктор типа можно определить в значимом типе, этого никогда не следует делать, 
-           так как иногда CLR не вызывает статический конструктор значимого типа.
-           Например:*/
-        internal struct SomeValType2
-        {
-            static SomeValType2()
-            {
-                Console.WriteLine("This never gets displayed");
-            }
+        /* Хотя конструктор типа можно определить в значимом типе, этого никогда не следует делать, так как иногда CLR не вызывает статический конструктор значимого типа. Например: */
+        //internal struct SomeValType
+        //{
+        //    static SomeValType()
+        //    {
+        //        Console.WriteLine("This never gets displayed");
+        //    }
             
-            public Int32 m_x;
-        }
+        //    public Int32 m_x;
+        //}
 
-        internal sealed class SomeType3
-        {
-            private static Int32 s_x = 5;
-        }
+        //internal sealed class SomeType
+        //{
+        //    private static Int32 s_x = 5;
+        //}
 
-        internal sealed class SomeType4
-        {
-            private static Int32 s_x;
-            static SomeType4() { s_x = 5; }
-        }
+        //internal sealed class SomeType
+        //{
+        //    private static Int32 s_x;
+
+        //    static SomeType() { s_x = 5; }
+        //}
+
+        //internal sealed class SomeType
+        //{
+        //    private static Int32 s_x = 5; // сначала
+
+        //    static SomeType() {
+        //        s_x = 10; // потом
+        //    }
+        //}
 
         public sealed class Complex
         {
@@ -205,14 +214,18 @@ namespace Methods
 
         static void Main(string[] args)
         {
-            SomeValType2[] a = new SomeValType2[10];
-            a[0].m_x = 123;
-            Console.WriteLine(a[0].m_x); // Выводится 123
+            SomeValType[] a = new SomeValType[10];
+            //a[0].m_x = 123;
+            //Console.WriteLine(a[0].m_x); // Выводится 123
 
             Rational r1 = 5; // Неявное приведение Int32 к Rational
             Rational r2 = 2.5F; // Неявное приведение Single к Rational
             Int32 x = (Int32)r1; // Явное приведение Rational к Int32
             Single s = (Single)r2; // Явное приведение Rational к Single
+
+            // сработает статический конструктор?
+            SomeRefType a1; 
+            new SomeRefType();
         }
     }
 }

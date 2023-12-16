@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace Properties
 {
-    class Program
+    namespace A1
     {
         public sealed class Employee
         {
@@ -16,6 +16,7 @@ namespace Properties
             public String Name
             {
                 get { return (m_Name); }
+                //get { return m_Name; }
                 set { m_Name = value; } // Ключевое слово value идентифицирует новое значение
             }
 
@@ -26,21 +27,25 @@ namespace Properties
                 {
                     if (value < 0) // Ключевое слово value всегда идентифицирует новое значение
                         throw new ArgumentOutOfRangeException("value", value.ToString(), "The value must be greater than or equal to 0");
-                    
+
                     m_Age = value;
                 }
             }
         }
+    }
 
-        public sealed class Employee2
+    namespace A2
+    {
+        public sealed class Employee
         {
             // Это свойство является автоматически реализуемым
             public String Name { get; set; }
-
             private Int32 m_Age;
+
             public Int32 Age
             {
                 get { return (m_Age); }
+
                 set
                 {
                     if (value < 0) // value всегда идентифицирует новое значение
@@ -50,11 +55,54 @@ namespace Properties
                 }
             }
         }
+    }
 
-        
+    namespace A3
+    { 
+        // error CS0111: Class 'SomeType' already defines a member called 'this' with the same parameter types
+        public sealed class SomeType
+        {
+            // Определяем метод доступа get_Item
+            public Int32 this[Boolean b]
+            {
+                get { return 0; }
+            }
+
+            // Определяем метод доступа get_Jeff
+            //[IndexerName("Jeff")]
+            //public String this[Boolean b]
+            //{
+            //    get { return null; }
+            //}
+
+            //public String this[int a] // aleek
+            //{
+            //    get { return string.Empty; }
+            //}
+        }
+    }
+
+    namespace A4
+    {
+        public class SomeType
+        {
+            private String m_name;
+
+            public String Name
+            {
+                get { return m_name; }
+
+                protected set { m_name = value; }
+            }
+        }
+    }
+
+    class Program
+    {
         private static String Name
         {
             get { return null; }
+
             set { }
         }
 
@@ -63,6 +111,7 @@ namespace Properties
         public sealed class Classroom
         {
             private List<String> m_students = new List<String>();
+
             public List<String> Students { get { return m_students; } }
 
             public Classroom() { }
@@ -85,7 +134,9 @@ namespace Properties
         public class Tuple<T1>
         {
             private T1 m_Item1;
+
             public Tuple(T1 item1) { m_Item1 = item1; }
+
             public T1 Item1 { get { return m_Item1; } }
         }
 
@@ -111,7 +162,7 @@ namespace Properties
                 m_Item5 = item5; 
                 m_Item6 = item6; 
                 m_Item7 = item7; 
-                m_Rest = rest;
+                m_Rest = t;
             }
 
             public T1 Item1 { get { return m_Item1; } }
@@ -142,71 +193,40 @@ namespace Properties
         //{
         //    return Tuple.Create(Math.Min(a, b), Math.Max(a, b)); // Упрощенный синтаксис
         //}
-
-        public sealed class SomeType
-        {
-            // Определяем метод доступа get_Item
-            //[IndexerName("Foo")] // я
-            public Int32 this[Boolean b]
-            {
-                get { return 0; }
-            }
-
-            // Определяем метод доступа get_Jeff
-            [IndexerName("Jeff")]
-            public String this[Boolean b]
-            {
-                get { return null; }
-            }
-
-            //public String this[int a]
-            //{
-            //    get { return string.Empty; }
-            //}
-
-            // error CS0111: Class 'SomeType' already defines a member called 'this' with the same parameter types
-        }
-
-        public class SomeType2
-        {
-            private String m_name;
-            public String Name
-            {
-                get { return m_name; }
-                protected set { m_name = value; }
-            }
-        }
-
+        
         static void Main(string[] args)
         {
-            Employee e = new Employee();
-            e.Name = "Jeffrey Richter"; // "Задать" имя сотрудника
-            String EmployeeName = e.Name; // "Получить" имя сотрудника
-            e.Age = 41; // "Задать" возраст сотрудника
-            e.Age = -5; // Вброс исключения ArgumentOutOfRangeException
-            Int32 EmployeeAge = e.Age; // "Получить" возраст сотрудника
+            {
+                A1.Employee e = new A1.Employee();
+                e.Name = "Jeffrey Richter"; // "Задать" имя сотрудника
+                String EmployeeName = e.Name; // "Получить" имя сотрудника
+                e.Age = 41; // "Задать" возраст сотрудника
+                e.Age = -5; // Вброс исключения ArgumentOutOfRangeException
+                Int32 EmployeeAge = e.Age; // "Получить" возраст сотрудника
+            }
+            // При попытке скомпилировать следующую строку компилятор вернет сообщение об ошибке: error CS0206: A property or indexer may not be passed as an out or ref parameter.
+            //MethodWithOutParam(out Name);
 
-            // При попытке скомпилировать следующую строку компилятор вернет сообщение об ошибке:
-            // error CS0206: A property or indexer may not be passed as an out or ref parameter.
-            MethodWithOutParam(out Name);
+            { A1.Employee e = new A1.Employee() { Name = "Jeff", Age = 45 }; }
+            {
+                A1.Employee e = new A1.Employee();
+                e.Name = "Jeff";
+                e.Age = 45;
+            }
 
-            Employee e2 = new Employee() { Name = "Jeff", Age = 45 };
-
-            Employee e3 = new Employee();
-            e3.Name = "Jeff";
-            e3.Age = 45;
-
-            String s = new Employee() { Name = "Jeff", Age = 45 }.ToString().ToUpper();
-
-            var table1 = new Dictionary<String, Int32> {
-                { "Jeffrey", 1 }, { "Kristin", 2 }, { "Aidan", 3 }, { "Grant", 4 }
-            };
-
-            var table2 = new Dictionary<String, Int32>();
-            table2.Add("Jeffrey", 1);
-            table2.Add("Kristin", 2);
-            table2.Add("Aidan", 3);
-            table2.Add("Grant", 4);
+            String s = new A1.Employee() { Name = "Jeff", Age = 45 }.ToString().ToUpper();
+            {
+                var table = new Dictionary<String, Int32> {
+                    { "Jeffrey", 1 }, { "Kristin", 2 }, { "Aidan", 3 }, { "Grant", 4 }
+                };
+            }
+            {
+                var table = new Dictionary<String, Int32>();
+                table.Add("Jeffrey", 1);
+                table.Add("Kristin", 2);
+                table.Add("Aidan", 3);
+                table.Add("Grant", 4);
+            }
 
             // Определение типа, создание сущности и инициализация свойств
             var o1 = new { Name = "Jeff", Year = 1964 };
@@ -239,20 +259,20 @@ namespace Properties
 
             var t = Tuple.Create(0, 1, 2, 3, 4, 5, 6, Tuple.Create(7, 8));
             Console.WriteLine("{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}", t.Item1, t.Item2, t.Item3, t.Item4, t.Item5);
+            {
+                dynamic e = new System.Dynamic.ExpandoObject();
+                e.x = 6; // Добавление свойства 'x' типа Int32 со значением 6
+                e.y = "Jeff"; // Добавление свойства 'y' строкового типа со значением "Jeff"
+                e.z = null; // Добавление свойста 'z' объекта со значением null
 
-            dynamic e4 = new System.Dynamic.ExpandoObject();
-            e4.x = 6; // Добавление свойства 'x' типа Int32 со значением 6
-            e4.y = "Jeff"; // Добавление свойства 'y' строкового типа со значением "Jeff"
-            e4.z = null; // Добавление свойста 'z' объекта со значением null
-                        
-            // Просмотр всех свойств и других значений
-            foreach (var v in (IDictionary<String, Object>)e4)
-                Console.WriteLine("Key={0}, V={1}", v.Key, v.Value);
+                // Просмотр всех свойств и других значений
+                foreach (var v in (IDictionary<String, Object>)e)
+                    Console.WriteLine("Key={0}, V={1}", v.Key, v.Value);
 
-            // Удаление свойства 'x' и его значения
-            var d = (IDictionary<String, Object>)e4;
-            d.Remove("x");
-
+                // Удаление свойства 'x' и его значения
+                var d = (IDictionary<String, Object>)e;
+                d.Remove("x");
+            }
             // Выделить массив BitArray, который может хранить 14 бит
             BitArray ba = new BitArray(14);
 

@@ -1,17 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CSharp.RuntimeBinder;
 
 namespace Reflection
 {
-    internal sealed class Dictionary<TKey, TValue> // не конфликтует с System.Collections.Generic.Dictionary  
+    internal sealed class Dictionary<TKey, TValue> // не конфликтует с System.Collections.Generic.Dictionary aleek
     {
     }
+
     
+
     class Program
     {
+        static void LoadAssemAndShowPublicTypes(String assemId)
+        {
+            // Явная загрузка сборки в домен приложений
+            Assembly a = Assembly.Load(assemId);
+
+            // Цикл выполняется для каждого типа, открыто экспортируемого загруженной сборкой
+            foreach (Type t in a.ExportedTypes)
+            {
+                // Вывод полного имени типа
+                Console.WriteLine(t.FullName);
+            }
+        }
+
+        public static void SomeMethod(Object o)
+        {
+            // GetType возвращает тип объекта во время выполнения (позднее связывание)
+            // typeof возвращает тип указанного класса (раннее связывание)
+
+            if (o.GetType() == typeof(FileInfo)) { }
+
+            if (o.GetType() == typeof(DirectoryInfo)) { }
+
+            var false1 = new DirectoryInfo("C:/").GetType() == typeof(FileInfo);
+        }
+
+        private static Assembly ResolveEventHandler(Object sender, ResolveEventArgs args)
+        {
+            string dllName = new AssemblyName(args.Name).Name + ".dll";
+
+            var assem = Assembly.GetExecutingAssembly();
+
+            string resourceName = assem.GetManifestResourceNames().FirstOrDefault(rn => rn.EndsWith(dllName));
+
+            if (resourceName == null)
+                return null;
+
+            // Not found, maybe another handler will find it
+            using (Stream stream = assem.GetManifestResourceStream(resourceName))
+            {
+                byte[] assemblyData = new byte[stream.Length];
+                stream.Read(assemblyData, 0, assemblyData.Length);
+                return Assembly.Load(assemblyData);
+            }
+        }
+
+        private static Boolean AreObjectsTheSameType(Object o1, Object o2)
+        {
+            return o1.GetType() == o2.GetType();
+        }
+
+        static Type typeReference /*...*/ ; // Например: o.GetType() или typeof(Object)
+
+        TypeInfo typeDefinition = typeReference.GetTypeInfo();
+
         private const BindingFlags c_bf = 
             BindingFlags.FlattenHierarchy | 
             BindingFlags.Instance | 
@@ -23,16 +80,17 @@ namespace Reflection
         {
             ExceptionTree.Go();
 
-            Console.WriteLine("*** LoadAssemAndShowPublicTypes ***");
             string dataAssembly = "System.Data, version=4.0.0.0, culture=neutral, PublicKeyToken=b77a5c561934e089";
-            Wrapper.LoadAssemAndShowPublicTypes(dataAssembly);
-            Wrapper.SomeMethod(new object());
-
-            //var res1 = new Dictionary<,>();
+            LoadAssemAndShowPublicTypes(dataAssembly);
+            SomeMethod(new object());
+            
+            #region aleek
+            //new Dictionary<,>();
             var res2 = new Dictionary<object, object>();
             var res3 = new Dictionary<string, string>();
             var res4 = typeof(Dictionary<,>);
             var res5 = typeof(Dictionary<object, object>);
+            #endregion
 
             // Получаем ссылку на объект Type обобщенного типа
             // если закомментировать объявленный здесь Dictionary - перейдёт на System.Collections.Generic.Dictionary. Почему?
@@ -49,8 +107,8 @@ namespace Reflection
 
             // Перебор всех сборок, загруженных в домене
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            //foreach (Assembly a in assemblies)
-            foreach (Assembly a in assemblies.Where(x => x.FullName.Contains("System.Data")))
+            foreach (Assembly a in assemblies)
+            //foreach (Assembly a in assemblies.Where(x => x.FullName.Contains("System.Data"))) // aleek
             {
                 Show(0, "Assembly: {0}", a);
 
@@ -73,19 +131,15 @@ namespace Reflection
                 }
             }
 
-            Console.WriteLine();
             Type someTypeRefTest = typeof(SomeTypeRefTest);
             RefTest(someTypeRefTest);
 
             Type someType = typeof(SomeType);
             BindToMemberThenInvokeTheMember(someType);
-            Console.WriteLine();
 
             BindToMemberCreateDelegateToMemberThenInvokeTheMember(someType);
-            Console.WriteLine();
 
             UseDynamicToBindAndInvokeTheMember(someType);
-            Console.WriteLine();
 
             // Выводим размер кучи до отражения
             // Show("Before doing anything");
@@ -130,8 +184,7 @@ namespace Reflection
             Console.WriteLine(new String(' ', 3 * indent) + format, args);
         }
 
-        // моё
-        private static void Show(String format)
+        private static void Show(String format) // aleek
         {
             //Console.WriteLine(new String(' ', 3 * indent) + format, args);
         }
@@ -151,7 +204,6 @@ namespace Reflection
 
             var x2 = args[0]; // x after constructor called
             Console.WriteLine(((Foo)args[0]).FooProp);
-            Console.WriteLine();
         }
 
         private static void BindToMemberThenInvokeTheMember(Type type)
@@ -299,8 +351,8 @@ namespace Reflection
         }
 
         // Добавление метода обратного вызова для события
-        private static void EventCallback(Object sender, EventArgs e)
-        {
-        }
+        private static void EventCallback(Object sender, EventArgs e) { }
+
+
     }
 }

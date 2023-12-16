@@ -23,7 +23,7 @@ namespace Generics
         {
             List<DateTime> dt = new List<DateTime>();
             //DateTimeList dt = new DateTimeList();
-            Boolean false1 = typeof(List<DateTime>) == typeof(DateTimeList);
+            Boolean false1 = typeof(List<DateTime>) == typeof(DateTimeList); // почему? aleek
             Boolean true1 = typeof(List<DateTime>) == typeof(List<DateTime>);
             Boolean true2 = typeof(DateTimeList) == typeof(DateTimeList);
         }

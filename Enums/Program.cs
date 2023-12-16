@@ -15,6 +15,27 @@ namespace Enums
             Orange // Присваивается значение 4
         }
 
+        //internal struct Color : System.Enum
+        //{
+        //    // Далее перечислены открытые константы, определяющие символьные имена и значения
+        //    public const Color White = (Color)0; // Color чёрный, но без ошибки aleek
+        //    public const Color Red = (Color)1;
+        //    public const Color Green = (Color)2;
+        //    public const Color Blue = (Color)3;
+        //    public const Color Orange = (Color)4;
+        //    // Далее находится открытое поле экземпляра со значением переменной Color
+        //    // Код с прямой ссылкой на этот экземпляр невозможен
+        //    public Int32 value__;
+        //}
+
+        //internal enum Color : byte
+        //{
+        //    White,
+        //    Red,
+        //    Green,
+        //    Blue,
+        //    Orange
+        //}
 
         // CS0527.cs  
         // compile with: /target:library  
@@ -36,25 +57,6 @@ namespace Enums
         //    public Int32 value__;
         //}
 
-        [Flags, Serializable]
-        public enum FileAttributes
-        {
-            ReadOnly = 0x0001,
-            Hidden = 0x0002,
-            System = 0x0004,
-            Directory = 0x0010,
-            Archive = 0x0020,
-            Device = 0x0040,
-            Normal = 0x0080,
-            Temporary = 0x0100,
-            SparseFile = 0x0200,
-            ReparsePoint = 0x0400,
-            Compressed = 0x0800,
-            Offline = 0x1000,
-            NotContentIndexed = 0x2000,
-            Encrypted = 0x4000
-        }
-
         [Flags] // Компилятор C# допускает значение "Flags" или "FlagsAttribute"
         internal enum Actions
         {
@@ -74,7 +76,7 @@ namespace Enums
             Color color100 = (Color)100; // 100. ошибки нет, хоть и вышли за пределв enum-а
             //int int1 = (Color1)100;
 
-            Color c = Color.Blue;
+            Color c = Color.Blue; // Blue
             Color[] colors = (Color[])Enum.GetValues(typeof(Color));
             Console.WriteLine("Number of symbols defined: " + colors.Length);
             Console.WriteLine("Value\tSymbol\n-----\t------");
@@ -86,6 +88,11 @@ namespace Enums
             }
 
             _2();
+
+            FileAttributes fa = FileAttributes.System;
+            fa = fa.Set(FileAttributes.ReadOnly);
+            fa = fa.Clear(FileAttributes.System);
+            fa.ForEach(f => Console.WriteLine(f));
         }
 
         static void _2()
@@ -100,7 +107,7 @@ namespace Enums
             Enum.TryParse<Color>("1", false, out c); // объявленный c переопределился на red
 
             // Создается экземпляр перечисления Color со значение 23
-            Enum.TryParse<Color>("23", false, out c);
+            Enum.TryParse<Color>("23", false, out c); // out vs return - out более универсальный, можно присвоить результат в этом или другом скоупе aleek
 
             // Выводит "True", так как в перечислении Color идентификатор Red определен как 1
             Console.WriteLine(Enum.IsDefined(typeof(Color), 1));

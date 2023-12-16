@@ -1,68 +1,63 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Types
 {
     // Тип, неявно производный от Object
-    class Employee
-    {
-
-    }
+    class Employee { }
 
     // Тип, явно производный от Object
-    class Employee : System.Object
-    {
+    //class Employee : System.Object { }
 
-    }
-
-    internal class Manager : Employee // базовый класс можно без internal
-    {
- 
-    }
+    internal class Manager : Employee { } // базовый класс можно без internal
 
     // Вот как выглядит реализация метода Equals для Object:
-    public class Object1 // почему конфликта с CLR-м object нет?
+    namespace A1
     {
-        public virtual Boolean Equals(Object obj)
+        public class Object // почему конфликта с CLR-м object нет?
         {
-            // Если обе ссылки указывают на один и тот же объект, значит, эти объекты равны
-            if (this == obj)
-                return true;
+            public virtual Boolean Equals(Object obj)
+            {
+                // Если обе ссылки указывают на один и тот же объект, значит, эти объекты равны
+                if (this == obj)
+                    return true;
 
-            // Предполагаем, что объекты не равны
-            return false;
+                // Предполагаем, что объекты не равны
+                return false;
+            }
         }
     }
 
     // Учитывая это, компания Microsoft должна была бы реализовать метод Equals типа Object примерно так:
-    public class Object2
+    namespace A2
     {
-        public virtual Boolean Equals(Object obj)
+        public class Object
         {
-            // Сравниваемый объект не может быть равным null
-            if (obj == null)
-                return false;
+            public virtual Boolean Equals(Object obj)
+            {
+                // Сравниваемый объект не может быть равным null
+                if (obj == null)
+                    return false;
 
-            // Объекты разных типов не могут быть равны
-            if (this.GetType() != obj.GetType())
-                return false;
+                // Объекты разных типов не могут быть равны
+                if (this.GetType() != obj.GetType())
+                    return false;
 
-            // Если типы объектов совпадают, возвращаем true при условии, что все их поля попарно равны.
-            // Так как в System.Object не определены поля, следует считать, что поля равны
-            return true;
+                // Если типы объектов совпадают, возвращаем true при условии, что все их поля попарно равны.
+                // Так как в System.Object не определены поля, следует считать, что поля равны
+                return true;
+            }
         }
     }
 
-    public class Object3
+    namespace A3
     {
-        public static Boolean ReferenceEquals(Object objA, Object objB)
+        public class Object3
         {
-            return (objA == objB);
+            public static Boolean ReferenceEquals(Object objA, Object objB)
+            {
+                return (objA == objB);
+            }
         }
     }
 
@@ -82,6 +77,7 @@ namespace Types
         public static String AStaticProperty
         {
             get { return s_AStaticField; }
+
             set { s_AStaticField = value; }
         }
 
@@ -90,16 +86,19 @@ namespace Types
         public static event EventHandler AStaticEvent;
     }
 
-    internal class Employee2
+    namespace A4
     {
-        // Невиртуальный экземплярный метод
-        public Int32 GetYearsEmployed() { return 0; }
+        internal class Employee
+        {
+            // Невиртуальный экземплярный метод
+            public Int32 GetYearsEmployed() { return 0; }
 
-        // Виртуальный метод (виртуальный - значит, экземплярный)
-        public virtual String GetProgressReport() { return ""; }
+            // Виртуальный метод (виртуальный - значит, экземплярный)
+            public virtual String GetProgressReport() { return ""; }
 
-        // Статический метод
-        public static Employee Lookup(String name) { return new Employee(); }
+            // Статический метод
+            public static Employee Lookup(String name) { return new Employee(); }
+        }
     }
 
     internal class SomeClass
@@ -148,49 +147,49 @@ namespace Types
 
             // Приведение типа не требуется, т. к. new возвращает объект Employee, а Object — это базовый тип для Employee.
             Object o = new Employee();
-
-            // Приведение типа обязательно, т. к. Employee — производный от Object
-            // В других языках (таких как Visual Basic) компилятор не потребует явного приведения
+            
+            // Приведение типа обязательно, т. к. Employee — производный от Object. В других языках (таких как Visual Basic) компилятор не потребует явного приведения
             Employee e = (Employee)o;
 
-            // Создаем объект Manager и передаем его в PromoteEmployee
-            // Manager ЯВЛЯЕТСЯ производным от Employee, поэтому PromoteEmployee работает
+            // Создаем объект Manager и передаем его в PromoteEmployee. Manager ЯВЛЯЕТСЯ производным от Employee, поэтому PromoteEmployee работает
             Manager m = new Manager();
             PromoteEmployee(m);
 
-            // Создаем объект DateTime и передаем его в PromoteEmployee
-            // DateTime НЕ ЯВЛЯЕТСЯ производным от Employee, поэтому PromoteEmployee выбрасывает исключение System.InvalidCastException
+            // Создаем объект DateTime и передаем его в PromoteEmployee. DateTime НЕ ЯВЛЯЕТСЯ производным от Employee, поэтому PromoteEmployee выбрасывает исключение System.InvalidCastException
             DateTime newYears = new DateTime(2013, 1, 1);
             PromoteEmployee(newYears);
 
             //System.Int32 a = new System.Int32();
 
-            int a = 0; // Самый удобный синтаксис
-            System.Int32 a2 = 0; // Удобный синтаксис
-            int a3 = new int(); // Неудобный синтаксис
-            System.Int32 a4 = new System.Int32(); // Самый неудобный синтаксис
+            { int a = 0; } // Самый удобный синтаксис
+            //System.Int32 a = 0; // Удобный синтаксис
+            //int a = new int(); // Неудобный синтаксис
+            //System.Int32 a = new System.Int32(); // Самый неудобный синтаксис
 
-            //Int32 i = 5; // 32-разрядное число
-            //Int64 l = i; // Неявное приведение типа к 64-разрядному значению
-
-            Int32 i = 5; // Неявное приведение Int32 к Int32
-            Int64 l = i; // Неявное приведение Int32 к Int64
-            Single s = i; // Неявное приведение Int32 к Single
-            Byte b1 = (Byte)i; // Явное приведение Int32 к Byte
-            Int16 v = (Int16)s; // Явное приведение Single к Int16
-
+            {
+                Int32 i = 5; // 32-разрядное число
+                Int64 l = i; // Неявное приведение типа к 64-разрядному значению
+            }
+            {
+                Int32 i = 5; // Неявное приведение Int32 к Int32
+                Int64 l = i; // Неявное приведение Int32 к Int64
+                Single s = i; // Неявное приведение Int32 к Single
+                Byte b = (Byte)i; // Явное приведение Int32 к Byte
+                Int16 v = (Int16)s; // Явное приведение Single к Int16
+            }
             Boolean found = false; // В готовом коде found присваивается 0
-            Int32 x = 100 + 20 + 3; // В готовом коде x присваивается 123
-            String s2 = "a " + "bc"; // В готовом коде s присваивается "a bc"
+            {
+                Int32 x = 100 + 20 + 3; // В готовом коде x присваивается 123
+                String s = "a " + "bc"; // В готовом коде s присваивается "a bc"
+            }
+            {
+                Int32 x = 100; // Оператор присваивания
+                Int32 y = x + 23; // Операторы суммирования и присваивания
+                Boolean lessThanFifty = (y < 50); // Операторы "меньше чем" и присваивания
+            }
 
-            Int32 x2 = 100; // Оператор присваивания
-            Int32 y = x + 23; // Операторы суммирования и присваивания
-            Boolean lessThanFifty = (y < 50); // Операторы "меньше чем" и присваивания
-
-            
-
-            //UInt32 invalid = unchecked((UInt32) - 1); // OK
-            
+            //UInt32 invalid = unchecked((UInt32) -1); // OK. ошибка Рихтера aleek
+            UInt32 invalid = unchecked((UInt32) (-1));
             
             checked
             { 
@@ -208,13 +207,16 @@ namespace Types
             //SomeVal v1 = new SomeVal(); // Размещается в стеке
 
             // Две следующие строки компилируются, так как C# считает, что поля в v1 инициализируются нулем
-            SomeVal v1 = new SomeVal();
-            Int32 a1 = v1.x;
-
+            {
+                SomeVal v1 = new SomeVal();
+                Int32 a = v1.x;
+            }
             // Следующие строки вызовут ошибку компиляции, поскольку C# не считает, что поля в v1 инициализируются нулем
-            SomeVal v1_2;
-            //Int32 a2 = v1_2.x;
-            // error CS0170: Use of possibly unassigned field 'x' (ошибка CS0170: Используется поле 'x', которому не присвоено значение)
+            {
+                SomeVal v1;
+                //Int32 a = v1.x;
+                // error CS0170: Use of possibly unassigned field 'x' (ошибка CS0170: Используется поле 'x', которому не присвоено значение)
+            }
 
             dynamic d = 123;
             //var result = M(d); // 'var result' - то же, что 'dynamic result'
@@ -226,14 +228,13 @@ namespace Types
             Int32 n3 = d; // OK: Неявное приведение dynamic к Int32 (распаковка)
 
             //new DynamicObject(); // нельзя, т.к. конструктор protected
-            new Object1(); // можно просто создать объект, не присваивая никуда
+            new A1.Object(); // можно просто создать объект, не присваивая никуда
 
             dynamic stringType = new StaticMemberDynamicWrapper(typeof(String));
-            var r = stringType.Concat("A", "B"); // Динамический вызов статического
-                                                 // метода Concat класса String
+            var r = stringType.Concat("A", "B"); // Динамический вызов статического метода Concat класса String
             Console.WriteLine(r); // выводится "AB"
 
-            new Virtual().Main();
+            new Virtual().Main_();
         }
 
         // Ссылочный тип (поскольку 'class')
@@ -306,8 +307,8 @@ namespace Types
             v1.x = 5; // Изменение в стеке
             Console.WriteLine(r1.x); // Отображается "5"
             Console.WriteLine(v1.x); // Также отображается "5"
-                                        // В левой части рис. 5.2 показан результат
-                                        // выполнения предыдущих строк
+            // В левой части рис. 5.2 показан результат выполнения предыдущих строк
+
             SomeRef r2 = r1; // Копируется только ссылка (указатель)
             SomeVal v2 = v1; // Помещаем в стек и копируем члены
             r1.x = 8; // Изменяются r1.x и r2.x
@@ -316,8 +317,7 @@ namespace Types
             Console.WriteLine(r2.x); // Отображается "8"
             Console.WriteLine(v1.x); // Отображается "9"
             Console.WriteLine(v2.x); // Отображается "5"
-                                        // В правой части рис. 5.2 показан результат
-                                        // выполнения ВСЕХ предыдущих строк
+            // В правой части рис. 5.2 показан результат выполнения ВСЕХ предыдущих строк
         }
     }
 }

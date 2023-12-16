@@ -46,7 +46,6 @@
   <ItemGroup>
     <Compile Include="AdditionalMeans.cs" />
     <Compile Include="DelegateReflection.cs" />
-    <Compile Include="FamiliarityWithDelegates.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Wrapper.cs" />

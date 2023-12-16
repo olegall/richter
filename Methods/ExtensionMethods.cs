@@ -4,18 +4,6 @@ using System.Text;
 
 namespace Methods
 {
-    //public static class StringBuilderExtensions
-    //{
-    //    public static Int32 IndexOf(StringBuilder sb, Char value) // пока ещё это не метод расширения stringbuilder-а
-    //    {
-    //        for (Int32 index = 0; index < sb.Length; index++)
-    //            if (sb[index] == value)
-    //                return index;
-
-    //        return -1;
-    //    }
-    //}
-
     public static class StringBuilderExtensions
     {
         public static Int32 IndexOf(this StringBuilder sb, Char value) // this - текущим классом расширяем StringBuilders
@@ -36,7 +24,7 @@ namespace Methods
                 Console.WriteLine(item);
         }
 
-        public static void InvokeAndCatch<TException>(this Action<Object> d, Object o) where TException : Exception
+        public static void InvokeAndCatch<TException>(this Action<Object> d, Object o) where TException : Exception // расширяет Action
         {
             try
             {
@@ -86,7 +74,8 @@ namespace Methods
             sb2.Replace('.', '!');
 
             // Показывает каждый символ в каждой строке консоли
-            "Grant".ShowItems(); // как он видит ShowItems, который инкапсулирован в класс?
+            // вызывается без аргумента, в сигнатуре он был с this для метода расширения. aleek
+            "Grant".ShowItems(); // String реализует IEnumerable, поэтому здесь доступен ShowItems() - здесь и далее
 
             // Показывает каждую строку в каждой строке консоли
             new[] { "Jeff", "Kristin" }.ShowItems();
@@ -100,6 +89,7 @@ namespace Methods
 
             // Cоздание делегата Action, ссылающегося на статический метод расширения ShowItems; первый аргумент инициализируется ссылкой на строку "Jeff"
             Action a = "Jeff".ShowItems;
+            //Action a = "Jeff".ShowItems();
  
             // Вызов делегата, вызывающего ShowItems и передающего ссылку на строку "Jeff"
             a();

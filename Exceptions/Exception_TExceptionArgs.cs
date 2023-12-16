@@ -31,19 +31,19 @@ namespace Exceptions
             } 
         }
                         // 2 параметра                                                  // 3 параметра
-        public Exception(String message = null, Exception innerException = null) : this(null, message, innerException) 
-                                                                                   // по F12 переходим в основной конструктор
+        public Exception(String message = null, Exception innerException = null) : this(null, message, innerException) // по F12 переходим в основной конструктор
         {
         }
 
-        public Exception(TExceptionArgs args, String message = null, Exception innerException = null) : base(message, innerException)
+        public Exception(TExceptionArgs args, String message = null, Exception innerException = null) : base(message, innerException) // вызовется к-р класса Exception
         {
             m_args = args;
         }
 
-        // Конструктор для десериализации; так как класс запечатан, конструктор закрыт. (я. почему?) Для незапечатанного класса конструктор должен быть защищенным
+        // Конструктор для десериализации; так как класс запечатан, конструктор закрыт. (aleek почему?) Для незапечатанного класса конструктор должен быть защищенным
         [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
         private Exception(SerializationInfo info, StreamingContext context) : base(info, context)
+        //public Exception(SerializationInfo info, StreamingContext context) : base(info, context)
         {
             m_args = (TExceptionArgs)info.GetValue(c_args, typeof(TExceptionArgs));
         }
@@ -51,6 +51,8 @@ namespace Exceptions
         // Метод для сериализации; он открыт из-за интерфейса ISerializable
         [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        //private override void GetObjectData(SerializationInfo info, StreamingContext context)
+        //protected override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             info.AddValue(c_args, m_args);
             base.GetObjectData(info, context);
@@ -75,9 +77,9 @@ namespace Exceptions
             return Object.Equals(m_args, other.m_args) && base.Equals(obj);
         }
 
-        public override int GetHashCode() 
+        public override int GetHashCode() // какой смысл?
         {
-            return base.GetHashCode(); 
+            return base.GetHashCode();
         }
     }
 }

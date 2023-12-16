@@ -7,7 +7,7 @@ namespace Serialization
 {
     internal static class QuickStart
     {
-        public static void Main()
+        public static void Main_()
         {
             // Создание графа объектов для последующей сериализации в поток
             var objectGraph = new List<String> {"Jeff", "Kristin", "Aidan", "Grant" };

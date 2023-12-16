@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Strings
 {
     class Protected
     {
-        void Main() 
+        public Protected()
         {
             using (SecureString ss = new SecureString())
             {
@@ -31,8 +27,7 @@ namespace Strings
                 DisplaySecureString(ss);
             }
 
-            // После 'using' SecureString обрабатывается методом Disposed,
-            // поэтому никаких конфиденциальных данных в памяти нет
+            // После 'using' SecureString обрабатывается методом Disposed, поэтому никаких конфиденциальных данных в памяти нет
         }
 
         // Этот метод небезопасен, потому что обращается к неуправляемой памяти
@@ -43,6 +38,7 @@ namespace Strings
             {
                 // Дешифрование SecureString в буфер неуправляемой памяти
                 pc = (Char*)Marshal.SecureStringToCoTaskMemUnicode(ss);
+
                 // Доступ к буферу неуправляемой памяти, который хранит дешифрованную версию SecureString
                 for (Int32 index = 0; pc[index] != 0; index++)
                     Console.Write(pc[index]);

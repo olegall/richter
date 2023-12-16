@@ -32,18 +32,18 @@ namespace Exceptions
             }
         }
         
-        // нет перегрузки из-за char?
-        //public static char? GetFirstCharacterNullable()
         public static Nullable<char> GetFirstCharacterNullable()
         {
             try
             {
-                return null; // в catch не попадёт, т.к. char? - допускает null
+                return null;
             }
             catch (NullReferenceException e)
             {
                 throw;
             }
         }
+        
+        // public static Nullable<char> GetFirstCharacterNullable() => null; // перегрузка по nullable не работает
     }
 }

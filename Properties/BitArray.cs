@@ -6,6 +6,7 @@ namespace Properties
     {
         // Закрытый байтовый массив, хранящий биты
         private Byte[] m_byteArray;
+
         private Int32 m_numBits;
 
         // Конструктор, выделяющий память для байтового массива и устанавливающий все биты в 0

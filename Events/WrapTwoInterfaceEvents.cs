@@ -5,20 +5,17 @@ namespace WrapTwoInterfaceEvents
 
     public interface IDrawingObject
     {
-        // Raise this event before drawing
-        // the object.
+        // Raise this event before drawing the object.
         event EventHandler OnDraw;
     }
 
     public interface IShape
     {
-        // Raise this event after drawing
-        // the shape.
+        // Raise this event after drawing the shape.
         event EventHandler OnDraw;
     }
 
-    // Base class event publisher inherits two
-    // interfaces, each with an OnDraw event
+    // Base class event publisher inherits two interfaces, each with an OnDraw event
     public class Shape : IDrawingObject, IShape
     {
         // Create an event for each interface event
@@ -27,9 +24,7 @@ namespace WrapTwoInterfaceEvents
 
         object objectLock = new Object();
 
-        // Explicit interface implementation required.
-        // Associate IDrawingObject's event with
-        // PreDrawEvent
+        // Explicit interface implementation required. Associate IDrawingObject's event with PreDrawEvent
         #region IDrawingObjectOnDraw
         event EventHandler IDrawingObject.OnDraw
         {

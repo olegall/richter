@@ -15,7 +15,7 @@ namespace ImplementInterfaceEvents
 
     public class Shape : IDrawingObject
     {
-        public event EventHandler ShapeChanged;
+        public event EventHandler ShapeChanged; // как в интерфейсе. что изменилось? убрать из интерфейса - ничего не изменится. aleek
 
         void ChangeShape()
         {
@@ -25,9 +25,9 @@ namespace ImplementInterfaceEvents
         }
 
         protected virtual void OnShapeChanged(MyEventArgs e)
+        //protected void OnShapeChanged(MyEventArgs e) // ok
         {
-            // ?. - если ShapeChanged != null вызовется? иначе не вызовется?
-            // this тут что?
+            // что будет, если ShapeChanged = null?
             ShapeChanged?.Invoke(this, e);
         }
     }

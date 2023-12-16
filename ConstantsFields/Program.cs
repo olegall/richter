@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConstantsFields
 {
@@ -13,11 +9,14 @@ namespace ConstantsFields
             // Некоторые типы не являются элементарными, но С# допускает существование константных переменных этих типов после присваивания значения null
             // объявили в классе объект этого же класса
             public const SomeType Empty = null;
+            //public const SomeType Empty; // ошибка
+            //const int a1; // ошибка
         }
 
         public sealed class SomeLibraryType
         {
-            // ПРИМЕЧАНИЕ: C# не позволяет использовать для констант модификатор static, поскольку всегда подразумевается, что константы являются статическими - я. почему?
+            // ПРИМЕЧАНИЕ: C# не позволяет использовать для констант модификатор static, поскольку всегда подразумевается, что константы являются статическими.
+            // видимо тк нельзя изменить нет смысла говорить о копии в рамках экземпляров - она бессмысленна, достаточно в рамках типа aleek
             public const Int32 MaxEntriesInList = 50;
         }
 
@@ -71,12 +70,12 @@ namespace ConstantsFields
             public static void M()
             {
                 // Следующие строки кода вполне корректны, компилируются и успешно изменяют символы в массиве InvalidChars
-                АТуре.InvalidChars[0] = 'X';
+                АТуре.InvalidChars[0] = 'X'; // меняется объект в куче, а не ссылка в стеке - aleek
                 АТуре.InvalidChars[1] = 'Y';
                 АТуре.InvalidChars[2] = 'Z';
                 
                 // Следующая строка некорректна и не скомпилируется, так как ссылка InvalidChars изменяться не может
-                АТуре.InvalidChars = new Char[] { 'X', 'Y', 'Z' };
+                //АТуре.InvalidChars = new Char[] { 'X', 'Y', 'Z' };
             }
         }
 

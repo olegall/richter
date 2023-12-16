@@ -2,12 +2,44 @@
 using System;
 using System.IO;
 using System.Runtime;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
 using System.Threading;
 
 namespace GarbageCollector
 {
+    internal static class GCWatcher
+    {
+        // ПРИМЕЧАНИЕ. Аккуратнее обращайтесь с типом String из-за интернирования и объектов-представителей MarshalByRefObject
+        private readonly static ConditionalWeakTable<Object, NotifyWhenGCd<String>> s_cwt = new ConditionalWeakTable<Object, NotifyWhenGCd<String>>();
+
+        private sealed class NotifyWhenGCd<T>
+        {
+            private readonly T m_value;
+
+            internal NotifyWhenGCd(T value)
+            {
+                m_value = value;
+            }
+
+            public override string ToString()
+            {
+                return m_value.ToString();
+            }
+
+            ~NotifyWhenGCd()
+            {
+                Console.WriteLine("GC'd: " + m_value);
+            }
+        }
+
+        public static T GCWatch<T>(this T @object, String tag) where T : class
+        {
+            s_cwt.Add(@object, new NotifyWhenGCd<String>(tag));
+            return @object;
+        }
+    }
+
     class Program
     {
         internal sealed class SomeType
@@ -68,22 +100,9 @@ namespace GarbageCollector
             protected override Boolean ReleaseHandle()
             {
                 // Сообщить Windows, что системный ресурс нужно закрыть
-                return Win32Native.CloseHandle(base.handle);
+                //return Win32Native.CloseHandle(base.handle);
+                return true;
             }
-        }
-
-        public sealed class HandleCollector
-        {
-            public HandleCollector(String name, Int32 initialThreshold);
-         
-            public HandleCollector(String name, Int32 initialThreshold, Int32 maximumThreshold);
-
-            public void Add();
-            public void Remove();
-            public Int32 Count { get; }
-            public Int32 InitialThreshold { get; }
-            public Int32 MaximumThreshold { get; }
-            public String Name { get; }
         }
 
         private static void MemoryPressureDemo(Int32 size)
@@ -159,29 +178,44 @@ namespace GarbageCollector
             }
         }
 
+        #region defined in FCL aleek
+        //public sealed class WeakReference<T> : ISerializable where T : class
+        //{
+        //    public WeakReference(T target);
+        //    public WeakReference(T target, Boolean trackResurrection);
+        //    public void SetTarget(T target);
+        //    public Boolean TryGetTarget(out T target);
+        //}
 
-        public sealed class WeakReference<T> : ISerializable where T : class // уже определён в CLR
-        {
-            public WeakReference(T target);
-            public WeakReference(T target, Boolean trackResurrection);
-            public void SetTarget(T target);
-            public Boolean TryGetTarget(out T target);
-        }
+        //public sealed class ConditionalWeakTable<TKey, TValue> where TKey : class where TValue : class
+        //{
+        //    public ConditionalWeakTable();
+        //    public void Add(TKey key, TValue value);
+        //    public TValue GetValue(TKey key, CreateValueCallback<TKey, TValue> createValueCallback);
+        //    public Boolean TryGetValue(TKey key, out TValue value);
+        //    public TValue GetOrCreateValue(TKey key);
+        //    public Boolean Remove(TKey key);
+        //    public delegate TValue CreateValueCallback(TKey key); // Вложенное определение делегата
+        //}
 
-        public sealed class ConditionalWeakTable<TKey, TValue> where TKey : class where TValue : class
-        {
-            public ConditionalWeakTable();
-            public void Add(TKey key, TValue value);
-            public TValue GetValue(TKey key, CreateValueCallback<TKey, TValue> createValueCallback);
-            public Boolean TryGetValue(TKey key, out TValue value);
-            public TValue GetOrCreateValue(TKey key);
-            public Boolean Remove(TKey key);
-            public delegate TValue CreateValueCallback(TKey key); // Вложенное определение делегата
-        }
+        //public sealed class HandleCollector
+        //{
+        //    public HandleCollector(String name, Int32 initialThreshold);
+
+        //    public HandleCollector(String name, Int32 initialThreshold, Int32 maximumThreshold);
+
+        //    public void Add();
+        //    public void Remove();
+        //    public Int32 Count { get; }
+        //    public Int32 InitialThreshold { get; }
+        //    public Int32 MaximumThreshold { get; }
+        //    public String Name { get; }
+        //}
+        #endregion
 
         internal static class ConditionalWeakTableDemo
         {
-            public static void Main()
+            public static void Main_()
             {
                 Object o = new Object().GCWatch("My Object created at " + DateTime.Now);
                 GC.Collect(); // Оповещение об отправке в мусор не выдается
@@ -189,37 +223,6 @@ namespace GarbageCollector
                 o = null; // Объект, на который ссылается o, можно уничтожать
                 GC.Collect(); // Оповещение об отправке в мусор
                 Console.ReadLine();
-            }
-        }
-        internal static class GCWatcher
-        {
-            // ПРИМЕЧАНИЕ. Аккуратнее обращайтесь с типом String из-за интернирования и объектов-представителей MarshalByRefObject
-            private readonly static ConditionalWeakTable<Object, NotifyWhenGCd<String>> s_cwt = new ConditionalWeakTable<Object, NotifyWhenGCd<String>>();
-            
-            private sealed class NotifyWhenGCd<T>
-            {
-                private readonly T m_value;
-
-                internal NotifyWhenGCd(T value) 
-                { 
-                    m_value = value; 
-                }
-
-                public override string ToString() 
-                { 
-                    return m_value.ToString(); 
-                }
-
-                ~NotifyWhenGCd() 
-                { 
-                    Console.WriteLine("GC'd: " + m_value); 
-                }
-            }
-
-            public static T GCWatch<T>(this T @object, String tag) where T : class
-            {
-                s_cwt.Add(@object, new NotifyWhenGCd<String>(tag));
-                return @object;
             }
         }
 
@@ -230,8 +233,6 @@ namespace GarbageCollector
 
             // Ждем, когда пользователь нажмет Enter
             Console.ReadLine();
-
-            
             
             // Создание объекта Timer, вызывающего метод TimerCallback каждые 2000 мс
             Timer t2 = new Timer(TimerCallback, null, 0, 2000);
@@ -239,8 +240,6 @@ namespace GarbageCollector
             Console.ReadLine();
             // Создаем ссылку на t после ReadLine (в ходе оптимизации эта строка удаляется)
             t2 = null;
-
-
 
             // Создание объекта Timer, вызывающего метод TimerCallback каждые 2000 мс
             Timer t3 = new Timer(TimerCallback, null, 0, 2000);
@@ -251,8 +250,6 @@ namespace GarbageCollector
 
             Console.WriteLine("Application is running with server GC=" + GCSettings.IsServerGC);
 
-
-
             // Создание байтов для записи во временный файл
             Byte[] bytesToWrite = new Byte[] { 1, 2, 3, 4, 5 };
             // Создание временного файла
@@ -261,8 +258,6 @@ namespace GarbageCollector
             fs.Write(bytesToWrite, 0, bytesToWrite.Length);
             // Удаление временного файла
             File.Delete("Temp.dat"); // Генерируется исключение IOException
-
-
 
             // Создание байтов для записи во временный файл
             Byte[] bytesToWrite2 = new Byte[] { 1, 2, 3, 4, 5 };
@@ -274,8 +269,6 @@ namespace GarbageCollector
             fs2.Dispose();
             // Удаление временного файла
             File.Delete("Temp.dat"); // Теперь эта инструкция всегда остается работоспособной
-
-
 
             // Создание байтов для записи во временный файл
             Byte[] bytesToWrite3 = new Byte[] { 1, 2, 3, 4, 5 };
@@ -289,8 +282,6 @@ namespace GarbageCollector
             fs3.Write(bytesToWrite, 0, bytesToWrite.Length); // Исключение ObjectDisposedException
             // Удаление временного файла
             File.Delete("Temp.dat");
-
-
 
             // Создание байтов для записи во временный файл
             Byte[] bytesToWrite4 = new Byte[] { 1, 2, 3, 4, 5 };
@@ -310,8 +301,6 @@ namespace GarbageCollector
             // Удаление временного файла
             File.Delete("Temp.dat");
 
-
-
             // Создание байтов для записи во временный файл
             Byte[] bytesToWrite5 = new Byte[] { 1, 2, 3, 4, 5 };
             // Создание временного файла
@@ -323,16 +312,14 @@ namespace GarbageCollector
             // Удаление временного файла
             File.Delete("Temp.dat");
 
-
-
-            FileStream fs5 = new FileStream("DataFile.dat", FileMode.Create);
-            StreamWriter sw5 = new StreamWriter(fs);
-            sw5.Write("Hi there");
-            // Следующий вызов метода Dispose обязателен
-            sw5.Dispose();
-            // ПРИМЕЧАНИЕ. Метод StreamWriter.Dispose закрывает объект FileStream. Вручную закрывать объект FileStream не нужно
-
-
+            {
+                FileStream fs5 = new FileStream("DataFile.dat", FileMode.Create);
+                StreamWriter sw5 = new StreamWriter(fs);
+                sw5.Write("Hi there");
+                // Следующий вызов метода Dispose обязателен
+                sw5.Dispose();
+                // ПРИМЕЧАНИЕ. Метод StreamWriter.Dispose закрывает объект FileStream. Вручную закрывать объект FileStream не нужно
+            }
 
             MemoryPressureDemo(0); // 0 вызывает нечастую уборку мусора
             MemoryPressureDemo(10 * 1024 * 1024); // 10 Mбайт вызывают частую уборку мусора
@@ -424,9 +411,8 @@ namespace GarbageCollector
                 LimitedResource destroy. Count=0             
              */
 
-
-
-            unsafe public static void Go()
+            //unsafe public static void Go()
+            unsafe static void Go()
             {
                 // Выделение места под объекты, которые немедленно превращаются в мусор
                 for (Int32 x = 0; x < 10000; x++)

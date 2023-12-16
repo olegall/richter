@@ -49,7 +49,6 @@
     <Compile Include="ReflectionExtensions.cs" />
     <Compile Include="SomeType.cs" />
     <Compile Include="SomeTypeRefTest.cs" />
-    <Compile Include="Wrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

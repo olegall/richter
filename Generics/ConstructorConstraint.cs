@@ -17,9 +17,11 @@ namespace Generics
         public static void Foo()
         {
         }
+
+        public ConstructorConstraint() {} // aleek
     }
     
-    internal sealed class ConstructorConstraint
+    internal sealed class ConstructorConstraint // перегрузка по дженерику aleek
     {
         public static Int32 Factory2()
         {

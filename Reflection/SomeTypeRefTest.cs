@@ -1,5 +1,6 @@
 ﻿namespace Reflection
 {
+    #region aleek
     class Foo
     {
         public int FooProp { get; set; }
@@ -12,4 +13,5 @@
             fooProp.FooProp *= 3;
         }
     }
+    #endregion
 }

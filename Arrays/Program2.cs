@@ -4,7 +4,7 @@ namespace Arrays
 {
     class Program2
     {
-        public static void Main()
+        public static void Main_()
         {
             Array a;
 

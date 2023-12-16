@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Strings
 {
@@ -58,7 +54,14 @@ namespace Strings
             n = ((IConvertible)c).ToInt32(null);
             Console.WriteLine(n); // Выводится "65"
 
-            String s = new String("Hi there."); // Ошибка
+            //String s = new String("Hi there."); // Ошибка
+
+            new Encoding_();
+            new Base64();
+            new Format();
+            new Protected();
+            new StringBuilder_();
+            new Symbols();
         }
 
         void Compare1()
@@ -113,6 +116,7 @@ namespace Strings
             // Эти строки представляют слово "shinkansen" (название высокоскоростного поезда) в разных вариантах письма: хирагане и катакане
             s1 = " "; // ("\u3057\u3093\u304b\u3093\u305b\u3093")
             s2 = " "; // ("\u30b7\u30f3\u30ab\u30f3\u30bb\u30f3")
+
                       // Результат сравнения по умолчанию
             ci = new CultureInfo("ja-JP");
             x = Math.Sign(String.Compare(s1, s2, true, ci));

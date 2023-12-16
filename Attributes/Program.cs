@@ -27,32 +27,31 @@ namespace Attributes
         public static extern Boolean GetVersionEx([In, Out] OSVERSIONINFO ver);
     }
 
-    [assembly: SomeAttr] // Применяется к сборке
-    [module: SomeAttr] // Применяется к модулю
-    [type: SomeAttr] // Применяется к типу
-    internal sealed class SomeType<[typevar: SomeAttr] T>
-    { // Применяется
-      // к переменной обобщенного типа
-        [field: SomeAttr] // Применяется к полю
-        public Int32 SomeField = 0;
-        [return: SomeAttr] // Применяется к возвращаемому значению
-        [method: SomeAttr] // Применяется к методу
-        public Int32 SomeMethod(
-        [param: SomeAttr] // Применяется к параметру
-        Int32 SomeParam)
-        { return SomeParam; }
-        [property: SomeAttr] // Применяется к свойству
-        public String SomeProp
-        {
-            [method: SomeAttr] // Применяется к механизму доступа get
-            get { return null; }
-        }
-        [event: SomeAttr] // Применяется к событиям
-        [field: SomeAttr] // Применяется к полям, созданным компилятором
-        [method: SomeAttr] // Применяется к созданным
-                           // компилятором методам add и remove
-        public event EventHandler SomeEvent;
-    }
+    //[assembly: SomeAttr] // Применяется к сборке
+    //[module: SomeAttr] // Применяется к модулю
+    //[type: SomeAttr] // Применяется к типу
+    //internal sealed class SomeType<[typevar: SomeAttr] T>
+    //{ // Применяется
+    //  // к переменной обобщенного типа
+    //    [field: SomeAttr] // Применяется к полю
+    //    public Int32 SomeField = 0;
+    //    [return: SomeAttr] // Применяется к возвращаемому значению
+    //    [method: SomeAttr] // Применяется к методу
+    //    public Int32 SomeMethod(
+    //    [param: SomeAttr] // Применяется к параметру
+    //    Int32 SomeParam)
+    //    { return SomeParam; }
+    //    [property: SomeAttr] // Применяется к свойству
+    //    public String SomeProp
+    //    {
+    //        [method: SomeAttr] // Применяется к механизму доступа get
+    //        get { return null; }
+    //    }
+    //    [event: SomeAttr] // Применяется к событиям
+    //    [field: SomeAttr] // Применяется к полям, созданным компилятором
+    //    [method: SomeAttr] // Применяется к созданным компилятором методам add и remove
+    //    public event EventHandler SomeEvent;
+    //}
 
     [AttributeUsage(AttributeTargets.Enum, Inherited = false)]
     public class FlagsAttribute : System.Attribute
@@ -127,7 +126,6 @@ namespace Attributes
     }
 
     [Flags]
-    [Flags]
     internal enum Color
     {
         Red
@@ -150,7 +148,6 @@ namespace Attributes
         protected override void DoSomething() { }
     }
 
-    
     [AttributeUsage(AttributeTargets.All)]
     internal sealed class SomeAttribute : Attribute
     {
@@ -187,16 +184,13 @@ namespace Attributes
             // Применяется ли к перечислимому типу экземпляр типа FlagsAttribute?
             if (this.GetType().IsDefined(typeof(FlagsAttribute), false))
             {
-                // Да; выполняем код, интерпретирующий значение как
-                // перечислимый тип с битовыми флагами
-                
+                // Да; выполняем код, интерпретирующий значение как перечислимый тип с битовыми флагами
             }
             else
             {
-                // Нет; выполняем код, интерпретирующий значение как
-                // обычный перечислимый тип
-                
+                // Нет; выполняем код, интерпретирующий значение как обычный перечислимый тип
             }
+            return null; // aleek
         }
     }
 }

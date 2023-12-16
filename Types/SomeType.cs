@@ -11,7 +11,9 @@ namespace Types
         // Константа, неизменяемое и статическое изменяемое поле
         // Constant, readonly, and static read/write field
         private const Int32 c_SomeConstant = 1; // 3
+
         private readonly String m_SomeReadOnlyField = "2"; // 4
+
         private static Int32 s_SomeReadWriteField = 3; // 5
 
         // Конструктор типа
@@ -25,11 +27,12 @@ namespace Types
 
         private String InstanceMethod() { return null; } // 9
 
-        public static void Main() { } // 10
+        public static void Main_() { } // 10
                                       // Необобщенное экземплярное свойство
         public Int32 SomeProp
         { // 11
             get { return 0; } // 12
+
             set { } // 13
         }
 
@@ -37,6 +40,7 @@ namespace Types
         public Int32 this[String s]
         { // 14
             get { return 0; } // 15
+
             set { } // 16
         }
 

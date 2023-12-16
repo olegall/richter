@@ -35,8 +35,6 @@ namespace Exceptions
         In try
         Type1's static ctor called*/
 
-
-
         public static void Demo2()
         {
             // Подготавливаем код в блоке finally

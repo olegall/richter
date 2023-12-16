@@ -1,16 +1,20 @@
 ﻿using System;
+using System.Collections;
 
 namespace Generics
 {
                                       
-    public interface IEnumerator<T> : IDisposable//, IEnumerator
+    public interface IEnumerator<T> : IDisposable, IEnumerator
     {
         T Current { get; }
+        //new T Current { get; }
+        //override T Current { get; }
     }
 
     class Point { }
 
-    internal sealed class Triangle : IEnumerator<Point>
+    //internal sealed class Triangle : IEnumerator<Point>
+    internal sealed class Triangle
     {
         private Point[] m_vertices;
 
@@ -27,6 +31,14 @@ namespace Generics
         { 
         }
     }
+
+    //internal sealed class ArrayEnumerator<T> : IEnumerator<T>
+    //{
+    //    private T[] m_array;
+
+    //    // Тип свойства Current в IEnumerator<T> — T
+    //    public T Current { get { ... } }
+    //}
 
     class GenericInterfaces
     {

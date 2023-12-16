@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Attributes
 {
-    [assembly: CLSCompliant(true)]
+    //[assembly: CLSCompliant(true)]
     [Serializable]
     [DefaultMemberAttribute("Main")]
     [DebuggerDisplayAttribute("Richter", Name = "Jeff", Target = typeof(Program))]
@@ -21,7 +21,7 @@ namespace Attributes
 
         [CLSCompliant(true)]
         [STAThread]
-        public static void Main()
+        public static void Main_()
         {
             // Вывод атрибутов, примененных к данному типу
             ShowAttributes(typeof(Program));
@@ -45,17 +45,23 @@ namespace Attributes
             {
                 // Вывод типа каждого примененного атрибута
                 Type t = attribute.Constructor.DeclaringType;
+
                 Console.WriteLine(" {0}", t.ToString());
                 Console.WriteLine(" Constructor called={0}", attribute.Constructor);
+
                 IList<CustomAttributeTypedArgument> posArgs = attribute.ConstructorArguments;
+
                 Console.WriteLine(" Positional arguments passed to constructor:" + ((posArgs.Count == 0) ? " None" : String.Empty));
+
                 foreach (CustomAttributeTypedArgument pa in posArgs)
                 {
                     Console.WriteLine(" Type={0}, Value={1}", pa.ArgumentType, pa.Value);
                 }
 
                 IList<CustomAttributeNamedArgument> namedArgs = attribute.NamedArguments;
+
                 Console.WriteLine(" Named arguments set after construction:" + ((namedArgs.Count == 0) ? " None" : String.Empty));
+
                 foreach (CustomAttributeNamedArgument na in namedArgs)
                 {
                     Console.WriteLine(" Name={0}, Type={1}, Value={2}", na.MemberInfo.Name, na.TypedValue.ArgumentType, na.TypedValue.Value);

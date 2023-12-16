@@ -1,35 +1,16 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Interfaces
 {
-    public interface IDisposable
-    {
-        void Dispose();
-    }
-
-    public interface IEnumerable
-    {
-        IEnumerator GetEnumerator();
-    }
-
-    public interface IEnumerable<T> : IEnumerable
+    public interface IEnumerable<T> : IEnumerable // в FCL типизированного нет aleek
     {
         IEnumerator<T> GetEnumerator();
+        //new IEnumerator<T> GetEnumerator();
     }
 
-    public interface ICollection<T> : IEnumerable<T>, IEnumerable
-    {
-        void Add(T item);
-        void Clear();
-        Boolean Contains(T item);
-        void CopyTo(T[] array, Int32 arrayIndex);
-        Boolean Remove(T item);
-        Int32 Count { get; } // Свойство только для чтения
-        Boolean IsReadOnly { get; } // Свойство только для чтения
-    }
-
-    public interface IComparable<T>
+    public interface IComparable<T> // в FCL типизированного нет aleek
     {
         Int32 CompareTo(T other);
     }
@@ -46,7 +27,7 @@ namespace Interfaces
         }
 
         // Этот метод реализует IComparable<T> в Point
-        public Int32 CompareTo(Point other)
+        public Int32 CompareTo(Point other) // интерфейс был типизирован
         {
             return Math.Sign(Math.Sqrt(m_x * m_x + m_y * m_y) - Math.Sqrt(other.m_x * other.m_x + other.m_y * other.m_y));
         }
@@ -62,11 +43,12 @@ namespace Interfaces
     {
         // Этот метод неявно запечатан и его нельзя переопределить
         public void Dispose()
+        //public override void Dispose()
         {
             Console.WriteLine("Base's Dispose");
         }
     }
-    
+
     // Этот класс наследует от Base и повторно реализует IDisposable
     internal class Derived : Base, IDisposable
     {
@@ -75,26 +57,28 @@ namespace Interfaces
         new public void Dispose()
         {
             Console.WriteLine("Derived's Dispose");
-            // ПРИМЕЧАНИЕ: следующая строка кода показывает, как вызвать реализацию базового класса (если нужно) base.Dispose();
+            // ПРИМЕЧАНИЕ: следующая строка кода показывает, как вызвать реализацию базового класса (если нужно)
+            //base.Dispose(); // зачем так, если реализован Disipose  в текущем классе?
         }
     }
 
-    internal sealed class SimpleType : IDisposable
-    {
-        public void Dispose() 
-        { 
-            Console.WriteLine("Dispose"); 
-        }
-    }
+    //internal sealed class SimpleType : IDisposable
+    //{
+    //    public void Dispose()
+    //    {
+    //        Console.WriteLine("Dispose");
+    //    }
+    //}
 
     internal sealed class SimpleType : IDisposable
     {
-        public void Dispose() 
+        public void Dispose()
         { 
             Console.WriteLine("public Dispose"); 
         }
 
         void IDisposable.Dispose() 
+        //public void IDisposable.Dispose()
         { 
             Console.WriteLine("IDisposable Dispose"); 
         }
@@ -117,23 +101,6 @@ namespace Interfaces
             return m_val.CompareTo(Int32.Parse(s));
         }
     }
-    
-    //public sealed class Number<T> : IComparable<T> // я
-    //{
-    //    private Int32 m_val = 5;
-
-    //    // Этот метод реализует метод CompareTo интерфейса IComparable<Int32>
-    //    public Int32 CompareTo(Int32 n)
-    //    {
-    //        return m_val.CompareTo(n);
-    //    }
-
-    //    // Этот метод реализует метод CompareTo интерфейса IComparable<String>
-    //    public Int32 CompareTo(String s)
-    //    {
-    //        return m_val.CompareTo(Int32.Parse(s));
-    //    }
-    //}
 
     public static class SomeType
     {
@@ -146,7 +113,7 @@ namespace Interfaces
             M(x);
 
             // Компиляция этого вызова M приводит к ошибке, поскольку Guid реализует IComparable, но не реализует IConvertible
-            M(g);
+            //M(g);
         }
 
         // Параметр T типа M ограничивается только теми типами, которые реализуют оба интерфейса: IComparable И IConvertible
@@ -179,69 +146,77 @@ namespace Interfaces
         public Object GetMenu() { return null; }
     }
 
-    internal class Base : IComparable
+    namespace A1
     {
-        // Явная реализация интерфейсного метода (EIMI)
-        Int32 IComparable.CompareTo(Object o)
+        internal class Base : IComparable
         {
-            Console.WriteLine("Base's CompareTo");
-            return 0;
+            // Явная реализация интерфейсного метода (EIMI)
+            Int32 IComparable.CompareTo(Object o)
+            {
+                Console.WriteLine("Base's CompareTo");
+                return 0;
+            }
+
+            //Int32 CompareTo(Object o) => 0;
+        }
+
+        internal sealed class Derived : Base, IComparable
+        {
+            // Открытый метод, также являющийся реализацией интерфейса
+            public Int32 CompareTo(Object o)
+            {
+                Console.WriteLine("Derived's CompareTo");
+
+                // Эта попытка вызвать EIMI базового класса приводит к ошибке: "error CS0117: 'Base' does not contain a definition for 'CompareTo'"
+                //base.CompareTo(o);
+
+                return 0;
+            }
+
+            // Открытый метод, который также является реализацией интерфейса
+            //public Int32 CompareTo(Object o)
+            //{
+            //    Console.WriteLine("Derived's CompareTo");
+
+            //    // Эта попытка вызова EIMI базового класса приводит к бесконечной рекурсии
+            //    IComparable c = this;
+
+            //    c.CompareTo(o);
+
+            //    return 0;
+            //}
         }
     }
 
-    internal sealed class Derived : Base, IComparable
+    namespace A2
     {
-        // Открытый метод, также являющийся реализацией интерфейса
-        public Int32 CompareTo(Object o)
+        internal class Base : IComparable
         {
-            Console.WriteLine("Derived's CompareTo");
+            // Явная реализация интерфейсного метода (EIMI)
+            Int32 IComparable.CompareTo(Object o)
+            {
+                Console.WriteLine("Base's IComparable CompareTo");
+                return CompareTo(o); // Теперь здесь вызывается виртуальный метод
+            }
 
-            // Эта попытка вызвать EIMI базового класса приводит к ошибке: "error CS0117: 'Base' does not contain a definition for 'CompareTo'"
-            base.CompareTo(o);
-
-            return 0;
+            // Виртуальный метод для производных классов (этот метод может иметь любое имя)
+            public virtual Int32 CompareTo(Object o)
+            {
+                Console.WriteLine("Base's virtual CompareTo");
+                return 0;
+            }
         }
 
-        // Открытый метод, который также является реализацией интерфейса
-        public Int32 CompareTo(Object o)
+        internal sealed class Derived : Base, IComparable
         {
-            Console.WriteLine("Derived's CompareTo");
+            // Открытый метод, который также является реализацией интерфейса
+            public override Int32 CompareTo(Object o)
+            {
+                Console.WriteLine("Derived's CompareTo");
 
-            // Эта попытка вызова EIMI базового класса приводит к бесконечной рекурсии
-            IComparable c = this;
-
-            c.CompareTo(o);
-
-            return 0;
-        }
-    }
-
-    internal class Base : IComparable
-    {
-        // Явная реализация интерфейсного метода (EIMI)
-        Int32 IComparable.CompareTo(Object o)
-        {
-            Console.WriteLine("Base's IComparable CompareTo");
-            return CompareTo(o); // Теперь здесь вызывается виртуальный метод
-        }
-     
-        // Виртуальный метод для производных классов (этот метод может иметь любое имя)
-        public virtual Int32 CompareTo(Object o)
-        {
-            Console.WriteLine("Base's virtual CompareTo");
-            return 0;
-        }
-    }
-
-    internal sealed class Derived : Base, IComparable
-    {
-        // Открытый метод, который также является реализацией интерфейса
-        public override Int32 CompareTo(Object o)
-        {
-            Console.WriteLine("Derived's CompareTo");
-
-            // Теперь можно вызвать виртуальный метод класса Base
-            return base.CompareTo(o);
+                // Теперь можно вызвать виртуальный метод класса Base
+                return base.CompareTo(o);
+            }
         }
     }
 
@@ -252,46 +227,50 @@ namespace Interfaces
             Int32 x = 1, y = 2;
             IComparable c = x;
             // CompareTo ожидает Object, но вполне допустимо передать переменную y типа Int32
-            c.CompareTo(y); // Выполняется упаковка CompareTo ожидает Object, при передаче "2" (тип String) компиляция выполняется нормально,
-                            // но во время выполнения генерируется исключение ArgumentException
+            c.CompareTo(y); // Выполняется упаковка CompareTo ожидает Object, при передаче "2" (тип String) компиляция выполняется нормально, но во время выполнения генерируется исключение ArgumentException
             c.CompareTo("2");
         }
 
-        private void SomeMethod()
-        {
-            Int32 x = 1, y = 2;
-            IComparable<Int32> c = x;
-            // CompareTo ожидает Object, но вполне допустимо передать переменную y типа Int32
-            c.CompareTo(y); // Выполняется упаковка. CompareTo ожидает Int32, передача "2" (тип String) приводит к ошибке компиляции
-                            // с сообщением о невозможности привести тип String к Int32
+        //private void SomeMethod()
+        //{
+        //    Int32 x = 1, y = 2;
+        //    IComparable<Int32> c = x;
+        //    // CompareTo ожидает Object, но вполне допустимо передать переменную y типа Int32
+        //    c.CompareTo(y); // Выполняется упаковка. CompareTo ожидает Int32, передача "2" (тип String) приводит к ошибке компиляции с сообщением о невозможности привести тип String к Int32
+        //    //c.CompareTo("2"); // Ошибка
+        //}
 
-            c.CompareTo("2"); // Ошибка
+        internal struct SomeValueType : IComparable // структура может реализовать интерфейс aleek
+        {
+            private Int32 m_x;
+
+            public SomeValueType(Int32 x) { m_x = x; }
+
+            public Int32 CompareTo(Object other)
+            {
+                //return (m_x _((SomeValueType)other).m_x);
+                return 0;
+            }
         }
 
         //internal struct SomeValueType : IComparable
         //{
         //    private Int32 m_x;
+
         //    public SomeValueType(Int32 x) { m_x = x; }
-        //    public Int32 CompareTo(Object other)
+
+        //    public Int32 CompareTo(SomeValueType other)
         //    {
-        //        return (m_x _((SomeValueType)other).m_x);
+        //        //return (m_x _ other.m_x);
+        //        return 0;
+        //    }
+
+        //    // ПРИМЕЧАНИЕ: в следующей строке не используется public/private
+        //    Int32 IComparable.CompareTo(Object other)
+        //    {
+        //        return CompareTo((SomeValueType)other);
         //    }
         //}
-
-        internal struct SomeValueType : IComparable
-        {
-            private Int32 m_x;
-            public SomeValueType(Int32 x) { m_x = x; }
-            public Int32 CompareTo(SomeValueType other)
-            {
-                return (m_x _ other.m_x);
-            }
-            // ПРИМЕЧАНИЕ: в следующей строке не используется public/private
-            Int32 IComparable.CompareTo(Object other)
-            {
-                return CompareTo((SomeValueType)other);
-            }
-        }
 
         static void Main(string[] args)
         {
@@ -335,22 +314,26 @@ namespace Interfaces
 
             // Переменная s ссылается на объект String
             String s = "Jeffrey";
-
+            s.Normalize();
+            s.Substring(0, s.Length - 1);
             // Используя переменную s, можно вызывать любой метод, определенный в String, Object, IComparable, ICloneable, IConvertible, IEnumerable и т. д.
-            // Переменная cloneable ссылается на тот же объект String
-            ICloneable cloneable = s;
 
+            // Переменная cloneable ссылается на тот же объект String
+            ICloneable cloneable = s; 
             // Используя переменную cloneable, я могу вызвать любой метод, объявленный только в интерфейсе ICloneable (или любой метод, определенный в типе Object)
+            cloneable.Clone();
+
             // Переменная comparable ссылается на тот же объект String
             IComparable comparable = s;
-
             // Используя переменную comparable, я могу вызвать любой метод, объявленный только в интерфейсе IComparable (или любой метод, определенный в типе Object)
+            comparable.CompareTo(comparable);
 
             // Переменная enumerable ссылается на тот же объект String
             // Во время выполнения можно приводить интерфейсную переменную к интерфейсу другого типа, если тип объекта реализует оба интерфейса
             IEnumerable enumerable = (IEnumerable)comparable;
-
             // Используя переменную enumerable, я могу вызывать любой метод, объявленный только в интерфейсе IEnumerable (или любой метод, определенный только в типе Object)
+            enumerable.GetEnumerator();
+            
             SimpleType st = new SimpleType();
 
             // Вызов реализации открытого метода Dispose
@@ -370,6 +353,7 @@ namespace Interfaces
             */
 
             Number n = new Number();
+
             // Значение n сравнивается со значением 5 типа Int32
             IComparable<Int32> cInt32 = n;
             Int32 result = cInt32.CompareTo(5);
@@ -377,8 +361,6 @@ namespace Interfaces
             // Значение n сравнивается со значением "5" типа String
             IComparable<String> cString = n;
             result = cString.CompareTo("5");
-
-
 
             MarioPizzeria mp = new MarioPizzeria();
             // Эта строка вызывает открытый метод GetMenu класса MarioPizzeria
@@ -391,8 +373,6 @@ namespace Interfaces
             // Эти строки вызывают метод IRestaurant.GetMenu
             IRestaurant restaurant = mp;
             restaurant.GetMenu();
-
-
 
             SomeValueType v = new SomeValueType(0);
             Object o = new Object();
@@ -412,10 +392,8 @@ namespace Interfaces
             n3 = c.CompareTo(o3); // Исключение InvalidCastException
 
             Int32 x = 5;
-            Single s = x.ToSingle(null); // Попытка вызвать метод интерфейса IConvertible
-
-            Int32 x2 = 5;
-            Single s2 = ((IConvertible)x).ToSingle(null);
+            //Single s = x.ToSingle(null); // Попытка вызвать метод интерфейса IConvertible
+            //Single s = ((IConvertible)x).ToSingle(null);
         }
     }
 }

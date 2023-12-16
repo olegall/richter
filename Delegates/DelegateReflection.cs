@@ -16,7 +16,7 @@ namespace Delegates
             //String[] args = (String[])new object();
             String[] args = new String[] { };
 
-            if (/*args.Length < 2*/true)
+            if (args.Length < 2)
             {
                 String usage =
                 @"Usage:" +

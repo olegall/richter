@@ -4,8 +4,6 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Metadata;
 
 // Пространство имен ДОЛЖНО соответствовать имени сборки и быть отличным от "Windows"
 namespace WinRT
@@ -36,7 +34,7 @@ namespace WinRT
     }
 
     // Члены без атрибута [Version(#)] по умолчанию используют версию класса (1) и являются частью одного нижележащего интерфейса COM, создаваемого программой WinMDExp.exe
-    [Version(1)]
+    //[Version(1)]
     // Классы должны быть производными от Object, запечатанными, не обобщенными, должны реализовать только интерфейсы WinRT, а открытые члены должны быть типами WinRT
     public sealed class WinRTClass : IWinRTInterface
     {
@@ -105,7 +103,7 @@ namespace WinRT
         // Перегруженные версии с одинаковым количеством параметров JavaScript считает идентичными
         public void SomeMethod(Int32 x) { }
 
-        [System.Windows.Foundation.Metadata.DefaultOverload] // Метод назначается
+        //[System.Windows.Foundation.Metadata.DefaultOverload] // Метод назначается
         public void SomeMethod(String s) { } // перегрузкой по умолчанию
         #endregion
 
@@ -128,7 +126,7 @@ namespace WinRT
             add
             {
                 // Получение существующей таблицы (или создание новой, если таблица еще не инициализирована)
-                return EventRegistrationTokenTable<WinRTDelegate>.GetOrCreateEventRegistrationTokenTable(ref m_manualEvent).AddEventHandler(value);
+                //return EventRegistrationTokenTable<WinRTDelegate>.GetOrCreateEventRegistrationTokenTable(ref m_manualEvent).AddEventHandler(value);
             }
             remove
             {
@@ -149,7 +147,8 @@ namespace WinRT
         public IAsyncOperationWithProgress<DateTimeOffset, Int32> DoSomethingAsync()
         {
             // Используйте методы Run класса System.Runtime.InteropServices.WindowsRuntime.AsyncInfo для вызова закрытого метода, написанного исключительно на управляемом коде.
-            return AsyncInfo.Run<DateTimeOffset, Int32>(DoSomethingAsyncInternal);
+            //return AsyncInfo.Run<DateTimeOffset, Int32>(DoSomethingAsyncInternal);
+            return null;
         }
 
         // Реализация асинхронной операции на базе закрытого метода с использованием обычных технологий .NET
@@ -167,17 +166,19 @@ namespace WinRT
 
              return DateTimeOffset.Now; // Итоговое возвращаемое значение
         }
+
         public IAsyncOperation<DateTimeOffset> DoSomethingAsync2()
         {
             // Если отмена и оповещения не нужны, используйте методы расширения AsAsync[Action|Operation] класса System.WindowsRuntimeSystemExtensions
             // (они вызывают AsyncInfo.Run в своей внутренней реализации)
-            return DoSomethingAsyncInternal(default(CancellationToken), null).AsAsyncOperation();
+            //return DoSomethingAsyncInternal(default(CancellationToken), null).AsAsyncOperation();
+            return null;
         }
         #endregion
 
         // После распространения версии новые члены следует помечать атрибутом [Version(#)], чтобы программа WinMDExp.exe
         // помещала новые члены в другой интерфейс COM. Это необходимо, поскольку интерфейсы COM должны быть неизменными.
-        [Version(2)]
+        //[Version(2)]
         public void NewMethodAddedInV2() { }
     }
 }

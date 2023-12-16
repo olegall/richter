@@ -61,7 +61,8 @@ namespace Types
 
         public override Boolean TryInvokeMember(InvokeMemberBinder binder, Object[] args, out Object result)
         {
-            MethodInfo method = FindMethod(binder.Name);
+            //MethodInfo method = FindMethod(binder.Name);
+            MethodInfo method = FindMethod(binder.Name, null);
             if (method == null) 
             { 
                 result = null; 
