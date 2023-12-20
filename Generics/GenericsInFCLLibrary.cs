@@ -5,9 +5,9 @@ namespace Generics
     /// <summary>
     /// Открытые и закрытые типы
     /// </summary>
-    class GenericsInFCLLibrary : IRunnable
+    class GenericsInFCLLibrary
     {
-        public void Run() 
+        public GenericsInFCLLibrary() 
         {
             // Создание и инициализация массива байтов
             Byte[] byteArray = new Byte[] { 5, 1, 4, 2, 3 };

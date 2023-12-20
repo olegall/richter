@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Serialization
+﻿namespace Serialization
 {
     class Program
     {
         static void Main(string[] args)
         {
+            new Common();
+            QuickStart.Main_();
         }
     }
 }

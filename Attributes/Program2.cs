@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
 using System.Reflection;
 using System.Linq;
 
 namespace Attributes
 {
-    
     //[assembly: CLSCompliant(true)]
     [Serializable]
     [DefaultMemberAttribute("Main")]

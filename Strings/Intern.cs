@@ -8,13 +8,20 @@ namespace Strings
         {
             String s1 = "Hello";
             String s2 = "Hello";
-            Console.WriteLine(Object.ReferenceEquals(s1, s2)); // Должно быть 'False'
-            var a1 = Object.ReferenceEquals(s1, s2);
+            var a1 = Object.ReferenceEquals(s1, s2); // Должно быть 'False'. true. видимо срабатывает интернирование строк - aleek
             
             s1 = String.Intern(s1);
             s2 = String.Intern(s2);
-            Console.WriteLine(Object.ReferenceEquals(s1, s2)); // 'True'
-            var a2 = Object.ReferenceEquals(s1, s2);
+            var a2 = Object.ReferenceEquals(s1, s2); // 'True'
+
+            #region #aleek
+            String s3 = "Hello";
+            String s4 = "Hello_";
+            var a3 = Object.ReferenceEquals(s3, s4); // false
+
+            s3 = s4; var a4 = Object.ReferenceEquals(s3, s4);
+            //s4 = s3; var a5 = Object.ReferenceEquals(s3, s4);
+            #endregion
 
             NumTimesWordAppearsEquals(null, null);
             NumTimesWordAppearsIntern(null, null);

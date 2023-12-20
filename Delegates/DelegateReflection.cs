@@ -11,7 +11,7 @@ namespace Delegates
     public static class DelegateReflection
     {
         //public static void Main(String[] args)
-        public static void Run()
+        public static void Main_()
         {
             //String[] args = (String[])new object();
             String[] args = new String[] { };

@@ -154,7 +154,13 @@ namespace Arrays
             String[] sa = new String[100];
             Object[] oa = sa; // oa ссылается на массив элементов типа String
             oa[5] = "Jeff"; // CLR проверяет принадлежность oa к типу String; Проверка проходит успешно
-            oa[3] = 5; // CLR проверяет принадлежность oa к типу Int32; Генерируется исключение ArrayTypeMismatchException
+            //oa[3] = 5; // CLR проверяет принадлежность oa к типу Int32; Генерируется исключение ArrayTypeMismatchException
+
+            //DynamicArrays da;
+            //DynamicArrays();
+            DynamicArrays.Main_();
+            Program2.Main_();
+            Program3.Main_();
         }
     }
 }

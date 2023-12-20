@@ -25,6 +25,13 @@ namespace Generics
 
     class Wrapper
     {
+        public Wrapper()
+        {
+            SomeMethod();
+            ValueTypePerfTest();
+            ReferenceTypePerfTest();
+        }
+
         private static void SomeMethod()
         {
             // Создание списка (List), работающего с объектами DateTime

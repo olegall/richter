@@ -13,22 +13,23 @@ namespace Generics
             Wrapper.ReferenceTypePerfTest();
 
             Console.WriteLine("\n*** Обобщения в библиотеке FCL ***");
-            new GenericsInFCLLibrary().Run();
+            new GenericsInFCLLibrary();
             
             Console.WriteLine("\n*** Открытые и закрытые типы ***");
-            new OpenedAndClosedTypes().Run();
+            new OpenedAndClosedTypes();
             
             Console.WriteLine("\n*** Обобщенные типы и наследование ***");
             GenericsAndInheritance.SameDataLinkedList();
-            //GenericsAndInheritance.DifferentDataLinkedList();
+            GenericsAndInheritance.DifferentDataLinkedList();
 
             Console.WriteLine("\n*** Обобщенные методы ***");
             GenericMethods.CallingSwap();
             GenericMethods.CallingSwapUsingInference();
-            GenericMethods.RunDisplays();
+            GenericMethods.Main_();
             //Console.ReadLine();
 
-            new IdentificationOfGenerics().Run();
+            new IdentificationOfGenerics();
+            new VerificationAndRestrictions();
         }
     }
 }

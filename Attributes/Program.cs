@@ -175,8 +175,9 @@ namespace Attributes
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-
             Console.WriteLine("CondAttribute is {0}applied to Program type.", Attribute.IsDefined(typeof(Program), typeof(CondAttribute)) ? "" : "not ");
+            Program2.Main_();
+            Program3.Main_();
         }
 
         public override String ToString()

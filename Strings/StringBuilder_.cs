@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Text;
+using static Strings.OwnFormat;
 
 namespace Strings
 {
@@ -13,11 +14,16 @@ namespace Strings
                 String s = sb.AppendFormat("{0} {1}", "Jeffrey", "Richter").Replace(' ', '-').Remove(4, 3).ToString(); 
                 Console.WriteLine(s); // "Jeff-Richter"
             }
-            IFormatProvider formatProvider = null; // aleek
+            #region aleek
+            //IFormatProvider formatProvider = null;
+            //IFormatProvider formatProvider = (IFormatProvider)new object();
+            IFormatProvider formatProvider = new BoldInt32s();
+            #endregion
             NumberFormatInfo nfi = (NumberFormatInfo)formatProvider.GetFormat(typeof(NumberFormatInfo));
             DateTimeFormatInfo dtfi = (DateTimeFormatInfo)formatProvider.GetFormat(typeof(DateTimeFormatInfo));
 
             { String s = String.Format("On {0}, {1} is {2} years old.", new DateTime(2012, 4, 22, 14, 35, 5), "Aidan", 9); }
+            _2();
         }
 
         void _2() 

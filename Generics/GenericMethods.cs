@@ -47,7 +47,7 @@ namespace Generics
             o2 = temp;
         }
 
-        public static void RunDisplays()
+        public static void Main_()
         {
             Display("Jeff"); // Вызывает Display(String)
             Display(123); // Вызывает Display<T>(T)

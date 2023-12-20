@@ -16,10 +16,10 @@ namespace Delegates
             ChainDelegateDemo2(new Program());
 
             Console.WriteLine("*** \nДополнительные средства управления цепочками делегатов ***");
-            new AdditionalMeans().Run();
+            new AdditionalMeans().Main_();
 
             Console.WriteLine("*** \nДелегаты и отражение ***");
-            DelegateReflection.Run();
+            DelegateReflection.Main_();
             Console.ReadLine();
         }
 

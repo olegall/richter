@@ -5,6 +5,7 @@ namespace Arrays
     public static class DynamicArrays // где динамика?
     {
         public static void Main_()
+        //static DynamicArrays() // модификатор доступа нельзя aleek
         {
             // Требуется двухмерный массив [2005..2009][1..4]
             Int32[] lowerBounds = { 2005, 1 };

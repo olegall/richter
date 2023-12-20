@@ -6,17 +6,14 @@ namespace Exceptions
     {
         static void Main(string[] args)
         {
-            //var wrapper = new Wrapper();
-            //// throw vs throw e
-            //wrapper.TextException();
-            //wrapper.ExceptionWithoutTry();
-            //var s = new Sentence(null);
-            //s.GetFirstCharacter();
-            //Sentence.GetFirstCharacterNullable();
+            new Wrapper().Main_();
+            // throw vs throw e
+            
+            var s = new Sentence(null);
+            s.GetFirstCharacter();
+            Sentence.GetFirstCharacterNullable();
 
-            //wrapper.MultipleThrows();
-
-            //ConstrainedExecutionRegion.Demo1();
+            ConstrainedExecutionRegion.Demo1();
             ConstrainedExecutionRegion.Demo2();
 
             new ShoppingCart().AddItem(new Item());

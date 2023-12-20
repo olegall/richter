@@ -62,6 +62,8 @@ namespace Strings
             new Protected();
             new StringBuilder_();
             new Symbols();
+            //new Intern();
+            new OwnFormat();
         }
 
         void Compare1()

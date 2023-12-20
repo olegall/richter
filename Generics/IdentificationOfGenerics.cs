@@ -12,14 +12,9 @@ namespace Generics
         // Здесь никакой код добавлять не нужно!
     }
 
-    interface IRunnable
+    class IdentificationOfGenerics
     {
-        void Run();
-    }
-
-    class IdentificationOfGenerics : IRunnable
-    {
-        public void Run() 
+        public void Main_() 
         {
             List<DateTime> dt = new List<DateTime>();
             //DateTimeList dt = new DateTimeList();

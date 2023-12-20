@@ -49,6 +49,73 @@ namespace Exceptions
             // блоком catch, а новое не генерировалось
         }
 
+        //private void SomeMethod()
+        //{
+        //    try
+        //    {
+        //        // Внутрь блока try помещают код, требующий корректного
+        //        // восстановления работоспособности или очистки ресурсов
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        // До C# 2.0 этот блок перехватывал только CLS-совместимые исключения
+        //        // В C# 2.0 этот блок научился перехватывать также
+        //        // CLS-несовместимые исключения
+        //        throw; // Повторная генерация перехваченного исключения
+        //    }
+        //    catch
+        //    {
+        //        // Во всех версиях C# этот блок перехватывает
+        //        // и совместимые, и несовместимые с CLS исключения
+        //        throw; // Повторная генерация перехваченного исключения
+        //    }
+        //}
+
+        //private void SomeMethod()
+        //{
+        //    try { 
+        //        //... 
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        //...
+        //         throw e; // CLR считает, что исключение возникло тут
+        //                  // FxCop сообщает об ошибке
+        //    }
+        //}
+        
+        //private void SomeMethod()
+        //{
+        //    try 
+        //    { 
+        //        //...
+        //    }
+        //    catch (Exception e)
+        //    {
+        //         //...
+        //         throw; // CLR не меняет информацию о начальной точке исключения.
+        //                // FxCop НЕ сообщает об ошибке
+        //    }
+        //}
+
+        //private void SomeMethod()
+        //{
+        //    Boolean trySucceeds = false;
+
+        //    try
+        //    {
+        //        //...
+        //        trySucceeds = true;
+        //    }
+        //    finally
+        //    {
+        //        if (!trySucceeds) 
+        //        { 
+        //            /* код перехвата исключения */ 
+        //        }
+        //    }
+        //}
+
         private void ReadData(String pathname)
         {
             FileStream fs = null;
@@ -65,81 +132,15 @@ namespace Exceptions
             finally
             {
                 // Файл обязательно следует закрыть
-                if (fs != null) 
+                if (fs != null)
                     fs.Close();
             }
         }
 
-        private void SomeMethod2()
-        {
-            try
-            {
-                // Внутрь блока try помещают код, требующий корректного
-                // восстановления работоспособности или очистки ресурсов
-            }
-            catch (Exception e)
-            {
-                // До C# 2.0 этот блок перехватывал только CLS-совместимые исключения
-                // В C# 2.0 этот блок научился перехватывать также
-                // CLS-несовместимые исключения
-                throw; // Повторная генерация перехваченного исключения
-            }
-            catch
-            {
-                // Во всех версиях C# этот блок перехватывает
-                // и совместимые, и несовместимые с CLS исключения
-                throw; // Повторная генерация перехваченного исключения
-            }
-        }
-
-        private void SomeMethod3()
-        {
-            try { 
-                //... 
-            }
-            catch (Exception e)
-            {
-                //...
-                 throw e; // CLR считает, что исключение возникло тут
-                          // FxCop сообщает об ошибке
-            }
-        }
-        
-        private void SomeMethod4()
-        {
-            try 
-            { 
-                //...
-            }
-            catch (Exception e)
-            {
-                 //...
-                 throw; // CLR не меняет информацию о начальной точке исключения.
-                        // FxCop НЕ сообщает об ошибке
-            }
-        }
-
-        private void SomeMethod5()
-        {
-            Boolean trySucceeds = false;
-
-            try
-            {
-                //...
-                trySucceeds = true;
-            }
-            finally
-            {
-                if (!trySucceeds) 
-                { 
-                    /* код перехвата исключения */ 
-                }
-            }
-        }
-
+        #region aleek
         // throw new Exception() в разных частях программы (конструктор, try, catch, ...)
 
-        public void ExceptionWithoutTry()
+        private void ExceptionWithoutTry()
         { 
             throw new Exception();
 
@@ -151,7 +152,7 @@ namespace Exceptions
             }
         }
 
-        public void MultipleThrows()
+        private void MultipleThrows()
         {
             try
             {
@@ -165,11 +166,11 @@ namespace Exceptions
                 throw new Exception();
             }
         }
-        
+
         // не важно какой возвращаемый тип. почему?
-        public int NoMatterType()
-        //public void NoMatterType()
-        //public string NoMatterType()
+        private int NoMatterType()
+        //private void NoMatterType()
+        //private string NoMatterType()
         {
             try
             {
@@ -181,7 +182,7 @@ namespace Exceptions
             }
         }
 
-        public int GenericException<T>() where T : Exception, new()
+        private int GenericException<T>() where T : Exception, new()
         {
             try
             {
@@ -193,7 +194,7 @@ namespace Exceptions
             }
         }
 
-        public void TextGenericException()
+        private void TextGenericException()
         {
             try
             {
@@ -328,6 +329,7 @@ namespace Exceptions
                 var res1 = e.Message;
             }
         }
+        #endregion
 
         public String CalculateSpreadsheetCell(Int32 row, Int32 column)
         {
@@ -410,6 +412,22 @@ namespace Exceptions
                 Console.WriteLine($"You entered {number:F0}");
             else
                 Console.WriteLine($"{arg} is not a number.");
+        }
+
+        public void Main_() 
+        {
+            SomeMethod();
+
+            ExceptionWithoutTry();
+            MultipleThrows();
+            NoMatterType();
+            //GenericException<Object>();
+            TextGenericException();
+            CalculateSpreadsheetCell(0, 0);
+            SerializeObjectGraph(null, null, null);
+            SomeMethod(null);
+            Reflection(null);
+            DisplayFirstNumber(null);
         }
     }
 }

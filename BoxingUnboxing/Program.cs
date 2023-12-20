@@ -79,16 +79,25 @@ namespace BoxingUnboxing
             Console.WriteLine(p2.ToString());// "(10, 10)"
 
             DynamicDemo.Main_();
+            _1();
+            _2();
+            _3();
+            _4();
+            _5();
+            _6();
+            _7();
+            _8();
+            _9();
         }
 
-        void _1()
+        static void _1()
         {
             Int32 x = 5;
             Object o = x; // Упаковка x; o указывает на упакованный объект
             Int16 y = (Int16)(Int32)o; // Распаковка, а затем приведение типа
         }
 
-        void _2()
+        static void _2()
         {
             Point p;
             p.x = p.y = 1;
@@ -96,7 +105,7 @@ namespace BoxingUnboxing
             p = (Point)o; // Распаковка o и копирование полей из экземпляра в стек
         }
 
-        void _3()
+        static void _3()
         {
             Point p;
             p.x = p.y = 1;
@@ -104,14 +113,14 @@ namespace BoxingUnboxing
                           // Изменение поля x структуры Point (присвоение числа 2).
         }
 
-        void _4()
+        static void _4()
         {
             Int32 v = 5; // Создание неупакованной переменной значимого типа o
             Object o = v; // указывает на упакованное Int32, содержащее 5
             v = 123; // Изменяем неупакованное значение на 123
         }
 
-        void _5()
+        static void _5()
         {
             Int32 v = 5; // Создаем неупакованную переменную значимого типа
             Object o = v; // o указывает на упакованную версию v
@@ -121,7 +130,7 @@ namespace BoxingUnboxing
             Console.WriteLine(v); // Отображает "5"
         }
 
-        void _6()
+        static void _6()
         {
             Int32 v = 5; // Создаем переменную упакованного значимого типа
             #if INEFFICIENT
@@ -135,7 +144,7 @@ namespace BoxingUnboxing
             #endif
         }
 
-        void _7()
+        static void _7()
         {
             BoxingUnboxingPoint2.Point p = new BoxingUnboxingPoint2.Point(1, 1);
             Console.WriteLine(p);
@@ -147,7 +156,7 @@ namespace BoxingUnboxing
             Console.WriteLine(o);
         }
 
-        void _8()
+        static void _8()
         {
             BoxingUnboxingPoint3.Point p = new BoxingUnboxingPoint3.Point(1, 1);
             Console.WriteLine(p);
@@ -167,7 +176,7 @@ namespace BoxingUnboxing
             Console.WriteLine(o);
         }
 
-        void _9() 
+        static void _9() 
         {
             dynamic d = 123;
             var x = (Int32)d; // Конвертация: 'var x' одинаково с 'Int32 x'

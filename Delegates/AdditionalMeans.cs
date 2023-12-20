@@ -114,7 +114,7 @@ namespace Delegates
             //var b5 = d1 * d2;
         }
 
-        public void Run() 
+        public void Main_()
         {
             // Объявление пустой цепочки делегатов
             GetStatus getStatus = null;
@@ -126,6 +126,7 @@ namespace Delegates
 
             // Сводный отчет о состоянии трех компонентов
             Console.WriteLine(GetComponentStatusReport(getStatus));
+            CompareDelegates();
         }
     }
 }

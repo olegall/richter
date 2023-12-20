@@ -226,6 +226,7 @@ namespace Methods
             // сработает статический конструктор?
             SomeRefType a1; 
             new SomeRefType();
+            new ExtensionMethods();
         }
     }
 }
