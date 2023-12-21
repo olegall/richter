@@ -76,6 +76,11 @@ namespace Generics
     /// </summary>
     class VerificationAndRestrictions
     {
+        public VerificationAndRestrictions()
+        {
+            CallMin();
+        }
+
         private static Boolean MethodTakingAnyType<T>(T o)
         {
             T temp = o;

@@ -9,9 +9,8 @@ namespace Generics
             AdditionalRestrictions.CallingConvertIList();
 
             Console.WriteLine("Initial");
-            Wrapper.ValueTypePerfTest();
-            Wrapper.ReferenceTypePerfTest();
-
+            new Wrapper();
+            
             Console.WriteLine("\n*** Обобщения в библиотеке FCL ***");
             new GenericsInFCLLibrary();
             

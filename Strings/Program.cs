@@ -62,7 +62,7 @@ namespace Strings
             new Protected();
             new StringBuilder_();
             new Symbols();
-            //new Intern();
+            new Intern();
             new OwnFormat();
         }
 

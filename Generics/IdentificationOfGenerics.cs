@@ -14,7 +14,7 @@ namespace Generics
 
     class IdentificationOfGenerics
     {
-        public void Main_() 
+        public IdentificationOfGenerics() 
         {
             List<DateTime> dt = new List<DateTime>();
             //DateTimeList dt = new DateTimeList();

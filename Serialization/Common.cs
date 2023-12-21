@@ -84,6 +84,16 @@ namespace Serialization
 
     class Common
     {
+        public Common()
+        {
+            SaveApplicationState(null);
+            RestoreApplicationState(null);
+            DeepClone(null);
+            OptInSerialization();
+            SingletonSerializationTest();
+            SerializationSurrogateDemo();
+        }
+
         private static List<Customer> s_customers = new List<Customer>();
         private static List<Order> s_pendingOrders = new List<Order>();
         private static List<Order> s_processedOrders = new List<Order>();

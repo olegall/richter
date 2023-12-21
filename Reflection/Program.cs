@@ -11,8 +11,6 @@ namespace Reflection
     {
     }
 
-    
-
     class Program
     {
         static void LoadAssemAndShowPublicTypes(String assemId)
@@ -352,7 +350,5 @@ namespace Reflection
 
         // Добавление метода обратного вызова для события
         private static void EventCallback(Object sender, EventArgs e) { }
-
-
     }
 }

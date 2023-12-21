@@ -14,9 +14,9 @@ namespace Generics
     /// <summary>
     /// Открытые и закрытые типы
     /// </summary>
-    public class OpenedAndClosedTypes : IRunnable
+    public class OpenedAndClosedTypes
     {
-        public void Run()
+        public OpenedAndClosedTypes()
         {
             Object o = null;
 

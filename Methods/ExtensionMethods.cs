@@ -44,7 +44,7 @@ namespace Methods
         {
         }
 
-        public void Main()
+        public ExtensionMethods()
         {
             // Инициализирующая строка
             StringBuilder sb = new StringBuilder("Hello. My name is Jeff.");
