@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,12 +14,60 @@ namespace Richter
 {
     class Threading
     {
-        #region Скоординированная отмена
+        public Threading() 
+        {   //Console.WriteLine("\n*** CancelCount ***");
+            //CancelCount();
+
+            //Console.WriteLine("\n*** Скоординированная отмена ***");
+            //CoordinatedCancel();
+
+            //Console.WriteLine("\n*** Завершение задания и получение результата ***");
+            //EndTask();
+            //EndTask2();
+
+            //Console.WriteLine("\n*** Отмена задания ***");
+            //CancelTask();
+            //
+            //Console.WriteLine("\n*** Автоматический запуск задания по завершении предыдущего ***");
+            //RunTaskAfterEndPrevious();
+            //RunTaskAfterEndPrevious2();
+
+            //ChildTasks();
+            //TaskFactory();
+            //TaskFactoryException();
+            //Go();
+            TaskRunUI();
+            GoWhenAll();
+            //Go_CancelIO();
+            //StrangeBehavior.MainStrangeBehavior();
+            //new ThreadsSharingData().Thread1();
+            //new ThreadsSharingData().Thread2();
+            //new ThreadsSharingDataCorrect().Thread1();
+            //new ThreadsSharingDataCorrect().Thread2();
+            //new ThreadsSharingDataVolatile().Thread1();
+            //new ThreadsSharingDataVolatile().Thread2();
+            //var mwr = new MultiWebRequests();
+            //mwr.Cancel();
+            //new SomeResource().AccessResource();
+            //MainSemaphore();
+
+            //ref int a1;
+            //Maximum(a1, 0);
+
+            //Morpher<int, int>();
+            //Morph(0, Morph, Morph);
+            //Events();
+            //RecursiveAutoResetEvent().Enter();
+            //RecursiveAutoResetEvent().Leave();
+
+        }
+
+        #region 1
         public void CancelCount()
         {
             CancellationTokenSource cts = new CancellationTokenSource(); // завязан на поток - см. далее
             // Передаем операции CancellationToken и число
-            ThreadPool.QueueUserWorkItem(o => Count(cts.Token, 10));
+            ThreadPool.QueueUserWorkItem(o => Count(cts.Token, 10)); // ещё один способ запустить задачу? aleek 
             Console.WriteLine("Press <Enter> to cancel the operation.");
             Console.ReadLine();
             cts.Cancel();
@@ -42,7 +91,9 @@ namespace Richter
             }
             Console.WriteLine("Count is done");
         }
+        #endregion
 
+        #region Скоординированная отмена
         public void CoordinatedCancel()
         {
             // Создание объекта CancellationTokenSource
@@ -58,7 +109,7 @@ namespace Richter
             // Создание второго объекта CancellationTokenSource
             var cts2 = new CancellationTokenSource();
 
-            Action a2 = () => // сработает, когда вызовется cts2.Cancel(), но сначала - linked
+            Action a2 = () => // сработает, когда вызовется cts2.Cancel()
             {
                 Console.WriteLine("cts2 canceled");
             };
@@ -76,8 +127,8 @@ namespace Richter
             linkedCts.Token.Register(linked);
 
             // Отмена одного из объектов CancellationTokenSource (я выбрал cts2)
-            cts1.Cancel(); // сработает коллбэк linked
-            //cts2.Cancel(); // сработает коллбэк linked
+            cts1.Cancel(); // сработает коллбэк linked. потом a1 - обратный call stack. aleek
+            //cts2.Cancel(); // сработает коллбэк linked. потом a2 - обратный call stack. aleek
 
             // Показываем, какой из объектов CancellationTokenSource был отменен
             Console.WriteLine("cts1 canceled={0}, cts2 canceled={1}, linkedCts={2}", cts1.IsCancellationRequested, cts2.IsCancellationRequested, linkedCts.IsCancellationRequested);
@@ -117,7 +168,7 @@ namespace Richter
         }
 
         #region Завершение задания и получение результата
-        public void EndTask() 
+        public async void EndTask()
         {
             // Создание задания Task (оно пока не выполняется)
             Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), 10); 
@@ -126,17 +177,25 @@ namespace Richter
             t.Start();
 
             // Можно ожидать завершения задания в явном виде
-            // если закомментировать - результат почему-то тот же
-            t.Wait(); // ПРИМЕЧАНИЕ. Существует перегруженная версия, принимающая тайм-аут/CancellationToken
-                      // Получение результата (свойство Result вызывает метод Wait)
-
-            Console.WriteLine("The Sum is: " + t.Result); // Значение Int32
+            // ! если закомментировать - результат тот же
+            //t.Wait(); // ПРИМЕЧАНИЕ. Существует перегруженная версия, принимающая тайм-аут/CancellationToken
+            //await t; // предупрежедние в сигнатуре пропадает, если раскомментировать. aleek
+            //var a1 = await t; // aleek
+            // Получение результата (свойство Result вызывает метод Wait)
+            Console.WriteLine("The Sum is: " + t.Result); // Значение Int32. .Result виден, если был await или t.Wait(). Иначе - только на след. строке aleek
         }
 
         public void EndTask2()
         {
             Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), 10);
-            //Console.WriteLine("The Sum is: " + t.Result); // зависнет - задача не запущена
+            Console.WriteLine("The Sum is: " + t.Result); // зависнет - задача не запущена
+            try // aleek
+            {
+                var a1 = t.Result;
+            }
+            catch (Exception e) // не попадает в эксепшн. TODO: cancellation по таймауту
+            {
+            }
             Console.WriteLine("The Sum is: "); // тут же выполнится - задача просто объявлена
         }
         #endregion
@@ -147,8 +206,9 @@ namespace Richter
             CancellationTokenSource cts = new CancellationTokenSource();
             Task<Int32> t = new Task<Int32>(() => Sum(cts.Token, 10000), cts.Token);
             t.Start();
+            //Thread.Sleep(1000); // aleek
             // Позднее отменим CancellationTokenSource, чтобы отменить Task
-            cts.Cancel(); // Это асинхронный запрос, задача уже может быть завершена
+            cts.Cancel(); // Это асинхронный запрос, задача уже может быть завершена. закомментировать - нет исключения aleek
 
             try
             {
@@ -167,23 +227,31 @@ namespace Richter
         #endregion
 
         #region Автоматический запуск задания по завершении предыдущего
-        public void RunTaskAfterEndPrevious() 
+        public void RunTaskAfterEndPrevious()
         {
             // Создание объекта Task с отложенным запуском
             Task<Int32> t = Task.Run(() => Sum(CancellationToken.None, 10));
 
             // Метод ContinueWith возвращает объект Task, но обычно он не используется
-            Task cwt = t.ContinueWith(task => Console.WriteLine("The sum is: " + task.Result)); // получаем результат в continuation или в строках ниже
-
+            Task cwt = t.ContinueWith(task => 
+                Console.WriteLine("The sum is: " + task.Result)); // получаем результат в continuation или в строках ниже. сработает после t.Wait() aleek
+            #region aleek
+            // какой смысл когда можно через await получить? видимо, чтобы запустить задачу позже. aleek
+            // t.ContinueWith(x => x);
+            // t.ContinueWith(x => x);
+            // t.ContinueWith(x => x);
+            #endregion
             //t.Start(); // System.InvalidOperationException: "Start нельзя вызывать для уже запущенной задачи."
-            //t.Wait();
+            t.Wait();
             //Console.WriteLine("The Sum is: " + t.Result); // Значение Int32
         }
-                                                           
+
         public void RunTaskAfterEndPrevious2()
         {
             // Создание и запуск задания с продолжением
             Task<Int32> t = Task.Run(() => Sum(10));
+
+            // срабатывают в зависимости от причин (TaskContinuationOptions) в Sum. aleek
 
             // Метод ContinueWith возвращает объект Task, но обычно он не используется
             t.ContinueWith(task => Console.WriteLine("The sum is: " + task.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
@@ -193,16 +261,20 @@ namespace Richter
 
             // отменить задачу. У task нет метода отмены
             t.ContinueWith(task => Console.WriteLine("Sum was canceled"), TaskContinuationOptions.OnlyOnCanceled);
+
+            //await t; // необходим async в сигнатуре
+            //t.Wait(); // условие срабатывания ContinueWith. По дефолту не было. aleek
         }
         #endregion
 
         #region Дочерние задания
-        public void ChildTasks() 
+        public void ChildTasks()
         {
+            // мониторинг запущенных задач, потоков. aleek
             Task<Int32[]> parent = new Task<Int32[]>(() => {
                 var results = new Int32[3]; // Создание массива для результатов. Создание и запуск 3 дочерних заданий
                 
-                new Task(() => results[0] = Sum(10000), TaskCreationOptions.AttachedToParent).Start(); // когда будут запущены задачи?
+                new Task(() => results[0] = Sum(10000), TaskCreationOptions.AttachedToParent).Start();
                 new Task(() => results[1] = Sum(20000), TaskCreationOptions.AttachedToParent).Start();
                 new Task(() => results[2] = Sum(30000), TaskCreationOptions.AttachedToParent).Start();
                 
@@ -210,11 +282,11 @@ namespace Richter
                 return results;
             });
 
-            // Вывод результатов после завершения родительского и дочерних заданий
-            var cwt = parent.ContinueWith(parentTask => 
-            {                                    // Почему без скобок? Делегат?
-                Array.ForEach(parentTask.Result, Console.WriteLine); 
-                Console.WriteLine("ContinueWith");
+            // Вывод результатов после завершения родительского и дочерних заданий. почему родительского? оно не запускалось aleek
+            var cwt = parent.ContinueWith(parentTask => // cwt не используется. можно не присваивать. aleek
+            {                                    // Почему без скобок? Делегат? какой смысл? aleek
+                Array.ForEach(parentTask.Result, Console.WriteLine);
+                Console.WriteLine("ContinueWith"); // не работает. aleek
             });
             
             // Запуск родительского задания, которое запускает дочерние
@@ -229,38 +301,40 @@ namespace Richter
         const int _2_SEC = 2000;
         const int _3_SEC = 3000;
 
-        int Delay1s() { Thread.Sleep(_1_SEC); return _1_SEC; }
+        int Delay1s() { Thread.Sleep(_1_SEC); return _1_SEC; } // каждый Thread.Sleep - новый поток?
         int Delay2s() { Thread.Sleep(_2_SEC); return _2_SEC; }
         int Delay3s() { Thread.Sleep(_3_SEC); return _3_SEC; }
 
         public void TaskFactory()
         {
             Task parent = new Task(() => {
-                var cts = new CancellationTokenSource(); // зачем навешивать токен на задачу? чтобы отменить задачу через токен?
+                var cts = new CancellationTokenSource(); // зачем нужен токен, раз нет Cancel()?
                 var tf = new TaskFactory<Int32>(cts.Token, TaskCreationOptions.AttachedToParent, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                 
                 // Задание создает и запускает 3 дочерних задания
                 Task<int>[] childTasks = new[] { // массив задач, которые вернут int
-                    tf.StartNew(() => Delay1s()),
+                    tf.StartNew(() => Delay1s()), // как назначается Id у задач? aleek
                     tf.StartNew(() => Delay2s()),
                     tf.StartNew(() => Delay3s())
                 };
 
-                // к этому моменту задачи уже выполнятся? останутся континуейшены?
-                for (Int32 i = 0; i < childTasks.Length; i++) 
+                // задачи пока не завершены, но перебирать в цикле можно aleek
+                for (Int32 i = 0; i < childTasks.Length; i++)
                 {
                     // если TaskContinuationOptions.OnlyOnFaulted и нет исключения - коллбэк в ContinueWith не сработает
-                    // как поставить точку останова в колбэке? - фиг. скобки
-                    // всегда показывает 3, потому что к моменту ContinueWhenAll цикл уже прогнан
                     // как сделать порядковый номер задачи?
-                    // коллбэк сработает после ContinueWhenAll
-                    childTasks[i].ContinueWith(t => Console.WriteLine($"ContinueWith Id:{t.Id} iterator:{i}"), TaskContinuationOptions.None);
+                    // сработает коллбэк, когда истечёт интервал. это и признак окончания задачи
+                    childTasks[i].ContinueWith(t =>
+                        Console.WriteLine($"ContinueWith Id:{t.Id} iterator:{i}"), TaskContinuationOptions.None); // i всегда 3, т.к. цикл выполняется намного быстрее, чем ContinueWith aleek
                 }
 
                 // После завершения дочерних заданий получаем максимальное возвращенное значение и передаем его другому заданию для вывода
-                // Без ContinueWhenAll можно максимальный результат получить?
-                tf.ContinueWhenAll(childTasks, completedTasks => completedTasks.Where(t => !t.IsFaulted && !t.IsCanceled).Max(t => t.Result), CancellationToken.None)
-                  .ContinueWith(t => Console.WriteLine("The maximum is: " + t.Result), TaskContinuationOptions.ExecuteSynchronously); // Без ContinueWith можно максимальный результат получить?
+                tf.ContinueWhenAll(childTasks, completedTasks => 
+                    completedTasks.Where(t => !t.IsFaulted && !t.IsCanceled).Max(t => t.Result), CancellationToken.None) // выделить лямбду в дебагере - результат aleek
+                .ContinueWith(t => 
+                    Console.WriteLine("The maximum is: " + t.Result), TaskContinuationOptions.ExecuteSynchronously); // Без ContinueWith можно максимальный результат получить?
+                //tf.ContinueWhenAll(childTasks, x => x.Max(t => t.Result)).ContinueWith(t => Console.WriteLine("The maximum is: " + t.Result)); // упрощённо aleek
+                // порядок срабатывания колбэков: 1.ContinueWith у childTasks[i] 2.ContinueWhenAll 3.ContinueWith после ContinueWhenAll
             });
 
             // Запуск родительского задания, которое может запускать дочерние
@@ -285,12 +359,15 @@ namespace Richter
                 // Если дочернее задание становится источником исключения, отменяем все дочерние задания
                 for (Int32 task = 0; task < childTasks.Length; task++)
                 {
-                    childTasks[task].ContinueWith(t => cts.Cancel(), TaskContinuationOptions.OnlyOnFaulted);
+                    childTasks[task].ContinueWith(t => cts.Cancel(), TaskContinuationOptions.OnlyOnFaulted); // исключения почему-то нет. видимо т.к. tf ещё не завершена aleek
                 }
 
                 // После завершения дочерних заданий получаем максимальное возвращенное значение и передаем его другому заданию для вывода
-                tf.ContinueWhenAll(childTasks, completedTasks => completedTasks.Where(t => !t.IsFaulted && !t.IsCanceled).Max(t => t.Result), CancellationToken.None)
-                  .ContinueWith(t => Console.WriteLine("The maximum is: " + t.Result), TaskContinuationOptions.ExecuteSynchronously);
+                tf.ContinueWhenAll(childTasks, completedTasks => // не работает aleek
+                      completedTasks.Where(t => !t.IsFaulted && !t.IsCanceled).Max(t => t.Result), CancellationToken.None)
+                  .ContinueWith(t => 
+                      Console.WriteLine("The maximum is: " + t.Result), TaskContinuationOptions.ExecuteSynchronously
+                  );
             });
 
             // После завершения дочерних заданий выводим, в том числе, и необработанные исключения
@@ -311,7 +388,7 @@ namespace Richter
             //parent.ContinueWith().ContinueWith()...
             // Запуск родительского задания, которое может запускать дочерние
             Console.WriteLine("parent.Start()");
-            parent.Start();
+            parent.Start(); // не работает. не обрабатывается исключение в Sum. aleek
         }
 
         private int Log()
@@ -332,8 +409,8 @@ namespace Richter
                 TaskLogger.LogLevel = TaskLogger.TaskLogLevel.Pending;
             #endif
 
-            // Запускаем 3 задачи; для тестирования TaskLogger их продолжительность задается явно.
-            var tasks = new List<Task>  // Просто объявили задачи? Не запустили?
+            // Запускаем 3 задачи; для тестирования TaskLogger их продолжительность задается явно. пока не запущены aleek
+            var tasks = new List<Task>
             {
                 Task.Delay(2000).Log("2s op"),
                 Task.Delay(5000).Log("5s op"),
@@ -344,7 +421,7 @@ namespace Richter
             {
                 // Ожидание всех задач с отменой через 3 секунды; только одна задача должна завершиться в указанное время.
                 // Примечание: WithCancellation - мой метод расширения, описанный позднее в этой главе.
-                //await Task.WhenAll(tasks).WithCancellation(new CancellationTokenSource(3000).Token);
+                //await Task.WhenAll(tasks).WithCancellation(new CancellationTokenSource(3000).Token); // не работает aleek
                 
             }
             catch (OperationCanceledException)
@@ -404,7 +481,8 @@ namespace Richter
             Task.Run(async () => {
                 // Этот код выполняется в потоке из пула
                 // TODO: Подготовительные вычисления...
-                /*await*/ XxxAsync(); // Инициирование асинхронной операции
+                //await XxxAsync(); // Инициирование асинхронной операции. не работает aleek
+                //XxxAsync();
                                   // Продолжение обработки...
                 var idAfter = Thread.CurrentThread.ManagedThreadId; // отличается от idBefore
                 var stop = 0;
