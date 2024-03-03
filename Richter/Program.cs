@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using static Richter.Threading;
 
 namespace Richter
 {
@@ -13,23 +14,9 @@ namespace Richter
 
             var threading = new Threading();
 
-            //Console.WriteLine("\n*** CancelCount ***");
-            //threading.CancelCount();
-            //Console.WriteLine("\n*** Скоординированная отмена ***");
-            //threading.CoordinatedCancel();
-
-            Console.WriteLine("\n*** Завершение задания и получение результата ***");
-            threading.EndTask();
-            threading.EndTask2();
-
-            //Console.WriteLine("\n*** Отмена задания ***");
-            //threading.CancelTask();
-
-            //Console.WriteLine("\n*** Автоматический запуск задания по завершении предыдущего ***");
-            //threading.RunTaskAfterEndPrevious();
-            //threading.RunTaskAfterEndPrevious2();
-
-
+            var mwr = new MultiWebRequests();
+            //var mwr = new MultiWebRequests(10);
+            //mwr.Cancel();
 
             //Console.WriteLine("\n*** Потоки для асинхронных вычислительных операций ***");
             //Console.WriteLine("Main thread: starting a dedicated thread " + "to do an asynchronous operation");
@@ -179,8 +166,6 @@ namespace Richter
 
             //Console.WriteLine("\n*** Классы коллекций для параллельного доступа ***");
             //threading.BlockingCollection();
-
-            threading.TaskRunUI();
             #endregion
 
             Console.ReadLine();

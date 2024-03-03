@@ -14,6 +14,8 @@ namespace Richter
 {
     class Threading
     {
+        private static int i_; // почему i_ д.б. static? aleek
+
         public Threading() 
         {   //Console.WriteLine("\n*** CancelCount ***");
             //CancelCount();
@@ -36,20 +38,57 @@ namespace Richter
             //TaskFactory();
             //TaskFactoryException();
             //Go();
-            TaskRunUI();
-            GoWhenAll();
+            //TaskRunUI();
+            //GoWhenAll();
+            //GoWhenAny();
             //Go_CancelIO();
             //StrangeBehavior.MainStrangeBehavior();
-            //new ThreadsSharingData().Thread1();
-            //new ThreadsSharingData().Thread2();
-            //new ThreadsSharingDataCorrect().Thread1();
-            //new ThreadsSharingDataCorrect().Thread2();
-            //new ThreadsSharingDataVolatile().Thread1();
-            //new ThreadsSharingDataVolatile().Thread2();
-            //var mwr = new MultiWebRequests();
-            //mwr.Cancel();
-            //new SomeResource().AccessResource();
-            //MainSemaphore();
+
+            //var tsd = new ThreadsSharingData();
+            //for (int i = 0; i < 30; i++)
+            //{
+            //    i_ = i;
+            //    Console.WriteLine("Thread1"); // порядок Console.WriteLine здесь и в реализации не детерменирован aleek
+            //    new Thread(() => tsd.Thread1()).Start(); // чаще у Console.WriteLine порядок именно такой, иногда обратный
+            //    Console.WriteLine("Thread2");
+            //    new Thread(() => tsd.Thread2()).Start();
+
+            //    //new Thread(() => tsd.Thread2()).Start(); // чаще у Console.WriteLine порядок именно такой, иногда обратный
+            //    //new Thread(() => tsd.Thread1()).Start();
+
+            //    //tsd.Thread1();
+            //    //tsd.Thread2();
+
+            //    Thread.Sleep(100);
+            //    Console.WriteLine("--------------");
+            //}
+
+            //var tdsc = new ThreadsSharingDataCorrect();
+            //for (int i = 0; i < 30; i++)
+            //{
+            //    i_ = i;
+            //    new Thread(() => tdsc.Thread1()).Start();
+            //    new Thread(() => tdsc.Thread2()).Start();
+            //    //new Thread(() => tdsc.Thread2()).Start();
+            //    //new Thread(() => tdsc.Thread1()).Start();
+            //    Thread.Sleep(100);
+            //    Console.WriteLine("--------------");
+            //}
+
+            //var tsdv = new ThreadsSharingDataVolatile();
+            //for (int i = 0; i < 30; i++)
+            //{
+            //    i_ = i;
+            //    new Thread(() => tsdv.Thread1()).Start();
+            //    new Thread(() => tsdv.Thread2()).Start();
+            //    Thread.Sleep(100);
+            //    Console.WriteLine("--------------");
+            //}
+
+            
+
+            new SomeResource().AccessResource();
+            MainSemaphore();
 
             //ref int a1;
             //Maximum(a1, 0);
@@ -481,18 +520,11 @@ namespace Richter
             Task.Run(async () => {
                 // Этот код выполняется в потоке из пула
                 // TODO: Подготовительные вычисления...
-                //await XxxAsync(); // Инициирование асинхронной операции. не работает aleek
-                //XxxAsync();
+                //await XxxAsync(); // Инициирование асинхронной операции
                                   // Продолжение обработки...
                 var idAfter = Thread.CurrentThread.ManagedThreadId; // отличается от idBefore
                 var stop = 0;
             });
-        }
-
-        private int XxxAsync()
-        //private Task<int> XxxAsync()
-        {
-            return 1;
         }
 
         public static async Task OuterAsyncFunction()
@@ -531,9 +563,11 @@ namespace Richter
 
             // Асинхронное ожидание завершения всех клиентских запросов. ВНИМАНИЕ: если 1+ заданий выдадут исключение, WhenAll заново инициирует последнее исключение
 
+            // aleek. не работает
             // пока ждём WhenAll всё в IssueClientRequestAsync - в другом потоке. 
             // Пока находимся в главном потоке на этой точке. В этот момент может сработать например REST запрос на другой контроллер, который так же обработается главным потоком. 
             // Код там отработает, а потом вернётся сюда -т.е. мы не блокируем главный поток, работая с IssueClientRequestAsync в другом потоке
+            // как запускаются задачи в requests? мониторинг потоков
             String[] responses = await Task.WhenAll(requests);
 
             // Обработка всех запросов
@@ -566,7 +600,7 @@ namespace Richter
             }
         }
 
-        private static async void StartServer()
+        private static async void StartServer() // не работает aleek
         {
             while (true)
             {
@@ -656,8 +690,7 @@ namespace Richter
             {
                 // Я использую Task.Delay для тестирования; замените другим методом, возвращающим Task
                 // Delay возвращает Task, а не Task<TResult>, поэтому .WithCancellation(ct) применить не получится
-                //await Task.Delay(10000).WithCancellation(ct);
-                //await Task.Delay(10000).WithCancellationEmpty(ct);
+                //await Task.Delay(10000).WithCancellation(ct); // не работает aleek
                 Console.WriteLine("Task completed");
             }
             catch (OperationCanceledException)
@@ -682,25 +715,33 @@ namespace Richter
         internal static class StrangeBehavior
         {
             // Далее вы увидите, что проблема решается объявлением этого поля volatile
-            private static Boolean s_stopWorker = false;
+            private static Boolean s_stopWorker = false; // volatile не влияет. aleek
             
             public static void MainStrangeBehavior()
             {
+                // aleek
+                var id = Thread.CurrentThread.ManagedThreadId; 
+                var id2 = GetId();
+
                 Console.WriteLine("Main: letting worker run for 5 seconds");
                 
                 Thread t = new Thread(Worker);
                 t.Start();
 
-                Thread.Sleep(1);
+                Thread.Sleep(1); // пауза для отработки Worker. aleek
                 s_stopWorker = true;
 
                 Console.WriteLine("Main: waiting for worker to stop");
                 
-                t.Join();
+                t.Join(); // не влияет. aleek
             }
 
-            private static void Worker(Object o) // почему параметр, new Thread(Worker) - без параметра
+            private static void Worker(Object o) // почему параметр, new Thread(Worker) - без параметра. aleek
             {
+                // aleek
+                var id = Thread.CurrentThread.ManagedThreadId; 
+                var id2 = GetId();
+
                 double x = 0;
 
                 while (!s_stopWorker) 
@@ -710,6 +751,8 @@ namespace Richter
 
                 Console.WriteLine("Worker: stopped when x={0}", x / 100000);
             }
+
+            private static int GetId() => Thread.CurrentThread.ManagedThreadId;
         }
 
         internal sealed class ThreadsSharingData
@@ -719,18 +762,33 @@ namespace Richter
 
             // Этот метод исполняется одним потоком
             public void Thread1()
+            //public void Thread1(int i) // aleek
             {
-                // ПРИМЕЧАНИЕ. Они могут выполняться в обратном порядке
+                //Thread.Sleep(100); // случайность. aleek
+
+                // ПРИМЕЧАНИЕ. Они могут выполняться в обратном порядке. почему? aleek
                 m_value = 5;
                 m_flag = 1;
+
+                Console.WriteLine("Thread1 " + i_);
             }
 
             // Этот метод исполняется другим потоком
             public void Thread2()
+            //public void Thread2(int i) // aleek
             {
+                //Thread.Sleep(100); // случайность. aleek
+
                 // ПРИМЕЧАНИЕ. Поле m_value может быть прочитано раньше, чем m_flag
                 if (m_flag == 1)
-                    Console.WriteLine(m_value);
+                    Console.WriteLine("Thread2 " + i_ + " " + m_value);
+                    #region aleek
+                    // почему когда в консоли сначала Thread2, потом Thread1 вообще сюда заходит?
+                    // почему (почти?) всегда срабатывает при порядке Thread2 -> Thread1?
+                    // не попадёт сюда, если раньше отработает Thread2
+                    // i иногда дублируются, некоторые пропадают.
+                    #endregion
+
             }
         }
 
@@ -745,6 +803,7 @@ namespace Richter
                 // ПРИМЕЧАНИЕ. 5 нужно записать в m_value до записи 1 в m_flag
                 m_value = 5;
                 Volatile.Write(ref m_flag, 1);
+                Console.WriteLine("Thread1 " + i_ + " " + m_value);
             }
 
             // Этот метод выполняется вторым потоком
@@ -752,7 +811,7 @@ namespace Richter
             {
                 // ПРИМЕЧАНИЕ. Поле m_value должно быть прочитано после m_flag
                 if (Volatile.Read(ref m_flag) == 1)
-                    Console.WriteLine(m_value);
+                    Console.WriteLine("Thread2 " + i_ + " " + m_value);
             }
         }
 
@@ -767,6 +826,7 @@ namespace Richter
                 // ПРИМЕЧАНИЕ. Значение 5 должно быть записано в m_value перед записью 1 в m_flag
                 m_value = 5;
                 m_flag = 1;
+                Console.WriteLine("Thread1 " + i_ + " " + m_value);
             }
 
             // Этот метод исполняется другим потоком
@@ -774,7 +834,7 @@ namespace Richter
             {
                 // ПРИМЕЧАНИЕ. Поле m_value должно быть прочитано после m_flag
                 if (m_flag == 1)
-                    Console.WriteLine(m_value);
+                    Console.WriteLine("Thread2 " + i_ + " " + m_value);
             }
         }
 
@@ -796,8 +856,12 @@ namespace Richter
             // Набор веб-серверов, к которым будут посылаться запросы. Хотя к этому словарю возможны одновременные обращения,
             // в синхронизации доступа нет необходимости, потому что ключи после создания доступны только для чтения
             private Dictionary<String, Object> m_servers = new Dictionary<String, Object> {
-                 { "http://Wintellect.com/", null },
-                 { "http://Microsoft.com/", null },
+                 //{ "http://Wintellect.com/", null },
+                 //{ "http://Microsoft.com/", null },
+                 //{ "http://1.1.1.1/", null }
+
+                 { "https://wintellectnow.com/", null }, // aleek
+                 //{ "https://microsoft.com/", null }, // не работает
                  { "http://1.1.1.1/", null }
             };
 
@@ -835,7 +899,7 @@ namespace Richter
             }
 
             // При вызове этого метода результаты игнорируются
-            public void Cancel() 
+            public void Cancel() // никакой отмены на уровне Task не происходит. смысла рассматривать этот кейс нет. aleek
             { 
                 m_ac.Cancel(); 
             }
