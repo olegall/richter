@@ -37,7 +37,6 @@ namespace Richter
             //ChildTasks();
             //TaskFactory();
             //TaskFactoryException();
-            //Go();
             //TaskRunUI();
             //GoWhenAll();
             //GoWhenAny();
@@ -85,20 +84,12 @@ namespace Richter
             //    Console.WriteLine("--------------");
             //}
 
-            
-
-            new SomeResource().AccessResource();
             MainSemaphore();
 
             //ref int a1;
             //Maximum(a1, 0);
 
-            //Morpher<int, int>();
-            //Morph(0, Morph, Morph);
-            //Events();
-            //RecursiveAutoResetEvent().Enter();
-            //RecursiveAutoResetEvent().Leave();
-
+            
         }
 
         #region 1
@@ -1008,7 +999,7 @@ namespace Richter
                 {
                     // Всегда указывать, что ресурс используется. Если поток переводит его из свободного состояния, вернуть управление
                     if (Interlocked.Exchange(ref m_ResourceInUse, 1) == 0) // Exchange возвращает значение
-                        return; 
+                        return; // попадёт сюда aleek
                     
                     // Здесь что-то происходит...
                 }
@@ -1025,7 +1016,7 @@ namespace Richter
         #region Универсальный Interlocked-паттерн
         public static Int32 Maximum(ref Int32 target, Int32 value)
         {
-            Int32 currentVal = target, startVal, desiredVal; // как это?
+            Int32 currentVal = target, startVal, desiredVal;
             // Параметр target может использоваться другим потоком, его трогать не стоит
             do
             {
@@ -1037,7 +1028,7 @@ namespace Richter
 
                 // ПРИМЕЧАНИЕ. Здесь поток может быть прерван!
                 if (target == startVal) 
-                    target = desiredVal; 
+                    target = desiredVal;
 
                 // Возвращение значения, предшествующего потенциальным изменениям
                 currentVal = Interlocked.CompareExchange(ref target, desiredVal, startVal);
@@ -1048,12 +1039,9 @@ namespace Richter
             return desiredVal;
         }
 
-        delegate Int32 Morpher<TResult, TArgument>(Int32 startValue, TArgument argument, out TResult morphResult);
+        public delegate Int32 Morpher<TResult, TArgument>(Int32 startValue, TArgument argument, out TResult morphResult);
 
-        /// <summary>
-        /// Morpher. Нигде не используется
-        /// </summary>
-        static TResult Morph<TResult, TArgument>(ref Int32 target, TArgument argument, Morpher<TResult, TArgument> morpher)
+        public static TResult Morph<TResult, TArgument>(ref Int32 target, TArgument argument, Morpher<TResult, TArgument> morpher)
         {
             TResult morphResult;
             Int32 currentVal = target, startVal, desiredVal;
@@ -1090,7 +1078,7 @@ namespace Richter
         #endregion
 
         #region События
-        public void Events() 
+        public void Events()
         {
             Int32 x = 0;
             const Int32 iterations = 10000000; // 10 миллионов.
@@ -1161,7 +1149,7 @@ namespace Richter
                 // Этому потоку доступ больше не нужен; его может получить другой поток
                 m_AvailableResources.Release();
             }
-
+            // по ссылке попадает в Interfaces. вызывается сам по себе, классом SimpleWaitLock. aleek
             public void Dispose() // не обязательно внутри вызывать Dispose
             { 
                 m_AvailableResources.Close(); 
@@ -1191,7 +1179,7 @@ namespace Richter
                 m_AvailableResources.Release();
             }
 
-            public void Dispose() 
+            public void Dispose() // не вызывается, т.к. не обёрнут в using aleek
             {
                 m_AvailableResources.Close(); 
             }
@@ -1240,7 +1228,7 @@ namespace Richter
                 }
             }
 
-            public void Dispose() 
+            public void Dispose() // не вызывается, т.к. не обёрнут в using aleek
             { 
                 m_lock.Dispose(); 
             }
@@ -1277,9 +1265,9 @@ namespace Richter
                 m_waiterLock.Set(); // Значительное снижение производительности
             }
             
-            public void Dispose() 
+            public void Dispose()
             { 
-                m_waiterLock.Dispose(); 
+                m_waiterLock.Dispose();
             }
         }
         #endregion
@@ -1302,7 +1290,7 @@ namespace Richter
             {
                 // Если вызывающий поток уже захватил блокировку, увеличим рекурсивный счетчик на единицу и вернем управление
                 Int32 threadId = Thread.CurrentThread.ManagedThreadId;
-                if (threadId == m_owningThreadId) 
+                if (threadId == m_owningThreadId)
                 { 
                     m_recursion++; 
                     return; 
@@ -1341,11 +1329,11 @@ namespace Richter
             public void Leave()
             {
                 // Если вызывающий поток не заперт, ошибка
-                // я. вызывающий - видимо текущий. когда работает поток и делает свои дела, то он видимо заперт
+                // вызывающий - видимо текущий. когда работает поток и делает свои дела, то он видимо заперт aleek
                 Int32 threadId = Thread.CurrentThread.ManagedThreadId;
                 if (threadId != m_owningThreadId) 
                 { 
-                    throw new SynchronizationLockException("Lock not owned by calling thread");
+                    //throw new SynchronizationLockException("Lock not owned by calling thread"); // попадёт, когда метод запущен под потоком
                 }
 
                 // Уменьшаем на единицу рекурсивный счетчик. Если поток все еще заперт, просто возвращаем управление
@@ -1357,7 +1345,7 @@ namespace Richter
                 m_owningThreadId = 0; // Запертых потоков больше нет. Если нет других заблокированных потоков, возвращаем управление
                 if (Interlocked.Decrement(ref m_waiters) == 0) 
                 {
-                    return; 
+                    return;
                 }
                 // Остальные потоки заблокированы, пробуждаем один из них
                 m_waiterLock.Set(); // Значительное падение производительности
@@ -1387,7 +1375,7 @@ namespace Richter
             {
                 get
                 {
-                    Monitor.Enter(this); // почему Monitor не должен быть реализован как статический?
+                    Monitor.Enter(this); // почему Monitor не должен быть реализован как статический? aleek
                     // Этот код имеет совместный доступ к данным...
                     DateTime temp = m_timeOfLastTrans;
                     Monitor.Exit(this);
@@ -1465,6 +1453,7 @@ namespace Richter
             private static Singleton s_value = null;
 
             // Закрытый конструктор не дает внешнему коду создавать экземпляры
+            //static Singleton() // почему конструктор не статический? aleek
             private Singleton()
             {
                 // Код инициализации объекта Singleton
@@ -1474,7 +1463,7 @@ namespace Richter
             public static Singleton GetSingleton()
             {
                 // Если объект Singleton уже создан, возвращаем его
-                if (s_value != null) 
+                if (s_value != null)
                     return s_value;
 
                 Monitor.Enter(s_lock);
@@ -1495,7 +1484,7 @@ namespace Richter
             }
         }
 
-        internal sealed class Singleton2
+        internal sealed class Singleton2 // в Рихтере Singleton aleek
         {
             private static Singleton2 s_value = new Singleton2();
 
@@ -1512,7 +1501,7 @@ namespace Richter
             }
         }
 
-        internal sealed class Singleton3
+        internal sealed class Singleton3 // в Рихтере Singleton aleek
         {
             private static Singleton3 s_value = null;
 
@@ -1539,7 +1528,8 @@ namespace Richter
 
         public void Lazy()
         {
-            Lazy<String> s = new Lazy<String>(() => DateTime.Now.ToLongTimeString(), LazyThreadSafetyMode.PublicationOnly);
+            Lazy<String> s = new Lazy<String>(() => 
+                DateTime.Now.ToLongTimeString(), LazyThreadSafetyMode.PublicationOnly);
 
             Console.WriteLine(s.IsValueCreated); // Возвращается false, так как запроса к Value еще не было
             Console.WriteLine(s.Value); // Вызывается этот делегат
@@ -1568,14 +1558,14 @@ namespace Richter
         #endregion
 
         #region Паттерн условной переменной
-        internal sealed class ConditionVariablePattern
+        internal sealed class ConditionVariablePattern // не работает aleek
         {
             private readonly Object m_lock = new Object();
             private Boolean m_condition = false;
             
             public void Thread1()
             {
-                Monitor.Enter(m_lock); // Взаимоисключающая блокировка. я - m_lock работает то для одного, то для другого потока?
+                Monitor.Enter(m_lock); // Взаимоисключающая блокировка. m_lock работает то для одного, то для другого потока? aleek
 
                 // "Атомарная" проверка сложного условия блокирования
                 while (!m_condition)
@@ -1645,7 +1635,7 @@ namespace Richter
             var tfConcurrent = new TaskFactory(cesp.ConcurrentScheduler);
             for (Int32 operation = 0; operation < 5; operation++)
             {                                                                   
-                var exclusive = operation < 2; // Для демонстрации создаются 2 монопольных и 3 параллельных задания. я - что значит монопольное задание?
+                var exclusive = operation < 2; // Для демонстрации создаются 2 монопольных и 3 параллельных задания. что значит монопольное задание? aleek
                 (exclusive ? tfExclusive : tfConcurrent).StartNew(() => {
                     Console.WriteLine("{0} access", exclusive ? "exclusive" : "concurrent");
                     // TODO: Здесь выполняется монопольная запись или параллельное чтение...
@@ -1655,11 +1645,29 @@ namespace Richter
 
         public enum OneManyMode { Exclusive, Shared }
 
+        private static async Task AccessResourceViaAsyncSynchronization(SemaphoreSlim asyncLock)
+        {
+            // TODO: Разместите здесь любой код на ваше усмотрение...
+            await asyncLock.WaitAsync(); // Запрос монопольного доступа к ресурсу.
+                                         // Когда управление попадает в эту точку, мы знаем, что никакой другой
+                                         // поток не обращается к ресурсу.
+                                         // TODO: Работа с ресурсом (в монопольном режиме)...
+                                         // Завершив работу с ресурсом, снимаем блокировку, чтобы ресурс
+                                         // стал доступным для других потоков.
+            asyncLock.Release();
+            // TODO: Разместите здесь любой код на ваше усмотрение...
+        }
+
         private static async Task AccessResourceViaAsyncSynchronization(AsyncOneManyLock asyncLock)
         {
             // TODO: Здесь выполняется любой код...
             // Передайте OneManyMode.Exclusive или OneManyMode.Shared в зависимости от нужного параллельного доступа
-            //await asyncLock.AcquireAsync(OneManyMode.Shared); // посмотреть в Рихтере метод AcquireAsync, возможно забыл
+            #region aleek
+            await asyncLock.AcquireAsync(OneManyMode.Exclusive); // aleek
+            await asyncLock.AcquireAsync(OneManyMode.Exclusive); // aleek
+            #endregion
+            await asyncLock.AcquireAsync(OneManyMode.Shared);
+            
             
             // Запросить общий доступ
             // Когда управление передается в эту точку, потоки, выполняющие запись в ресурс, отсутствуют; другие потоки могут читать данные
@@ -1672,20 +1680,22 @@ namespace Richter
             // TODO: Здесь выполняется любой код...
         }
 
+        public static async Task AccessResourceViaAsyncSynchronizationWrapper(AsyncOneManyLock asyncLock) => AccessResourceViaAsyncSynchronization(asyncLock);
+
         public sealed class AsyncOneManyLock
         {
             #region Lock code
             private SpinLock m_lock = new SpinLock(true); // Не используем readonly с SpinLock
 
-            private void Lock() 
-            { 
-                Boolean taken = false; // это зачем?
-                m_lock.Enter(ref taken); 
+            private void Lock()
+            {
+                Boolean taken = false;
+                m_lock.Enter(ref taken);
             }
 
-            private void Unlock() 
-            { 
-                m_lock.Exit(); 
+            private void Unlock()
+            {
+                m_lock.Exit();
             }
             #endregion
 
@@ -1710,7 +1720,7 @@ namespace Richter
                 m_state = 1; 
             }
 
-            private void MakeFree()
+            private void MakeFree() // не попадает aleek 
             { 
                 m_state = 0; 
             }
@@ -1732,7 +1742,8 @@ namespace Richter
                 m_noContentionAccessGranter = Task.FromResult<Object>(null);
             }
 
-            public Task WaitAsync(OneManyMode mode)
+            //public Task WaitAsync(OneManyMode mode)
+            public Task AcquireAsync(OneManyMode mode) // скорее всего AcquireAsync - ошибка в Рихтере aleek
             {
                 Task accressGranter = m_noContentionAccessGranter; // Предполагается отсутствие конкуренции
                 
@@ -1759,10 +1770,10 @@ namespace Richter
                         {
                             AddReaders(1); // Отсутствие конкуренции
                         }
-                        else
+                        else // не попадает aleek
                         { 
                             // Конкуренция. Увеличиваем количество ожидающих заданий чтения
-                                                                         // когда срабатывает колбэк?
+                                                                         // когда срабатывает колбэк? aleek
                             accressGranter = m_waitingReadersSignal.Task.ContinueWith(t => t.Result);
                         }
                         break;
@@ -1783,7 +1794,7 @@ namespace Richter
                 {
                     MakeFree(); // Ушло задание записи
                 }
-                else 
+                else
                 { 
                     SubtractReader(); // Ушло задание чтения
                 }
@@ -1791,12 +1802,12 @@ namespace Richter
                 if (IsFree)
                 {
                     // Если ресурс свободен, пробудить одно ожидающее задание записи или все задания чтения
-                    if (m_qWaitingWriters.Count > 0)
+                    if (m_qWaitingWriters.Count > 0) // не попадает aleek
                     {
                         MakeWriter();
                         accessGranter = m_qWaitingWriters.Dequeue();
                     }
-                    else if (m_numWaitingReaders > 0)
+                    else if (m_numWaitingReaders > 0) // не попадает aleek
                     {
                         AddReaders(m_numWaitingReaders);
                         m_numWaitingReaders = 0;
@@ -1852,7 +1863,7 @@ namespace Richter
                 bl.Add(item);
             }
 
-            // Информируем поток-потребитель, что больше элементов не будет. я - где поток-потребитель?
+            // Информируем поток-потребитель, что больше элементов не будет. где поток-потребитель? aleek
             bl.CompleteAdding();
 
             Console.ReadLine(); // Для целей тестирования
@@ -1860,7 +1871,15 @@ namespace Richter
 
         private static void ConsumeItems(Object o)
         {
-            var bl = (BlockingCollection<Int32>)o; // так можно закастить? объект к бому типу
+            #region aleek
+            int a1 = 0;
+            var a2 = (object)a1;
+            var a3 = (object)(int)0;
+            //var a4 = (int)(new object());
+            var a5 = (int)(new Int32());
+            #endregion
+
+            var bl = (BlockingCollection<Int32>)o; // каст пройдёт, если тип o совместим (иерархия наследования) aleek
 
             // Блокируем до получения элемента, затем обрабатываем его
             foreach (var item in bl.GetConsumingEnumerable())

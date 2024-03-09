@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using static Richter.Threading;
 
@@ -14,10 +15,81 @@ namespace Richter
 
             var threading = new Threading();
 
-            var mwr = new MultiWebRequests();
+            //var mwr = new MultiWebRequests();
             //var mwr = new MultiWebRequests(10);
             //mwr.Cancel();
 
+            //new SomeResource().AccessResource();
+
+            int target = 1;
+            //Threading.Maximum(ref target, 2);
+            //Morpher<object, object> morpher = null; // падает aleek
+            //Morph(ref target, 2, morpher);
+
+            //threading.Events();
+
+            //using (var simpleWaitLockSemaphore = new SimpleWaitLockSemaphore(4)) // сработает Dispose(), т.к. using aleek
+            //{
+            //    simpleWaitLockSemaphore.Enter();
+            //    simpleWaitLockSemaphore.Leave();
+            //}
+
+            //var recursiveAutoResetEvent = new RecursiveAutoResetEvent(); // не сработает Dispose(), т.к. нет using aleek
+            //recursiveAutoResetEvent.Enter();
+            //recursiveAutoResetEvent.Leave();
+
+            //using (var simpleHybridLock = new SimpleHybridLock())
+            //{
+            //    simpleHybridLock.Enter();
+            //    simpleHybridLock.Leave();
+            //}
+
+            //using (var anotherHybridLock = new AnotherHybridLock())
+            //{
+            //    anotherHybridLock.Enter();
+            //    anotherHybridLock.Leave();
+
+            //    //new Thread(() => anotherHybridLock.Enter()).Start();
+            //    //new Thread(() => anotherHybridLock.Leave()).Start();
+
+            //    //new Thread(() => anotherHybridLock.Enter()).Start();
+            //    //new Thread(() => anotherHybridLock.Leave()).Start();
+            //}
+
+            //var transaction = new Transaction();
+            //transaction.PerformTransaction();
+            //var a1 = transaction.LastTransaction;
+
+            //var transactionCorrect = new TransactionCorrect();
+            //transactionCorrect.PerformTransaction();
+            //var a1 = transactionCorrect.LastTransaction;
+
+            //using (var transaction_ReaderWriterLockSlim = new Transaction_ReaderWriterLockSlim())
+            //{
+            //    transaction_ReaderWriterLockSlim.PerformTransaction();
+            //    var a1 = transaction_ReaderWriterLockSlim.LastTransaction;
+            //}
+
+            var a1 = Singleton.GetSingleton(); // создаёт экземпляр
+            var a2 = Singleton.GetSingleton(); // возвращает кэшированный экземпляр
+            
+            //var a = Singleton2.a1; // сначала вызовется конструктор, потом сработает строка
+            var a3 = Singleton2.GetSingleton(); // конструктор вызовется
+            var a4 = Singleton2.GetSingleton(); // конструктор не вызовется
+
+            var a5 = Singleton3.GetSingleton(); // создаёт экземпляр
+            var a6 = Singleton3.GetSingleton(); // возвращает кэшированный экземпляр
+
+            //threading.Lazy();
+
+            var conditionVariablePattern = new ConditionVariablePattern();
+            //conditionVariablePattern.Thread1();
+            //conditionVariablePattern.Thread2();
+            //new Thread(() => conditionVariablePattern.Thread1()).Start();
+            //new Thread(() => conditionVariablePattern.Thread1()).Start();
+
+            //SynchronizedQueue();
+            
             //Console.WriteLine("\n*** Потоки для асинхронных вычислительных операций ***");
             //Console.WriteLine("Main thread: starting a dedicated thread " + "to do an asynchronous operation");
             //Thread dedicatedThread = new Thread(ComputeBoundOp);
@@ -122,13 +194,6 @@ namespace Richter
 
             // Периодические вычислительные операции
 
-            //Threading.Morph<object, object,>();
-
-            //Console.WriteLine("\n*** События ***");
-            //threading.Events();
-
-
-
             //Console.WriteLine("\n*** Блокировка с двойной проверкой ***");
             //String name = null;
             //// Так как имя равно null, запускается делегат и инициализирует поле имени
@@ -137,13 +202,8 @@ namespace Richter
             //LazyInitializer.EnsureInitialized(ref name, () => "Richter");
             //Console.WriteLine(name); // Снова выводится "Jeffrey"
 
-
-
-            //Console.WriteLine("\n*** Классы коллекций для параллельного доступа ***");
-            //threading.BlockingCollection();
-
             //Console.WriteLine("\n*** Расширяемость асинхронных функций ***");
-            //Threading.Go();
+            Go();
 
             //Console.WriteLine("\n*** Другие возможности асинхронных функций ***");
             //Threading.GoAnother();
@@ -152,20 +212,11 @@ namespace Richter
             //Console.WriteLine("\n*** Отмена операций ввода-вывода ***");
             //Threading.GoCancelIO();
 
-            //Console.WriteLine("\n*** Блокировка с двойной проверкой ***");
-            //threading.Lazy();
+            //ConcurrentExclusiveSchedulerDemo();
 
-            //Console.WriteLine("\n*** MultiWebRequests ***");
-            //new Threading.MultiWebRequests();
-
-            //Console.WriteLine("\n*** События ***");
-            //threading.Events();
-
-            //Console.WriteLine("\n*** Асинхронная синхронизация ***");
-            //Threading.ConcurrentExclusiveSchedulerDemo();
-
-            //Console.WriteLine("\n*** Классы коллекций для параллельного доступа ***");
-            //threading.BlockingCollection();
+            AccessResourceViaAsyncSynchronizationWrapper(new AsyncOneManyLock());
+            
+            threading.MainConsumeItems();
             #endregion
 
             Console.ReadLine();
@@ -197,6 +248,104 @@ namespace Richter
         {
             Thread.Sleep(10000); // Имитация 10 секунд работ. Следующая строка выводится только для кода, исполняемого активным потоком
             Console.WriteLine("Returning from Worker");
+        }
+
+        private static void SynchronizedQueue() 
+        {
+            // значения в очереди будут в таком порядке, даже если без Monitor, т.к. в одном главном потоке
+            //var synchronizedQueue = new SynchronizedQueue<int>();
+            //synchronizedQueue.Enqueue(1);
+            //synchronizedQueue.Enqueue(2);
+            //synchronizedQueue.Enqueue(3);
+            //synchronizedQueue.Enqueue(4);
+            //synchronizedQueue.Enqueue(5);
+            //synchronizedQueue.Dequeue();
+
+            //for (int i = 0; i < 10; i++)
+            //{
+            //    var t1 = new Thread(() => {});
+            //    t1.Start();
+            //    t1.Start(); // на какой-то итерации падает
+            //}
+
+            // значения в очереди будут в таком порядке, если с Monitor, без Monitor - результат не предсказуем            new Thread(() => synchronizedQueue.Enqueue(1)).Start();
+            var synchronizedQueue = new SynchronizedQueue<int>();
+
+            #region legacy
+            //var arr = new[] { 
+            //    new Thread(() => synchronizedQueue.Enqueue(1)),
+            //    new Thread(() => synchronizedQueue.Enqueue(2)),
+            //    new Thread(() => synchronizedQueue.Enqueue(3)),
+            //    new Thread(() => synchronizedQueue.Enqueue(4)),
+            //    new Thread(() => synchronizedQueue.Enqueue(5))
+            //};
+            //arr[new Random().Next(1, 5)].Start(); // сделать строго разный индекс от 1 до 6
+            //arr[new Random().Next(1, 5)].Start();
+            //arr[new Random().Next(1, 5)].Start();
+            //arr[new Random().Next(1, 5)].Start();
+            //arr[new Random().Next(1, 5)].Start();
+            #endregion
+
+            #region 1
+            // сделать через паттерны сочетания без потока/под потоком/счётчик 1000/счётчик 10000
+            var dt1 = DateTime.Now;
+            var res1 = dt1.Second + " " + dt1.Millisecond;
+            //for (int i = 0; i < 100000000; i++) // зависает под потоком
+            for (int i = 0; i < 1000; i++)
+            {
+                //synchronizedQueue.Enqueue(i);
+                new Thread(() => synchronizedQueue.Enqueue(i)).Start(); // monitor не вдияет
+            }
+            var dt2 = DateTime.Now;
+            var res2 = dt2.Second + " " + dt2.Millisecond;
+            #endregion
+
+            var dt3 = DateTime.Now;
+            for (int i = 0; i < 10; i++)
+            {
+                //lock (new object()) 
+                //{
+                new Thread(() => synchronizedQueue.Enqueue(i)).Start();
+                //}
+                //Thread.Sleep(10); // без паузы m_queue заполняется неадекватно
+            }
+            var dt4 = DateTime.Now;
+
+            synchronizedQueue.Dequeue();
+
+            var tCnt = 10;
+            var dict = new Dictionary<int, Thread>();
+            for (int i = 0; i < tCnt; i++)
+            {
+                var rand = new Random().Next(0, tCnt);
+                try
+                {
+
+                    dict.Add(rand, new Thread(() => synchronizedQueue.Enqueue(i)));
+                    //dict.Add(rand, synchronizedQueue.Enqueue(i));
+
+                }
+                catch
+                {
+                    //continue;
+
+                }
+                dict[rand].Start();
+            }
+            //dict.Add(new Random().Next(1, 5), new Thread(() => synchronizedQueue.Enqueue(2)));
+            //dict.Add(new Random().Next(1, 5), new Thread(() => synchronizedQueue.Enqueue(3)));
+            //dict.Add(new Random().Next(1, 5), new Thread(() => synchronizedQueue.Enqueue(4)));
+            //dict.Add(new Random().Next(1, 5), new Thread(() => synchronizedQueue.Enqueue(5)));
+            for (int i = 0; i < tCnt; i++)
+            {
+                try
+                {
+                    dict[i].Start();
+                }
+                catch { }
+            }
+
+            synchronizedQueue.Dequeue();
         }
     }
 }
