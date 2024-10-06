@@ -44,12 +44,21 @@ namespace Richter
             //StrangeBehavior.MainStrangeBehavior();
 
             //var tsd = new ThreadsSharingData();
-            //for (int i = 0; i < 30; i++)
+            ////bool useMs = false;
+            //for (int i = 0; i < 50; i++)
             //{
             //    i_ = i;
-            //    Console.WriteLine("Thread1"); // порядок Console.WriteLine здесь и в реализации не детерменирован aleek
-            //    new Thread(() => tsd.Thread1()).Start(); // чаще у Console.WriteLine порядок именно такой, иногда обратный
-            //    Console.WriteLine("Thread2");
+            //    #region aleek
+            //    // порядок Console.WriteLine здесь и в Thread1() иногда нарушается
+            //    // почему иногда? новый поток может опередить главный (вызывающий) поток. как синхронизировать?
+            //    #endregion
+            //    //Console.Write($"t1_main_{DateTime.Now.Second}:{DateTime.Now.Millisecond}    ");
+            //    Console.Write($"t1_main_    ");
+            //    Thread.Sleep(100); // синхронизация. чем больше таймаут (на время создания потока), тем лучше работает. инкапсулировать в Synchronise() (проверить инспектором потоков корректное использвание Thread.Sleep).    
+            //    new Thread(() => tsd.Thread1()).Start();
+            //    //Console.Write($"t2_main_{DateTime.Now.Second}:{DateTime.Now.Millisecond}    ");
+            //    Console.Write($"t2_main_    ");
+            //    Thread.Sleep(100); // синхронизация
             //    new Thread(() => tsd.Thread2()).Start();
 
             //    //new Thread(() => tsd.Thread2()).Start(); // чаще у Console.WriteLine порядок именно такой, иногда обратный
@@ -59,7 +68,7 @@ namespace Richter
             //    //tsd.Thread2();
 
             //    Thread.Sleep(100);
-            //    Console.WriteLine("--------------");
+            //    Console.WriteLine(/*"\n-------------------------"*/);
             //}
 
             //var tdsc = new ThreadsSharingDataCorrect();
@@ -536,9 +545,9 @@ namespace Richter
                                               // Код продолжает выполняться, как и InnerAsyncFunction...
         }
 
-        static async Task InnerAsyncFunction() { /* ... */ } // тело пустое, а возвращает Task
+        static async Task InnerAsyncFunction() { /* ... */ } // тело пустое, а возвращает Task aleek
         
-        static async void InnerAsyncFunctionVoid() { /* ... */ } // я
+        static async void InnerAsyncFunctionVoid() { /* ... */ } // aleek
 
         public static async Task GoWhenAll()
         {
@@ -554,7 +563,6 @@ namespace Richter
 
             // Асинхронное ожидание завершения всех клиентских запросов. ВНИМАНИЕ: если 1+ заданий выдадут исключение, WhenAll заново инициирует последнее исключение
 
-            // aleek. не работает
             // пока ждём WhenAll всё в IssueClientRequestAsync - в другом потоке. 
             // Пока находимся в главном потоке на этой точке. В этот момент может сработать например REST запрос на другой контроллер, который так же обработается главным потоком. 
             // Код там отработает, а потом вернётся сюда -т.е. мы не блокируем главный поток, работая с IssueClientRequestAsync в другом потоке
@@ -591,19 +599,19 @@ namespace Richter
             }
         }
 
-        private static async void StartServer() // не работает aleek
+        private static async void StartServer()
         {
             while (true)
             {
-                string c_pipeName = null;
-                var pipe = new NamedPipeServerStream(c_pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous | PipeOptions.WriteThrough);
+                                                    // не определён у Рихтера aleek
+                var pipe = new NamedPipeServerStream(/*c_pipeName*/null, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous | PipeOptions.WriteThrough);
 
                 // Асинхронный прием клиентского подключения. ПРИМЕЧАНИЕ: NamedPipeServerStream использует старую модель асинхронного программирования.
                 // Я преобразую ее к новой модели Task при помощи метода FromAsync класса TaskFactory.
                 await Task.Factory.FromAsync(pipe.BeginWaitForConnection, pipe.EndWaitForConnection, null);
 
                 // Начало обслуживания клиента; управление возвращается немедленно, потому что операция выполняется асинхронно.
-                //ServiceClientRequestAsync(pipe);
+                //ServiceClientRequestAsync(pipe); // не определён у Рихтера aleek
             }
         }
 
@@ -752,27 +760,29 @@ namespace Richter
             private Int32 m_value = 0;
 
             // Этот метод исполняется одним потоком
-            public void Thread1()
-            //public void Thread1(int i) // aleek
+            public void Thread1(int timeout = 0)
+            //public void Thread1(int i)
             {
-                //Thread.Sleep(100); // случайность. aleek
+                if (timeout > 0) Thread.Sleep(timeout); // случайность aleek
 
                 // ПРИМЕЧАНИЕ. Они могут выполняться в обратном порядке. почему? aleek
                 m_value = 5;
                 m_flag = 1;
 
-                Console.WriteLine("Thread1 " + i_);
+                //Console.Write($"t1_in_{DateTime.Now.Second}:{DateTime.Now.Millisecond}    "/* + i_*/);
+                Console.Write($"t1_in_    "/* + i_*/);
             }
 
             // Этот метод исполняется другим потоком
-            public void Thread2()
-            //public void Thread2(int i) // aleek
+            public void Thread2(int timeout = 0)
+            //public void Thread2(int i)
             {
-                //Thread.Sleep(100); // случайность. aleek
+                if (timeout > 0) Thread.Sleep(timeout); // случайность aleek
 
                 // ПРИМЕЧАНИЕ. Поле m_value может быть прочитано раньше, чем m_flag
                 if (m_flag == 1)
-                    Console.WriteLine("Thread2 " + i_ + " " + m_value);
+                    //Console.Write($"t2_in_/*{DateTime.Now.Second}:{DateTime.Now.Millisecond}*/    " /*+ i_ + " " + m_value*/);
+                    Console.Write($"t2_in_    " /*+ i_ + " " + m_value*/);
                     #region aleek
                     // почему когда в консоли сначала Thread2, потом Thread1 вообще сюда заходит?
                     // почему (почти?) всегда срабатывает при порядке Thread2 -> Thread1?
@@ -1624,6 +1634,8 @@ namespace Richter
 
                 return item;
             }
+
+            public Queue<T> M_queue { get { return m_queue; } } // aleek
         }
         #endregion
 
