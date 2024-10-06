@@ -72,11 +72,9 @@ namespace Richter
 
             var a1 = Singleton.GetSingleton(); // создаёт экземпляр
             var a2 = Singleton.GetSingleton(); // возвращает кэшированный экземпляр
-            
             //var a = Singleton2.a1; // сначала вызовется конструктор, потом сработает строка
             var a3 = Singleton2.GetSingleton(); // конструктор вызовется
             var a4 = Singleton2.GetSingleton(); // конструктор не вызовется
-
             var a5 = Singleton3.GetSingleton(); // создаёт экземпляр
             var a6 = Singleton3.GetSingleton(); // возвращает кэшированный экземпляр
 
@@ -88,8 +86,9 @@ namespace Richter
             //new Thread(() => conditionVariablePattern.Thread1()).Start();
             //new Thread(() => conditionVariablePattern.Thread1()).Start();
 
-            //SynchronizedQueue();
-            
+            SynchronizedQueue();
+
+            #region region
             //Console.WriteLine("\n*** Потоки для асинхронных вычислительных операций ***");
             //Console.WriteLine("Main thread: starting a dedicated thread " + "to do an asynchronous operation");
             //Thread dedicatedThread = new Thread(ComputeBoundOp);
@@ -110,9 +109,9 @@ namespace Richter
                 In ComputeBoundOp: state=5
                 Main thread: Doing other work here...
             */
+            #endregion
 
-
-
+            #region region
             //Console.WriteLine("\n*** Фоновые и активные потоки ***");
             //// Создание нового потока (по умолчанию активного)
             //Thread t = new Thread(Worker);
@@ -122,11 +121,9 @@ namespace Richter
             //           // В случае активного потока приложение будет работать около 10 секунд
             //           // В случае фонового потока приложение немедленно прекратит работу
             //Console.WriteLine("Returning from Main");
+            #endregion
 
-
-
-
-
+            #region
             //Console.WriteLine("\n*** Простые вычислительные операции ***");
             //Console.WriteLine("Main thread: queuing an asynchronous operation");
             //ThreadPool.QueueUserWorkItem(ComputeBoundOp, 5);
@@ -148,9 +145,9 @@ namespace Richter
                 выполнением методов. Планировщик Windows решает, какой поток должен выполняться первым, или же планирует их для одновременного выполнения на
                 многопроцессорном компьютере
             */
+            #endregion
 
-
-
+            #region
             //Console.WriteLine("\n*** Контексты исполнения ***");
             //// Помещаем данные в контекст логического вызова потока метода Main
             //CallContext.LogicalSetData("Name", "Jeffrey");
@@ -163,13 +160,14 @@ namespace Richter
             //ThreadPool.QueueUserWorkItem(state => Console.WriteLine("Name={0}", CallContext.LogicalGetData("Name")));
             //// Восстанавливаем копирование контекста исполнения потока метода Main на случай будущей работы с другими потоками из пула
             //ExecutionContext.RestoreFlow();
+            #endregion
 
-
-
+            #region
             //Console.WriteLine("\n*** Задания ***");
             //ThreadPool.QueueUserWorkItem(ComputeBoundOp, 5); // Вызов QueueUserWorkItem
             //new Task(ComputeBoundOp, 5).Start(); // Аналог предыдущей строки
             //Task.Run(() => ComputeBoundOp(5)); // Еще один аналог
+            #endregion
 
             //Console.WriteLine("\n*** Автоматический запуск задания по завершении предыдущего ***");
             //threading.RunTaskAfterEndPrevious();
@@ -185,8 +183,7 @@ namespace Richter
             //Console.WriteLine("\n*** TaskFactory с исключениями ***");
             //threading.TaskFactoryException();
 
-            // internal, public - результат такой же
-            //Threading.StrangeBehavior.MainStrangeBehavior();
+            //Threading.StrangeBehavior.MainStrangeBehavior();// internal, public - результат такой же
 
             // Планировщики заданий - сделать приложение WPF/Winforms
 
@@ -194,6 +191,7 @@ namespace Richter
 
             // Периодические вычислительные операции
 
+            #region
             //Console.WriteLine("\n*** Блокировка с двойной проверкой ***");
             //String name = null;
             //// Так как имя равно null, запускается делегат и инициализирует поле имени
@@ -201,6 +199,7 @@ namespace Richter
             //Console.WriteLine(name); // Выводится "Jeffrey". Так как имя отлично от null, делегат не запускается и имя не меняется
             //LazyInitializer.EnsureInitialized(ref name, () => "Richter");
             //Console.WriteLine(name); // Снова выводится "Jeffrey"
+            #endregion
 
             //Console.WriteLine("\n*** Расширяемость асинхронных функций ***");
             Go();
@@ -268,10 +267,11 @@ namespace Richter
             //    t1.Start(); // на какой-то итерации падает
             //}
 
+            #region region
             // значения в очереди будут в таком порядке, если с Monitor, без Monitor - результат не предсказуем            new Thread(() => synchronizedQueue.Enqueue(1)).Start();
             var synchronizedQueue = new SynchronizedQueue<int>();
 
-            #region legacy
+            #region region
             //var arr = new[] { 
             //    new Thread(() => synchronizedQueue.Enqueue(1)),
             //    new Thread(() => synchronizedQueue.Enqueue(2)),
@@ -286,32 +286,35 @@ namespace Richter
             //arr[new Random().Next(1, 5)].Start();
             #endregion
 
-            #region 1
-            // сделать через паттерны сочетания без потока/под потоком/счётчик 1000/счётчик 10000
+            // сделать через паттерн сочетания без потока/под потоком/счётчик 1000/счётчик 10000
             var dt1 = DateTime.Now;
             var res1 = dt1.Second + " " + dt1.Millisecond;
             //for (int i = 0; i < 100000000; i++) // зависает под потоком
-            for (int i = 0; i < 1000; i++)
-            {
-                //synchronizedQueue.Enqueue(i);
-                new Thread(() => synchronizedQueue.Enqueue(i)).Start(); // monitor не вдияет
-            }
-            var dt2 = DateTime.Now;
-            var res2 = dt2.Second + " " + dt2.Millisecond;
-            #endregion
-
-            var dt3 = DateTime.Now;
             for (int i = 0; i < 10; i++)
             {
                 //lock (new object()) 
                 //{
-                new Thread(() => synchronizedQueue.Enqueue(i)).Start();
+                    //synchronizedQueue.Enqueue(i);
+
+                    // некоторые итерации игнорируются потоком. последняя итерация по любому зафиксируется
+                    // не успевает создаваться новый поток каждую итерацию. эффект запоминания i
+                    // кейс m_queue[2]...m_queue[5] = 5. притормаживаются 4 потока, а потом скопом отрабатывают на последнем i = 5. видно в дебаггере. правильно: m_queue[2]...m_queue[5] - 3...6 
+                    new Thread(() => synchronizedQueue.Enqueue(i)).Start(); // Monitor в Enqueue не влияет
+                    
+                    //Thread.Sleep(10); // с паузой m_queue заполняется корректно
                 //}
-                //Thread.Sleep(10); // без паузы m_queue заполняется неадекватно
+
+                var a1 = synchronizedQueue.M_queue; // точка останова на каждой итерации - то корректно, то некорректно
             }
-            var dt4 = DateTime.Now;
+            // точка останова на каждой итерации for. быстро кликать - некорректно, медленно кликать - корректно
+            // если for (int i = 0; i < 10; i++) откуда-то появляется значение 10
+            var a2 = synchronizedQueue.M_queue; 
+            
+            var dt2 = DateTime.Now;
+            var res2 = dt2.Second + " " + dt2.Millisecond;
 
             synchronizedQueue.Dequeue();
+            #endregion
 
             var tCnt = 10;
             var dict = new Dictionary<int, Thread>();
