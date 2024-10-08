@@ -32,7 +32,7 @@ namespace Richter
             //
             //Console.WriteLine("\n*** Автоматический запуск задания по завершении предыдущего ***");
             //RunTaskAfterEndPrevious();
-            //RunTaskAfterEndPrevious2();
+            RunTaskAfterEndPrevious2();
 
             //ChildTasks();
             //TaskFactory();
@@ -93,12 +93,10 @@ namespace Richter
             //    Console.WriteLine("--------------");
             //}
 
-            MainSemaphore();
+            //MainSemaphore();
 
             //ref int a1;
             //Maximum(a1, 0);
-
-            
         }
 
         #region 1
@@ -185,7 +183,7 @@ namespace Richter
                     sum += n;
                 } // при больших n выдается System.OverflowException
                 
-                Thread.Sleep(100);
+                //Thread.Sleep(100); // если пауза, результат синхрона и асинхрона примерно одинаков aleek
             }
 
             return sum;
@@ -209,21 +207,43 @@ namespace Richter
         #region Завершение задания и получение результата
         public async void EndTask()
         {
+            const int num = 100;
+
+            var now1 = DateTime.Now;
+            var a1 = now1.Second + ":" + now1.Millisecond;
+
             // Создание задания Task (оно пока не выполняется)
-            Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), 10); 
+            Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), num); 
 
             // Можно начать выполнение задания через некоторое время
             t.Start();
 
             // Можно ожидать завершения задания в явном виде
-            // ! если закомментировать - результат тот же
-            //t.Wait(); // ПРИМЕЧАНИЕ. Существует перегруженная версия, принимающая тайм-аут/CancellationToken
-            //await t; // предупрежедние в сигнатуре пропадает, если раскомментировать. aleek
-            //var a1 = await t; // aleek
+            // если закомментировать - результат тот же aleek
+            t.Wait(); // ПРИМЕЧАНИЕ. Существует перегруженная версия, принимающая тайм-аут/CancellationToken
+            
             // Получение результата (свойство Result вызывает метод Wait)
             Console.WriteLine("The Sum is: " + t.Result); // Значение Int32. .Result виден, если был await или t.Wait(). Иначе - только на след. строке aleek
-        }
 
+            var now2 = DateTime.Now;
+            var a2 = now2.Second + ":" + now2.Millisecond;
+            var res = a1 + "-" + a2;
+
+            #region aleek
+            //await t; // без присваивания
+            //var b1 = await t; // предупрежедние в сигнатуре пропадает, если раскомментировать
+
+            var now3 = DateTime.Now;
+            var a3 = now3.Second + ":" + now3.Millisecond;
+
+            Sum(num);
+            
+            var now4 = DateTime.Now;
+            var a4 = now4.Second + ":" + now4.Millisecond;
+            var res2 = a3 + "-" + a4;
+            #endregion
+        }
+        
         public void EndTask2()
         {
             Task<Int32> t = new Task<Int32>(n => Sum((Int32)n), 10);
@@ -243,9 +263,9 @@ namespace Richter
         public void CancelTask()
         {
             CancellationTokenSource cts = new CancellationTokenSource();
-            Task<Int32> t = new Task<Int32>(() => Sum(cts.Token, 10000), cts.Token);
+            Task<Int32> t = new Task<Int32>(() => Sum(cts.Token, 10000), cts.Token); // почему токен прокидывается в Sum?
             t.Start();
-            //Thread.Sleep(1000); // aleek
+            //Thread.Sleep(3000); // через паузу - исключение. aleek
             // Позднее отменим CancellationTokenSource, чтобы отменить Task
             cts.Cancel(); // Это асинхронный запрос, задача уже может быть завершена. закомментировать - нет исключения aleek
 
@@ -258,7 +278,7 @@ namespace Richter
             {
                 // Считаем обработанными все объекты OperationCanceledException
                 // Все остальные исключения попадают в новый объект AggregateException, состоящий только из необработанных исключений
-                x.Handle(e => e is OperationCanceledException); // комментирование не повлияет
+                x.Handle(e => e is OperationCanceledException);
                 // Строка выполняется, если все исключения уже обработаны
                 Console.WriteLine("Sum was canceled");
             }
@@ -272,37 +292,44 @@ namespace Richter
             Task<Int32> t = Task.Run(() => Sum(CancellationToken.None, 10));
 
             // Метод ContinueWith возвращает объект Task, но обычно он не используется
-            Task cwt = t.ContinueWith(task => 
-                Console.WriteLine("The sum is: " + task.Result)); // получаем результат в continuation или в строках ниже. сработает после t.Wait() aleek
+            Task cwt = t.ContinueWith(task => Console.WriteLine("The sum is: " + task.Result)); // получаем результат в continuation или в строках ниже. сработает после t.Wait() aleek
+            
             #region aleek
-            // какой смысл когда можно через await получить? видимо, чтобы запустить задачу позже. aleek
+            // какой смысл когда можно через await получить? видимо, чтобы запустить задачу позже
             // t.ContinueWith(x => x);
             // t.ContinueWith(x => x);
-            // t.ContinueWith(x => x);
-            #endregion
+            
+            
             //t.Start(); // System.InvalidOperationException: "Start нельзя вызывать для уже запущенной задачи."
             t.Wait();
             //Console.WriteLine("The Sum is: " + t.Result); // Значение Int32
+            #endregion
         }
 
         public void RunTaskAfterEndPrevious2()
         {
             // Создание и запуск задания с продолжением
-            Task<Int32> t = Task.Run(() => Sum(10));
+            Task<Int32> t = Task.Run(() => Sum(10000));
 
             // срабатывают в зависимости от причин (TaskContinuationOptions) в Sum. aleek
 
             // Метод ContinueWith возвращает объект Task, но обычно он не используется
+            // сработает при  aleek
             t.ContinueWith(task => Console.WriteLine("The sum is: " + task.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
 
-            // обернуть в исключение
+            // обернуть в исключение aleek
+            // не срабатывает при Sum(100000)
             t.ContinueWith(task => Console.WriteLine("Sum threw: " + task.Exception), TaskContinuationOptions.OnlyOnFaulted);
 
-            // отменить задачу. У task нет метода отмены
+            // отменить задачу. У task нет метода отмены aleek
+            // сработает при CancellationToken .Cancel()
             t.ContinueWith(task => Console.WriteLine("Sum was canceled"), TaskContinuationOptions.OnlyOnCanceled);
-
+            
+            #region aleek
             //await t; // необходим async в сигнатуре
-            //t.Wait(); // условие срабатывания ContinueWith. По дефолту не было. aleek
+            t.Wait(); // условие срабатывания ContinueWith. По дефолту не было
+            //t.IsCanceled = true;
+            #endregion
         }
         #endregion
 
