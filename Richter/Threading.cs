@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -32,7 +33,7 @@ namespace Richter
             //
             //Console.WriteLine("\n*** Автоматический запуск задания по завершении предыдущего ***");
             //RunTaskAfterEndPrevious();
-            RunTaskAfterEndPrevious2();
+            //RunTaskAfterEndPrevious2();
 
             //ChildTasks();
             //TaskFactory();
@@ -41,7 +42,7 @@ namespace Richter
             //GoWhenAll();
             //GoWhenAny();
             //Go_CancelIO();
-            //StrangeBehavior.MainStrangeBehavior();
+            //StrangeBehavior.Main_();
 
             //var tsd = new ThreadsSharingData();
             ////bool useMs = false;
@@ -71,27 +72,38 @@ namespace Richter
             //    Console.WriteLine(/*"\n-------------------------"*/);
             //}
 
-            //var tdsc = new ThreadsSharingDataCorrect();
-            //for (int i = 0; i < 30; i++)
+            //var ts2 = new ThreadsSharing2();
+            //// иногда между итерациями логируется большее кол-во потоков, чем в теле цикла. лишние - с других итераций. гонка итерация <-> поток
+            //// поставить брейкпоинты у Thread1, Thread2, в цикле
+            //// всего д.б. число Console.WriteLine("Thread = макс счётчик * кол-во потоков в теле цикла
+            //for (int i = 0; i < 10; i++)
             //{
             //    i_ = i;
-            //    new Thread(() => tdsc.Thread1()).Start();
-            //    new Thread(() => tdsc.Thread2()).Start();
-            //    //new Thread(() => tdsc.Thread2()).Start();
-            //    //new Thread(() => tdsc.Thread1()).Start();
-            //    Thread.Sleep(100);
-            //    Console.WriteLine("--------------");
+            //    new Thread(() => ts2.Thread1()).Start(); // поменять местами
+            //    new Thread(() => ts2.Thread2()).Start();
+            //    //Thread.Sleep(100); // синхронизация, устранение гонки итерация <-> поток
+            //    Console.WriteLine("--------------" + i);
             //}
 
-            //var tsdv = new ThreadsSharingDataVolatile();
-            //for (int i = 0; i < 30; i++)
+            //var ts3 = new ThreadsSharingData3();
+            //for (int i = 0; i < 10; i++)
             //{
             //    i_ = i;
-            //    new Thread(() => tsdv.Thread1()).Start();
-            //    new Thread(() => tsdv.Thread2()).Start();
-            //    Thread.Sleep(100);
-            //    Console.WriteLine("--------------");
+            //    new Thread(() => ts3.Thread1()).Start();
+            //    new Thread(() => ts3.Thread2()).Start();
+            //    //Thread.Sleep(100);
+            //    Console.WriteLine("--------------" + i);
             //}
+
+            var ts4 = new ThreadsSharingData4();
+            for (int i = 0; i < 10; i++)
+            {
+                i_ = i;
+                new Thread(() => ts4.Thread1()).Start();
+                new Thread(() => ts4.Thread2()).Start();
+                //Thread.Sleep(100);
+                Console.WriteLine("--------------" + i);
+            }
 
             //MainSemaphore();
 
@@ -336,7 +348,7 @@ namespace Richter
         #region Дочерние задания
         public void ChildTasks()
         {
-            // мониторинг запущенных задач, потоков. aleek
+            // aleek мониторинг запущенных задач, потоков; cwt не используется; вопрос внутри
             Task<Int32[]> parent = new Task<Int32[]>(() => {
                 var results = new Int32[3]; // Создание массива для результатов. Создание и запуск 3 дочерних заданий
                 
@@ -348,13 +360,13 @@ namespace Richter
                 return results;
             });
 
-            // Вывод результатов после завершения родительского и дочерних заданий. почему родительского? оно не запускалось aleek
-            var cwt = parent.ContinueWith(parentTask => // cwt не используется. можно не присваивать. aleek
-            {                                    // Почему без скобок? Делегат? какой смысл? aleek
+            // Вывод результатов после завершения родительского и дочерних заданий
+            var cwt = parent.ContinueWith(parentTask =>
+            {   // ? при наведении на console.writeline - перегрузка с параметром. Console.WriteLine(1) не работает
                 Array.ForEach(parentTask.Result, Console.WriteLine);
-                Console.WriteLine("ContinueWith"); // не работает. aleek
+                Console.WriteLine("ContinueWith");
             });
-            
+
             // Запуск родительского задания, которое запускает дочерние
             Console.WriteLine("parent.Start()");
             
@@ -370,37 +382,44 @@ namespace Richter
         int Delay1s() { Thread.Sleep(_1_SEC); return _1_SEC; } // каждый Thread.Sleep - новый поток?
         int Delay2s() { Thread.Sleep(_2_SEC); return _2_SEC; }
         int Delay3s() { Thread.Sleep(_3_SEC); return _3_SEC; }
-
+        // aleek нет такой версии в Рихтере или переделал вопросы
         public void TaskFactory()
         {
-            Task parent = new Task(() => {
+            Task parent = new Task(() =>
+            {
                 var cts = new CancellationTokenSource(); // зачем нужен токен, раз нет Cancel()?
                 var tf = new TaskFactory<Int32>(cts.Token, TaskCreationOptions.AttachedToParent, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-                
+
                 // Задание создает и запускает 3 дочерних задания
                 Task<int>[] childTasks = new[] { // массив задач, которые вернут int
-                    tf.StartNew(() => Delay1s()), // как назначается Id у задач? aleek
+                    tf.StartNew(() => Delay1s()), // ? как назначается Id у задач?
                     tf.StartNew(() => Delay2s()),
                     tf.StartNew(() => Delay3s())
                 };
 
-                // задачи пока не завершены, но перебирать в цикле можно aleek
+                // задачи пока не завершены, но перебирать в цикле можно
                 for (Int32 i = 0; i < childTasks.Length; i++)
                 {
                     // если TaskContinuationOptions.OnlyOnFaulted и нет исключения - коллбэк в ContinueWith не сработает
                     // как сделать порядковый номер задачи?
                     // сработает коллбэк, когда истечёт интервал. это и признак окончания задачи
-                    childTasks[i].ContinueWith(t =>
-                        Console.WriteLine($"ContinueWith Id:{t.Id} iterator:{i}"), TaskContinuationOptions.None); // i всегда 3, т.к. цикл выполняется намного быстрее, чем ContinueWith aleek
+
+                    // ? i всегда 3, т.к. ContinueWith отработает позже (когда завершится задача), чем отработает цикл
+                    childTasks[i].ContinueWith(t => Console.WriteLine($"ContinueWith Id:{t.Id} iterator:{i}"), TaskContinuationOptions.None);
+
+                    //var i_ = i; // ? фиксируем i, ошибки рассинхрона нет
+                    //childTasks[i_].ContinueWith(t => Console.WriteLine($"ContinueWith Id:{t.Id} iterator:{i_}"), TaskContinuationOptions.None);
                 }
 
                 // После завершения дочерних заданий получаем максимальное возвращенное значение и передаем его другому заданию для вывода
-                tf.ContinueWhenAll(childTasks, completedTasks => 
-                    completedTasks.Where(t => !t.IsFaulted && !t.IsCanceled).Max(t => t.Result), CancellationToken.None) // выделить лямбду в дебагере - результат aleek
-                .ContinueWith(t => 
-                    Console.WriteLine("The maximum is: " + t.Result), TaskContinuationOptions.ExecuteSynchronously); // Без ContinueWith можно максимальный результат получить?
-                //tf.ContinueWhenAll(childTasks, x => x.Max(t => t.Result)).ContinueWith(t => Console.WriteLine("The maximum is: " + t.Result)); // упрощённо aleek
-                // порядок срабатывания колбэков: 1.ContinueWith у childTasks[i] 2.ContinueWhenAll 3.ContinueWith после ContinueWhenAll
+                // выделить лямбду в дебагере - результат
+                //tf.ContinueWhenAll(childTasks, completedTasks => completedTasks.Where(t => !t.IsFaulted && !t.IsCanceled).Max(t => t.Result), CancellationToken.None)
+                //.ContinueWith(t => Console.WriteLine("The maximum is: " + t.Result), TaskContinuationOptions.ExecuteSynchronously);
+                // без ContinueWith можно максимальный результат получить? зачем ContinueWith раз уже есть ContinueWhenAll?
+
+                // почему выводит самую быструю задачу? отфильтровать по IsFaulted, IsCanceled
+                tf.ContinueWhenAny(childTasks, completedTask => /*!completedTask.IsFaulted && completedTask.IsCanceled*/ completedTask.Result, CancellationToken.None)
+                .ContinueWith(t => Console.WriteLine("The maximum is: " + t.Result), TaskContinuationOptions.ExecuteSynchronously);
             });
 
             // Запуск родительского задания, которое может запускать дочерние
@@ -408,15 +427,18 @@ namespace Richter
             parent.Start();
         }
 
+        /// <summary>
+        /// aleek другие значения CancellationToken.None, TaskContinuationOptions; на исключении прерывается - приходится жать Продолжить
+        /// </summary>
         public void TaskFactoryException()
         {
-            Task parent = new Task(() => {
+            Task parent = new Task(() => { 
                 var cts = new CancellationTokenSource();
                 var tf = new TaskFactory<Int32>(cts.Token, TaskCreationOptions.AttachedToParent, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                 
                 // Задание создает и запускает 3 дочерних задания
                 var childTasks = new[] {
-                    tf.StartNew(() => Log()), // Thread.Sleep
+                    //tf.StartNew(() => Log()), // ? Thread.Sleep
                     tf.StartNew(() => Sum(cts.Token, 10000)),
                     tf.StartNew(() => Sum(cts.Token, 20000)),
                     tf.StartNew(() => Sum(cts.Token, Int32.MaxValue)) // Исключение OverflowException
@@ -425,20 +447,17 @@ namespace Richter
                 // Если дочернее задание становится источником исключения, отменяем все дочерние задания
                 for (Int32 task = 0; task < childTasks.Length; task++)
                 {
-                    childTasks[task].ContinueWith(t => cts.Cancel(), TaskContinuationOptions.OnlyOnFaulted); // исключения почему-то нет. видимо т.к. tf ещё не завершена aleek
+                    childTasks[task].ContinueWith(t => cts.Cancel(), TaskContinuationOptions.OnlyOnFaulted);
                 }
 
                 // После завершения дочерних заданий получаем максимальное возвращенное значение и передаем его другому заданию для вывода
-                tf.ContinueWhenAll(childTasks, completedTasks => // не работает aleek
-                      completedTasks.Where(t => !t.IsFaulted && !t.IsCanceled).Max(t => t.Result), CancellationToken.None)
-                  .ContinueWith(t => 
-                      Console.WriteLine("The maximum is: " + t.Result), TaskContinuationOptions.ExecuteSynchronously
-                  );
+                tf.ContinueWhenAll(childTasks, completedTasks => completedTasks.Where(t => !t.IsFaulted && !t.IsCanceled).Max(t => t.Result), CancellationToken.None)
+                  .ContinueWith(t => Console.WriteLine("The maximum is: " + t.Result), TaskContinuationOptions.ExecuteSynchronously); 
             });
 
             // После завершения дочерних заданий выводим, в том числе, и необработанные исключения
             parent.ContinueWith(p => {
-                // p.Result
+                // ? p.Result; без StringBuilder
                 // Текст помещен в StringBuilder и однократно вызван метод Console.WriteLine просто потому, что это задание
                 // может выполняться параллельно с предыдущим, и я не хочу путаницы в выводимом результате
                 StringBuilder sb = new StringBuilder("The following exception(s) occurred:" + Environment.NewLine);
@@ -454,7 +473,7 @@ namespace Richter
             //parent.ContinueWith().ContinueWith()...
             // Запуск родительского задания, которое может запускать дочерние
             Console.WriteLine("parent.Start()");
-            parent.Start(); // не работает. не обрабатывается исключение в Sum. aleek
+            parent.Start();
         }
 
         private int Log()
@@ -540,42 +559,46 @@ namespace Richter
         #endregion
 
         #region Другие возможности асинхронных функций
-        // Task.Run вызывается в потоке графического интерфейса
-        public void TaskRunUI() 
+        public void TaskRunUI()
         {
             var idBefore = Thread.CurrentThread.ManagedThreadId;
+            // Task.Run вызывается в потоке графического интерфейса
             Task.Run(async () => {
                 // Этот код выполняется в потоке из пула
                 // TODO: Подготовительные вычисления...
                 //await XxxAsync(); // Инициирование асинхронной операции
                                   // Продолжение обработки...
-                var idAfter = Thread.CurrentThread.ManagedThreadId; // отличается от idBefore
-                var stop = 0;
+                var idAfter = Thread.CurrentThread.ManagedThreadId; // отличается от idBefore. idBefore отсюда в дебагере недоступен
             });
         }
 
         public static async Task OuterAsyncFunction()
         {
             InnerAsyncFunction(); // В этой строке пропущен оператор await!
-                                  // Код продолжает выполняться, как и InnerAsyncFunction...
+            // Код продолжает выполняться, как и InnerAsyncFunction...
         }
 
-        static async Task OuterAsyncFunctionNoWarningVar()
-        {
-            var noWarning = InnerAsyncFunction(); // Строка без await
-                                                  // Этот код продолжает выполняться, как и код InnerAsyncFunction...
-        }
+        //static async Task OuterAsyncFunction()
+        //{
+        //    var noWarning = InnerAsyncFunction(); // Строка без await. ? присвоили - предупреждение пропало
+        //    // Этот код продолжает выполняться, как и код InnerAsyncFunction...
+        //}
 
-        static async Task OuterAsyncFunctionNoWarning()
-        {
-            //InnerAsyncFunction().NoWarning(); // Строка без await
-                                              // Код продолжает выполняться, как и InnerAsyncFunction...
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] // Заставляет компилятор
+                                                           // убрать вызов при оптимизации
+        //public static void NoWarning(this Task task) { /* Не содержит кода */ } // нельзя из-за CS1106
 
-        static async Task InnerAsyncFunction() { /* ... */ } // тело пустое, а возвращает Task aleek
+        //static async Task OuterAsyncFunction()
+        //{
+        //    InnerAsyncFunction().NoWarning(); // Строка без await.
+        //    // Код продолжает выполняться, как и InnerAsyncFunction...
+        //}
+
+        static async Task InnerAsyncFunction() { /* ... */ } // ? тело пустое, а возвращает Task. можно void
         
-        static async void InnerAsyncFunctionVoid() { /* ... */ } // aleek
-
+        /// <summary>
+        /// aleek нельзя протестировать. надо дорабатывать
+        /// </summary>
         public static async Task GoWhenAll()
         {
             // Запуск сервера немедленно возвращает управление, потому что сервер ожидает клиентские запросы в асинхронном режиме
@@ -603,6 +626,9 @@ namespace Richter
             }
         }
 
+        /// <summary>
+        /// aleek нельзя протестировать. надо дорабатывать
+        /// </summary>
         public static async Task GoWhenAny()
         {
             // Запуск сервера немедленно возвращает управление, потому что сервер ожидает клиентские запросы в асинхронном режиме
@@ -630,7 +656,7 @@ namespace Richter
         {
             while (true)
             {
-                                                    // не определён у Рихтера aleek
+                                                    // не определён у Рихтера
                 var pipe = new NamedPipeServerStream(/*c_pipeName*/null, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous | PipeOptions.WriteThrough);
 
                 // Асинхронный прием клиентского подключения. ПРИМЕЧАНИЕ: NamedPipeServerStream использует старую модель асинхронного программирования.
@@ -638,7 +664,7 @@ namespace Richter
                 await Task.Factory.FromAsync(pipe.BeginWaitForConnection, pipe.EndWaitForConnection, null);
 
                 // Начало обслуживания клиента; управление возвращается немедленно, потому что операция выполняется асинхронно.
-                //ServiceClientRequestAsync(pipe); // не определён у Рихтера aleek
+                //ServiceClientRequestAsync(pipe); // не определён у Рихтера
             }
         }
 
@@ -661,9 +687,12 @@ namespace Richter
         #endregion
 
         #region Потоковые модели приложений
+        /// <summary>
+        /// aleek нельзя протестировать, надо дорабатывать
+        /// </summary>
         private sealed class MyWpfWindow : Window
         {
-            public MyWpfWindow() { Title = "WPF Window"; } // почему присваивается?
+            public MyWpfWindow() { Title = "WPF Window"; }
 
             public string Title { get; }
 
@@ -674,11 +703,11 @@ namespace Richter
                 String http = GetHttp().Result; // Синхронное получение строки
                 base.OnActivated(e);
             }
+
             private async Task<String> GetHttp()
             {
                 // Выдача запроса HTTP и возврат из GetHttp
-                HttpResponseMessage msg = await new
-                HttpClient().GetAsync("http://Wintellect.com/");
+                HttpResponseMessage msg = await new HttpClient().GetAsync("http://Wintellect.com/");
                 // В эту точку мы никогда не попадем: GUI-поток ожидает завершения
                 // этого метода, а метод не может завершиться, потому что GUI-поток
                 // ожидает его завершения ­­> ВЗАИМНАЯ БЛОКИРОВКА!
@@ -696,27 +725,30 @@ namespace Richter
             //return msg.Content.ReadAsStringAsync().Result; // я
         }
 
-        private Task<String> GetHttp2()
-        {
-            return Task.Run(async () => {
-                // Выполнение в потоке пула, с которым не связан объект SynchronizationContext
-                HttpResponseMessage msg = await new HttpClient().GetAsync("http://Wintellect.com/");
-                return await msg.Content.ReadAsStringAsync();
-            });
-        }
+        //private Task<String> GetHttp()
+        //{
+        //    return Task.Run(async () => {
+        //        // Выполнение в потоке пула, с которым не связан объект SynchronizationContext
+        //        HttpResponseMessage msg = await new HttpClient().GetAsync("http://Wintellect.com/");
+        //        return await msg.Content.ReadAsStringAsync();
+        //    });
+        //}
         #endregion
 
         #region Отмена операций ввода-вывода
         public static async Task Go_CancelIO()
         {
             // Создание объекта CancellationTokenSource, отменяющего себя через заданный промежуток времени в миллисекундах
-            var cts = new CancellationTokenSource(5000); // Чтобы отменить ранее, вызовите cts.Cancel()
-            var ct = cts.Token; 
+            // ? без параметра - не отменится. Почему отменяется без cts.Cancel()?
+            var cts = new CancellationTokenSource(5000); // Чтобы отменить ранее, вызовите cts.Cancel(). 
+            var ct = cts.Token;
+            //cts.Cancel();
             try
             {
                 // Я использую Task.Delay для тестирования; замените другим методом, возвращающим Task
-                // Delay возвращает Task, а не Task<TResult>, поэтому .WithCancellation(ct) применить не получится
-                //await Task.Delay(10000).WithCancellation(ct); // не работает aleek
+                //await Task.Delay(10000).WithCancellation(ct); // ? .WithCancellation у Task нет
+                await Task.Delay(10000, ct); // фикс
+                
                 Console.WriteLine("Task completed");
             }
             catch (OperationCanceledException)
@@ -729,7 +761,7 @@ namespace Richter
         #region Приоритеты запросов ввода-вывода
         private void IOPriority()
         {
-            using (ThreadIO.BeginBackgroundProcessing())
+            using (ThreadIO.BeginBackgroundProcessing()) // aleek можно using, т.к. метод возвращает структуру IDisposable
             {
                 // Здесь располагается низкоприоритетный запрос ввода-вывода
                 // (например, вызов BeginRead/BeginWrite)
@@ -738,47 +770,71 @@ namespace Richter
         #endregion
 
         #region Volatile-конструкции
+
         internal static class StrangeBehavior
         {
-            // Далее вы увидите, что проблема решается объявлением этого поля volatile
-            private static Boolean s_stopWorker = false; // volatile не влияет. aleek
-            
-            public static void MainStrangeBehavior()
+            // Далее вы увидите, что проблема решается объявлением этого поля volatile. ? volatile не влияет
+            private static Boolean s_stopWorker = false;
+            /// <summary>
+            /// aleek корректный метод? странно работает
+            /// </summary>
+            public static void Main_()
             {
-                // aleek
-                var id = Thread.CurrentThread.ManagedThreadId; 
+                #region aleek
+                var id = Thread.CurrentThread.ManagedThreadId;
                 var id2 = GetId();
+                #endregion
 
                 Console.WriteLine("Main: letting worker run for 5 seconds");
-                
+
                 Thread t = new Thread(Worker);
                 t.Start();
 
-                Thread.Sleep(1); // пауза для отработки Worker. aleek
+                Thread.Sleep(5000);
                 s_stopWorker = true;
 
                 Console.WriteLine("Main: waiting for worker to stop");
-                
-                t.Join(); // не влияет. aleek
+
+                t.Join(); // ? не влияет. к этому моменту Worker отработает, ждать нечего
             }
 
-            private static void Worker(Object o) // почему параметр, new Thread(Worker) - без параметра. aleek
+            private static void Worker(Object o) // ? почему параметр, new Thread(Worker) - без параметра
             {
-                // aleek
-                var id = Thread.CurrentThread.ManagedThreadId; 
+                #region aleek
+                var id = Thread.CurrentThread.ManagedThreadId;
                 var id2 = GetId();
+                #endregion
 
                 double x = 0;
 
-                while (!s_stopWorker) 
+                while (!s_stopWorker)
                 {
-                    x++; 
+                    x++;
                 }
 
                 Console.WriteLine("Worker: stopped when x={0}", x / 100000);
             }
 
             private static int GetId() => Thread.CurrentThread.ManagedThreadId;
+
+            //#region aleek
+            //public static void Main_()
+            //{
+            //    Console.WriteLine("Main: letting worker run for 5 seconds");
+            //    Thread t = new Thread(Worker);
+            //    t.Start();
+            //    s_stopWorker = true;
+            //    Console.WriteLine("Main: waiting for worker to stop");
+            //    t.Join(); // пауза 5 сек
+            //}
+
+            //private static void Worker(Object o) // ? почему параметр, new Thread(Worker) - без параметра
+            //{
+            //    double x = 0;
+            //    Thread.Sleep(5000);
+            //    Console.WriteLine("Worker: stopped when x={0}", x / 100000);
+            //}
+            //#endregion
         }
 
         internal sealed class ThreadsSharingData
@@ -820,7 +876,7 @@ namespace Richter
             }
         }
 
-        internal sealed class ThreadsSharingDataCorrect
+        internal sealed class ThreadsSharing2
         {
             private Int32 m_flag = 0;
             private Int32 m_value = 0;
@@ -843,7 +899,7 @@ namespace Richter
             }
         }
 
-        internal sealed class ThreadsSharingDataVolatile
+        internal sealed class ThreadsSharingData3
         {
             private volatile Int32 m_flag = 0;
             private Int32 m_value = 0;
@@ -866,10 +922,30 @@ namespace Richter
             }
         }
 
+        internal sealed class ThreadsSharingData4
+        {
+            private volatile Int32 m_flag = 0; // volatile - не влияет
+            private Int32 m_value = 0;
+
+            // Этот метод исполняется одним потоком
+            public void Thread1()
+            {
+                // ПРИМЕЧАНИЕ. Значение 5 должно быть записано в m_value перед записью 1 в m_flag
+                m_value = 5;
+                m_flag = 1;
+            }
+
+            // Этот метод исполняется другим потоком
+            public void Thread2()
+            {
+                // ПРИМЕЧАНИЕ. Поле m_value должно быть прочитано после m_flag
+                if (m_flag == 1)
+                    Console.WriteLine(m_value);
+            }
+        }
+
         static volatile int m_amount = 0; 
         Boolean success = Int32.TryParse("123", out m_amount); // если убрать volatile - предупреждение исчезнет
-        // Эта строка приводит к сообщению от компилятора:
-        // CS0420: ссылка на волатильное поле не будет трактоваться как волатильная
 
         #endregion
 
