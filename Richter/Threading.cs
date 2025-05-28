@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static Richter.Threading;
 
 namespace Richter
 {
@@ -45,6 +46,13 @@ namespace Richter
             //StrangeBehavior.Main_();
 
             //var tsd = new ThreadsSharingData();
+            //for (int i = 0; i < 5; i++)
+            //{
+            //    new Thread(() => tsd.Thread1()).Start(); // вывод хаотичный. в обратном порядке - детерминированный
+            //    new Thread(() => tsd.Thread2()).Start();
+            //}
+
+            //var tsd = new ThreadsSharingData();
             ////bool useMs = false;
             //for (int i = 0; i < 50; i++)
             //{
@@ -72,7 +80,7 @@ namespace Richter
             //    Console.WriteLine(/*"\n-------------------------"*/);
             //}
 
-            //var ts2 = new ThreadsSharing2();
+            //var ts2 = new ThreadsSharingData2();
             //// иногда между итерациями логируется большее кол-во потоков, чем в теле цикла. лишние - с других итераций. гонка итерация <-> поток
             //// поставить брейкпоинты у Thread1, Thread2, в цикле
             //// всего д.б. число Console.WriteLine("Thread = макс счётчик * кол-во потоков в теле цикла
@@ -86,29 +94,119 @@ namespace Richter
             //}
 
             //var ts3 = new ThreadsSharingData3();
+            //// i = 9 - чтобы вмещалось в консоль
+            //// i = 5, убрать/оставить Thread.Sleep - посчитать в консоли Thread1, Thread2. д.б. равны
+            //for (int i = 0; i < 9; i++)
+            //{
+            //    i_ = i;
+            //    new Thread(() => ts3.Thread2()).Start();
+            //    new Thread(() => ts3.Thread1()).Start();
+            //    Thread.Sleep(100);
+            //    Console.WriteLine("--------------" + i);
+            //}
+
+            //var ts4 = new ThreadsSharingData4();
             //for (int i = 0; i < 10; i++)
             //{
             //    i_ = i;
-            //    new Thread(() => ts3.Thread1()).Start();
-            //    new Thread(() => ts3.Thread2()).Start();
+            //    new Thread(() => ts4.Thread1()).Start();
+            //    new Thread(() => ts4.Thread2()).Start();
             //    //Thread.Sleep(100);
             //    Console.WriteLine("--------------" + i);
             //}
 
-            var ts4 = new ThreadsSharingData4();
-            for (int i = 0; i < 10; i++)
-            {
-                i_ = i;
-                new Thread(() => ts4.Thread1()).Start();
-                new Thread(() => ts4.Thread2()).Start();
-                //Thread.Sleep(100);
-                Console.WriteLine("--------------" + i);
-            }
+            //// поставить брейкпоинты в AllDone; 
+            //var mwr = new MultiWebRequests();
+            ////var mwr = new MultiWebRequests(10);
+            //Thread.Sleep(5000);
+            //mwr.Cancel();
+
+            //new SomeResource().AccessResource();
 
             //MainSemaphore();
 
             //ref int a1;
             //Maximum(a1, 0);
+
+            //int target = 1;
+            //Maximum(ref target, 2);
+            //Morpher<object, object> morpher = null; // падает aleek
+            //Morph(ref target, 2, morpher);
+
+            //Events();
+
+            using (var swl = new SimpleWaitLock(4)) // сработает Dispose() после всех методов в using, т.к. using aleek
+            {
+                // ? эксепшн, т.к. объект создан в главном потоке, а в Enter используется другим потоком. как починить?m_AvailableResources.Dispose() в конструкторе не помогает
+                //new Thread(() => { swl.Enter();}).Start();
+                //new Thread(() => { var swl_ = new SimpleWaitLock(4);  swl_.Enter(); swl_.Leave(); }).Start();
+                swl.Enter();swl.Enter(); // ok
+                swl.Leave();swl.Leave(); // ok
+
+                for (int i = 0; i < 10; i++) // ok
+                {
+                    swl.Enter();
+                    swl.Leave();
+                }
+                
+                for (int i = 0; i < 10; i++) // ok
+                    new Thread(() => { var swl_ = new SimpleWaitLock(4); swl_.Enter(); swl_.Leave(); }).Start();
+            }
+
+            //var recursiveAutoResetEvent = new RecursiveAutoResetEvent(); // не сработает Dispose(), т.к. нет using aleek
+            //recursiveAutoResetEvent.Enter();
+            //recursiveAutoResetEvent.Leave();
+
+            //using (var simpleHybridLock = new SimpleHybridLock())
+            //{
+            //    simpleHybridLock.Enter();
+            //    simpleHybridLock.Leave();
+            //}
+
+            //using (var anotherHybridLock = new AnotherHybridLock())
+            //{
+            //    anotherHybridLock.Enter();
+            //    anotherHybridLock.Leave();
+
+            //    //new Thread(() => anotherHybridLock.Enter()).Start();
+            //    //new Thread(() => anotherHybridLock.Leave()).Start();
+
+            //    //new Thread(() => anotherHybridLock.Enter()).Start();
+            //    //new Thread(() => anotherHybridLock.Leave()).Start();
+            //}
+
+            //var transaction = new Transaction();
+            //transaction.PerformTransaction();
+            //var a1 = transaction.LastTransaction;
+
+            //var transactionCorrect = new TransactionCorrect();
+            //transactionCorrect.PerformTransaction();
+            //var a1 = transactionCorrect.LastTransaction;
+
+            //using (var transaction_ReaderWriterLockSlim = new Transaction2())
+            //{
+            //    transaction_ReaderWriterLockSlim.PerformTransaction();
+            //    var a1 = transaction_ReaderWriterLockSlim.LastTransaction;
+            //}
+
+            //var a1 = Singleton.GetSingleton(); // создаёт экземпляр
+            //var a2 = Singleton.GetSingleton(); // возвращает кэшированный экземпляр
+            ////var a = Singleton2.a1; // сначала вызовется конструктор, потом сработает строка
+            //var a3 = Singleton2.GetSingleton(); // конструктор вызовется
+            //var a4 = Singleton2.GetSingleton(); // конструктор не вызовется
+            //var a5 = Singleton3.GetSingleton(); // создаёт экземпляр
+            //var a6 = Singleton3.GetSingleton(); // возвращает кэшированный экземпляр
+
+            //Lazy();
+
+            //var conditionVariablePattern = new ConditionVariablePattern();
+            //for (int i = 0; i < 10; i++)
+            //{
+            //    new Thread(() => conditionVariablePattern.Thread1()).Start();
+            //    new Thread(() => conditionVariablePattern.Thread2()).Start();
+            //}
+
+            //SynchronizedQueue();
         }
 
         #region 1
@@ -272,14 +370,15 @@ namespace Richter
         #endregion
 
         #region Отмена задания
+        // aleek комментарии
         public void CancelTask()
         {
             CancellationTokenSource cts = new CancellationTokenSource();
             Task<Int32> t = new Task<Int32>(() => Sum(cts.Token, 10000), cts.Token); // почему токен прокидывается в Sum?
             t.Start();
-            //Thread.Sleep(3000); // через паузу - исключение. aleek
+            //Thread.Sleep(3000); // ? через паузу - исключение
             // Позднее отменим CancellationTokenSource, чтобы отменить Task
-            cts.Cancel(); // Это асинхронный запрос, задача уже может быть завершена. закомментировать - нет исключения aleek
+            cts.Cancel(); // Это асинхронный запрос, задача уже может быть завершена. ? закомментировать - нет исключения
 
             try
             {
@@ -297,7 +396,7 @@ namespace Richter
         }
         #endregion
 
-        #region Автоматический запуск задания по завершении предыдущего
+        #region Автоматический запуск задания по завершении предыдущего aleek
         public void RunTaskAfterEndPrevious()
         {
             // Создание объекта Task с отложенным запуском
@@ -306,7 +405,7 @@ namespace Richter
             // Метод ContinueWith возвращает объект Task, но обычно он не используется
             Task cwt = t.ContinueWith(task => Console.WriteLine("The sum is: " + task.Result)); // получаем результат в continuation или в строках ниже. сработает после t.Wait() aleek
             
-            #region aleek
+            #region
             // какой смысл когда можно через await получить? видимо, чтобы запустить задачу позже
             // t.ContinueWith(x => x);
             // t.ContinueWith(x => x);
@@ -374,7 +473,7 @@ namespace Richter
         }
         #endregion
 
-        #region Фабрика заданий
+        #region Фабрика заданий aleek
         const int _1_SEC = 1000;
         const int _2_SEC = 2000;
         const int _3_SEC = 3000;
@@ -382,7 +481,7 @@ namespace Richter
         int Delay1s() { Thread.Sleep(_1_SEC); return _1_SEC; } // каждый Thread.Sleep - новый поток?
         int Delay2s() { Thread.Sleep(_2_SEC); return _2_SEC; }
         int Delay3s() { Thread.Sleep(_3_SEC); return _3_SEC; }
-        // aleek нет такой версии в Рихтере или переделал вопросы
+        // нет такой версии в Рихтере или переделал вопросы
         public void TaskFactory()
         {
             Task parent = new Task(() =>
@@ -843,40 +942,64 @@ namespace Richter
             private Int32 m_value = 0;
 
             // Этот метод исполняется одним потоком
-            public void Thread1(int timeout = 0)
-            //public void Thread1(int i)
+            public void Thread1()
             {
-                if (timeout > 0) Thread.Sleep(timeout); // случайность aleek
-
-                // ПРИМЕЧАНИЕ. Они могут выполняться в обратном порядке. почему? aleek
+                // ПРИМЕЧАНИЕ. Они могут выполняться в обратном порядке
                 m_value = 5;
                 m_flag = 1;
-
-                //Console.Write($"t1_in_{DateTime.Now.Second}:{DateTime.Now.Millisecond}    "/* + i_*/);
-                Console.Write($"t1_in_    "/* + i_*/);
+                Console.WriteLine("Thread1");
             }
 
             // Этот метод исполняется другим потоком
-            public void Thread2(int timeout = 0)
-            //public void Thread2(int i)
+            public void Thread2()
             {
-                if (timeout > 0) Thread.Sleep(timeout); // случайность aleek
-
                 // ПРИМЕЧАНИЕ. Поле m_value может быть прочитано раньше, чем m_flag
                 if (m_flag == 1)
-                    //Console.Write($"t2_in_/*{DateTime.Now.Second}:{DateTime.Now.Millisecond}*/    " /*+ i_ + " " + m_value*/);
-                    Console.Write($"t2_in_    " /*+ i_ + " " + m_value*/);
-                    #region aleek
-                    // почему когда в консоли сначала Thread2, потом Thread1 вообще сюда заходит?
-                    // почему (почти?) всегда срабатывает при порядке Thread2 -> Thread1?
-                    // не попадёт сюда, если раньше отработает Thread2
-                    // i иногда дублируются, некоторые пропадают.
-                    #endregion
-
+                    Console.WriteLine(m_value);
+                Console.WriteLine("Thread2");
             }
         }
 
-        internal sealed class ThreadsSharing2
+        //internal sealed class ThreadsSharingData
+        //{
+        //    private Int32 m_flag = 0;
+        //    private Int32 m_value = 0;
+
+        //    // Этот метод исполняется одним потоком
+        //    public void Thread1(int timeout = 0)
+        //    //public void Thread1(int i)
+        //    {
+        //        if (timeout > 0) Thread.Sleep(timeout); // случайность aleek
+
+        //        // ПРИМЕЧАНИЕ. Они могут выполняться в обратном порядке. почему? aleek
+        //        m_value = 5;
+        //        m_flag = 1;
+
+        //        //Console.Write($"t1_in_{DateTime.Now.Second}:{DateTime.Now.Millisecond}    "/* + i_*/);
+        //        Console.Write($"t1_in_    "/* + i_*/);
+        //    }
+
+        //    // Этот метод исполняется другим потоком
+        //    public void Thread2(int timeout = 0)
+        //    //public void Thread2(int i)
+        //    {
+        //        if (timeout > 0) Thread.Sleep(timeout); // случайность aleek
+
+        //        // ПРИМЕЧАНИЕ. Поле m_value может быть прочитано раньше, чем m_flag
+        //        if (m_flag == 1)
+        //            //Console.Write($"t2_in_/*{DateTime.Now.Second}:{DateTime.Now.Millisecond}*/    " /*+ i_ + " " + m_value*/);
+        //            Console.Write($"t2_in_    " /*+ i_ + " " + m_value*/);
+        //        #region aleek
+        //        // почему когда в консоли сначала Thread2, потом Thread1 вообще сюда заходит?
+        //        // почему (почти?) всегда срабатывает при порядке Thread2 -> Thread1?
+        //        // не попадёт сюда, если раньше отработает Thread2
+        //        // i иногда дублируются, некоторые пропадают.
+        //        #endregion
+
+        //    }
+        //}
+
+        internal sealed class ThreadsSharingData2
         {
             private Int32 m_flag = 0;
             private Int32 m_value = 0;
@@ -884,7 +1007,7 @@ namespace Richter
             // Этот метод выполняется одним потоком
             public void Thread1()
             {
-                // ПРИМЕЧАНИЕ. 5 нужно записать в m_value до записи 1 в m_flag
+                // ПРИМЕЧАНИЕ. 5 нужно записать в m_value до записи 1 в m_flag. зачем для этого Volatile.Write?
                 m_value = 5;
                 Volatile.Write(ref m_flag, 1);
                 Console.WriteLine("Thread1 " + i_ + " " + m_value);
@@ -917,7 +1040,7 @@ namespace Richter
             public void Thread2()
             {
                 // ПРИМЕЧАНИЕ. Поле m_value должно быть прочитано после m_flag
-                if (m_flag == 1)
+                if (m_flag == 1) // ? срабатывает только 1 раз, только если поменять местами вызов потоков
                     Console.WriteLine("Thread2 " + i_ + " " + m_value);
             }
         }
@@ -960,13 +1083,15 @@ namespace Richter
             // Набор веб-серверов, к которым будут посылаться запросы. Хотя к этому словарю возможны одновременные обращения,
             // в синхронизации доступа нет необходимости, потому что ключи после создания доступны только для чтения
             private Dictionary<String, Object> m_servers = new Dictionary<String, Object> {
-                 //{ "http://Wintellect.com/", null },
-                 //{ "http://Microsoft.com/", null },
-                 //{ "http://1.1.1.1/", null }
-
-                 { "https://wintellectnow.com/", null }, // aleek
-                 //{ "https://microsoft.com/", null }, // не работает
-                 { "http://1.1.1.1/", null }
+                //{ "http://Wintellect.com/", null },
+                //{ "http://Microsoft.com/", null },
+                //{ "http://1.1.1.1/", null }
+                
+                #region aleek
+                { "https://wintellectnow.com/", null },
+                //{ "https://microsoft.com/", null }, // не работает
+                { "http://1.1.1.1/", null }
+                #endregion
             };
 
             public MultiWebRequests(Int32 timeout = Timeout.Infinite)
@@ -976,12 +1101,12 @@ namespace Richter
                 foreach (var server in m_servers.Keys)
                 {
                     m_ac.AboutToBegin(1);
-                    httpClient.GetByteArrayAsync(server).ContinueWith(task => ComputeResult(server, task));
+                    httpClient.GetByteArrayAsync(server).ContinueWith(task => ComputeResult(server, task)); // ? await-а нет, ContinueWith зафиксирует окончание задачи
                 }
 
                 // Сообщаем AsyncCoordinator, что все операции были инициированы и 
                 // что он должен вызвать AllDone после завершения всех операций, вызова Cancel или тайм-аута
-                m_ac.AllBegun(AllDone, timeout);
+                m_ac.AllBegun(AllDone, timeout); // ? регистрируется делегат, отложенное выполнение позже
             }
 
             private void ComputeResult(String server, Task<Byte[]> task)
@@ -1003,7 +1128,7 @@ namespace Richter
             }
 
             // При вызове этого метода результаты игнорируются
-            public void Cancel() // никакой отмены на уровне Task не происходит. смысла рассматривать этот кейс нет. aleek
+            public void Cancel()
             { 
                 m_ac.Cancel(); 
             }
@@ -1011,7 +1136,9 @@ namespace Richter
             // Этот метод вызывается после получения ответа от всех веб-серверов, вызова Cancel или тайм-аута
             private void AllDone(CoordinationStatus status)
             {
-                switch (status)
+                // ? сработает только один из case в вызывающем коде - даже если вызваны несколько публичных методов, завязанных на case-ы
+                // делегат Action сработает только 1 раз
+                switch (status) 
                 {
                     case CoordinationStatus.Cancel:
                         Console.WriteLine("Operation canceled.");
@@ -1089,7 +1216,7 @@ namespace Richter
         #endregion
 
         #region Реализация простой циклической блокировки
-        // создать конкуренцию из нескольких потоков
+        // aleek создать конкуренцию из нескольких потоков
         public sealed class SomeResource
         {
             private SimpleSpinLock m_sl = new SimpleSpinLock();
@@ -1127,6 +1254,7 @@ namespace Richter
         #endregion
 
         #region Универсальный Interlocked-паттерн
+        // aleek не тестировалось
         public static Int32 Maximum(ref Int32 target, Int32 value)
         {
             Int32 currentVal = target, startVal, desiredVal;
@@ -1153,7 +1281,7 @@ namespace Richter
         }
 
         public delegate Int32 Morpher<TResult, TArgument>(Int32 startValue, TArgument argument, out TResult morphResult);
-
+        // aleek не тестировалось
         public static TResult Morph<TResult, TArgument>(ref Int32 target, TArgument argument, Morpher<TResult, TArgument> morpher)
         {
             TResult morphResult;
@@ -1202,46 +1330,49 @@ namespace Richter
             {
                 x++;
             }
-            Console.WriteLine("Incrementing x: {0:N0}", sw.ElapsedMilliseconds);
+            Console.WriteLine("Incrementing x: {0:N0}", sw.ElapsedMilliseconds); // ~9 (меняется) почему? как сделать чтобы не менялось? (ограничить одним потоком)
             
             // Сколько времени займет инкремент x 10 миллионов раз, если добавить вызов ничего не делающего метода?
             sw.Restart();
             for (Int32 i = 0; i < iterations; i++)
             {
-                M(); 
-                x++; 
+                M();
+                x++;
                 M();
             }
-            Console.WriteLine("Incrementing x in M: {0:N0}", sw.ElapsedMilliseconds);
-            
+            Console.WriteLine("Incrementing x in M: {0:N0}", sw.ElapsedMilliseconds); // ~57 (меняется)
+
             // Сколько времени займет инкремент x 10 миллионов раз, если добавить вызов неконкурирующего объекта SimpleSpinLock?
             SpinLock sl = new SpinLock(false);
             sw.Restart();
             for (Int32 i = 0; i < iterations; i++)
             {
                 Boolean taken = false;
-                sl.Enter(ref taken); 
-                x++; 
+                sl.Enter(ref taken);
+                x++;
                 sl.Exit();
             }
-            Console.WriteLine("Incrementing x in SpinLock: {0:N0}", sw.ElapsedMilliseconds);
-            
+            Console.WriteLine("Incrementing x in SpinLock: {0:N0}", sw.ElapsedMilliseconds); // ~137 (меняется)
+
             // Сколько времени займет инкремент x 10 миллионов раз, если добавить вызов неконкурирующего объекта SimpleWaitLock?
+            // ? using использовать всегда для объектов IDisposable
+            // ? параметр 1, 4 - результат тот же
             using (SimpleWaitLock swl = new SimpleWaitLock(1))
             {
                 sw.Restart();
                 for (Int32 i = 0; i < iterations; i++)
                 {
-                    swl.Enter();
+                    swl.Enter(); // задержка из-за Enter()/Leave(), а не создания объекта SimpleWaitLock
                     x++; 
                     swl.Leave();
                 }
-                Console.WriteLine("Incrementing x in SimpleWaitLock: {0:N0}", sw.ElapsedMilliseconds);
+                Console.WriteLine("Incrementing x in SimpleWaitLock: {0:N0}", sw.ElapsedMilliseconds); // ~12505 (меняется)
             }
         }
 
         private void M() { }
 
+        // aleek комменты
         public sealed class SimpleWaitLock : IDisposable
         {
             private Semaphore m_AvailableResources;
@@ -1262,20 +1393,21 @@ namespace Richter
                 // Этому потоку доступ больше не нужен; его может получить другой поток
                 m_AvailableResources.Release();
             }
-            // по ссылке попадает в Interfaces. вызывается сам по себе, классом SimpleWaitLock. aleek
-            public void Dispose() // не обязательно внутри вызывать Dispose
+            // ? по ссылке попадает в Interfaces. вызывается сам по себе, классом SimpleWaitLock
+            public void Dispose() // ? не обязательно внутри вызывать Dispose
             { 
-                m_AvailableResources.Close(); 
+                m_AvailableResources.Close(); // ? vs Dispose
             }
         }
         #endregion
 
         #region Семафоры
-        public sealed class SimpleWaitLockSemaphore : IDisposable
+        // такой же как в предыдущем примере
+        public sealed class SimpleWaitLock2 : IDisposable
         {
             private Semaphore m_AvailableResources;
 
-            public SimpleWaitLockSemaphore(Int32 maximumConcurrentThreads)
+            public SimpleWaitLock2(Int32 maximumConcurrentThreads)
             {
                 m_AvailableResources = new Semaphore(maximumConcurrentThreads, maximumConcurrentThreads);
             }
@@ -1292,7 +1424,7 @@ namespace Richter
                 m_AvailableResources.Release();
             }
 
-            public void Dispose() // не вызывается, т.к. не обёрнут в using aleek
+            public void Dispose() // ? не вызывается, т.к. не обёрнут в using
             {
                 m_AvailableResources.Close(); 
             }
@@ -1464,9 +1596,9 @@ namespace Richter
                 m_waiterLock.Set(); // Значительное падение производительности
             }
 
-            public void Dispose() 
+            public void Dispose()
             { 
-                m_waiterLock.Dispose(); 
+                m_waiterLock.Dispose();
             }
         }
         #endregion
@@ -1521,7 +1653,7 @@ namespace Richter
             }
         }
 
-        internal sealed class Transaction_ReaderWriterLockSlim : IDisposable
+        internal sealed class Transaction2 : IDisposable
         {
             private readonly ReaderWriterLockSlim m_lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
             private DateTime m_timeOfLastTrans;
@@ -1641,8 +1773,7 @@ namespace Richter
 
         public void Lazy()
         {
-            Lazy<String> s = new Lazy<String>(() => 
-                DateTime.Now.ToLongTimeString(), LazyThreadSafetyMode.PublicationOnly);
+            Lazy<String> s = new Lazy<String>(() => DateTime.Now.ToLongTimeString(), LazyThreadSafetyMode.PublicationOnly);
 
             Console.WriteLine(s.IsValueCreated); // Возвращается false, так как запроса к Value еще не было
             Console.WriteLine(s.Value); // Вызывается этот делегат
@@ -1671,12 +1802,18 @@ namespace Richter
         #endregion
 
         #region Паттерн условной переменной
-        internal sealed class ConditionVariablePattern // не работает aleek
+        // aleek комменты
+        // при вызове 
+        // var conditionVariablePattern = new ConditionVariablePattern();
+        // new Thread(() => conditionVariablePattern.Thread1()).Start();
+        // new Thread(() => conditionVariablePattern.Thread2()).Start();
+        // срабатывает to Thread1, то Thread2 - несколько раз - а вызваны потоки были 1 раз
+        internal sealed class ConditionVariablePattern
         {
             private readonly Object m_lock = new Object();
             private Boolean m_condition = false;
             
-            public void Thread1()
+            public void Thread1() // если в начале поставить брейк поинт, то иногда сразу переходит на Thread2
             {
                 Monitor.Enter(m_lock); // Взаимоисключающая блокировка. m_lock работает то для одного, то для другого потока? aleek
 
@@ -1689,8 +1826,9 @@ namespace Richter
 
                 // Условие соблюдено, обрабатываем данные...
                 Monitor.Exit(m_lock); // Снятие блокировки
+                // если закомментировать Monitor.Enter - эксепшн, если закомментировать Monitor.Exit - работает
             }
-            
+
             public void Thread2()
             {
                 Monitor.Enter(m_lock); // Взаимоисключающая блокировка. Обрабатываем данные и изменяем условие...

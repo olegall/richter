@@ -39,7 +39,7 @@ namespace Richter
                 m_process = process;
             }
 
-            public void Dispose() // называется Dispose, т.к. общепринятое название. Будут искать по имени этого метода
+            public void Dispose() // aleek называется Dispose, т.к. общепринятое название. Будут искать по имени этого метода
             {
                 EndBackgroundProcessing(m_process);
             }

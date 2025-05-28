@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
 using System.Threading;
+using System.Threading.Tasks;
 using static Richter.Threading;
 
 namespace Richter
@@ -15,88 +17,21 @@ namespace Richter
 
             var threading = new Threading();
 
-            //var mwr = new MultiWebRequests();
-            //var mwr = new MultiWebRequests(10);
-            //mwr.Cancel();
+            //SynchronizedQueue();
 
-            //new SomeResource().AccessResource();
-
-            int target = 1;
-            //Threading.Maximum(ref target, 2);
-            //Morpher<object, object> morpher = null; // падает aleek
-            //Morph(ref target, 2, morpher);
-
-            //threading.Events();
-
-            //using (var simpleWaitLockSemaphore = new SimpleWaitLockSemaphore(4)) // сработает Dispose(), т.к. using aleek
-            //{
-            //    simpleWaitLockSemaphore.Enter();
-            //    simpleWaitLockSemaphore.Leave();
-            //}
-
-            //var recursiveAutoResetEvent = new RecursiveAutoResetEvent(); // не сработает Dispose(), т.к. нет using aleek
-            //recursiveAutoResetEvent.Enter();
-            //recursiveAutoResetEvent.Leave();
-
-            //using (var simpleHybridLock = new SimpleHybridLock())
-            //{
-            //    simpleHybridLock.Enter();
-            //    simpleHybridLock.Leave();
-            //}
-
-            //using (var anotherHybridLock = new AnotherHybridLock())
-            //{
-            //    anotherHybridLock.Enter();
-            //    anotherHybridLock.Leave();
-
-            //    //new Thread(() => anotherHybridLock.Enter()).Start();
-            //    //new Thread(() => anotherHybridLock.Leave()).Start();
-
-            //    //new Thread(() => anotherHybridLock.Enter()).Start();
-            //    //new Thread(() => anotherHybridLock.Leave()).Start();
-            //}
-
-            //var transaction = new Transaction();
-            //transaction.PerformTransaction();
-            //var a1 = transaction.LastTransaction;
-
-            //var transactionCorrect = new TransactionCorrect();
-            //transactionCorrect.PerformTransaction();
-            //var a1 = transactionCorrect.LastTransaction;
-
-            //using (var transaction_ReaderWriterLockSlim = new Transaction_ReaderWriterLockSlim())
-            //{
-            //    transaction_ReaderWriterLockSlim.PerformTransaction();
-            //    var a1 = transaction_ReaderWriterLockSlim.LastTransaction;
-            //}
-
-            var a1 = Singleton.GetSingleton(); // создаёт экземпляр
-            var a2 = Singleton.GetSingleton(); // возвращает кэшированный экземпляр
-            //var a = Singleton2.a1; // сначала вызовется конструктор, потом сработает строка
-            var a3 = Singleton2.GetSingleton(); // конструктор вызовется
-            var a4 = Singleton2.GetSingleton(); // конструктор не вызовется
-            var a5 = Singleton3.GetSingleton(); // создаёт экземпляр
-            var a6 = Singleton3.GetSingleton(); // возвращает кэшированный экземпляр
-
-            //threading.Lazy();
-
-            var conditionVariablePattern = new ConditionVariablePattern();
-            //conditionVariablePattern.Thread1();
-            //conditionVariablePattern.Thread2();
-            //new Thread(() => conditionVariablePattern.Thread1()).Start();
-            //new Thread(() => conditionVariablePattern.Thread1()).Start();
-
-            SynchronizedQueue();
-
-            #region region
+            #region aleek
             //Console.WriteLine("\n*** Потоки для асинхронных вычислительных операций ***");
             //Console.WriteLine("Main thread: starting a dedicated thread " + "to do an asynchronous operation");
             //Thread dedicatedThread = new Thread(ComputeBoundOp);
             //dedicatedThread.Start(5);
             //Console.WriteLine("Main thread: Doing other work here...");
-            //Thread.Sleep(1000); // Имитация другой работы (10 секунд)
-            //dedicatedThread.Join(); // Ожидание завершения потока
-            //Console.WriteLine("Hit <Enter> to end this program...");
+            //Thread.Sleep(10000); // Имитация другой работы (10 секунд)
+            // если на брейкпоинте ждать сколько задержка в ComputeBoundOp - следующая строка - мгновенно из-за Start. Дочерний поток запущен и выполняется, пока стоим на брейкпоинте
+            // заметно, если поставить в ComputeBoundOp задержку сек 10. с 1 сек незаметно из-за асинхрона брейкпоинта
+            // без Start - ошибка
+            // есть смысл в строке и примере? главный и саб поток синхронны. Join выполнится выполнится мгновенно
+            //dedicatedThread.Join(); // Ожидание завершения потока. ждём завершения dedicatedThread
+            Console.WriteLine("Hit <Enter> to end this program...");
             /*
                 Результат компиляции и запуска такого кода:
                 Main thread: starting a dedicated thread to do an asynchronous operation
@@ -105,18 +40,18 @@ namespace Richter
 
                 Так как мы не можем контролировать очередность исполнения потоков
                 в Windows, возможен и другой результат:
-                Main thread: starting a dedicated thread to do an asynchronous operation
+                Main thread: starting a dedicated thread to do an asynchronous operation // ? не получается
                 In ComputeBoundOp: state=5
                 Main thread: Doing other work here...
             */
             #endregion
 
-            #region region
+            #region region aleek
             //Console.WriteLine("\n*** Фоновые и активные потоки ***");
             //// Создание нового потока (по умолчанию активного)
             //Thread t = new Thread(Worker);
             //// Превращение потока в фоновый
-            //t.IsBackground = true;
+            ////t.IsBackground = true; // ни на что не влияет
             //t.Start(); // Старт потока
             //           // В случае активного потока приложение будет работать около 10 секунд
             //           // В случае фонового потока приложение немедленно прекратит работу
@@ -136,7 +71,9 @@ namespace Richter
                 Main thread: Doing other work here...
                 In ComputeBoundOp: state=5
                 
-                Впрочем, возможен и такой результат:
+                // не получается. воможно из-за разного окружения, т.к. книга была написана давно
+                // ошибка? нужно результата не будет. поменять строки Console.WriteLine("Main thread: Doing other work here..."); и Thread.Sleep(1000);  местами
+                Впрочем, возможен и такой результат: 
                 Main thread: queuing an asynchronous operation
                 In ComputeBoundOp: state=5
                 Main thread: Doing other work here...       
@@ -169,6 +106,7 @@ namespace Richter
             //Task.Run(() => ComputeBoundOp(5)); // Еще один аналог
             #endregion
 
+            #region
             //Console.WriteLine("\n*** Автоматический запуск задания по завершении предыдущего ***");
             //threading.RunTaskAfterEndPrevious();
             //threading.RunTaskAfterEndPrevious2();
@@ -182,6 +120,7 @@ namespace Richter
 
             //Console.WriteLine("\n*** TaskFactory с исключениями ***");
             //threading.TaskFactoryException();
+            #endregion
 
             //Threading.StrangeBehavior.MainStrangeBehavior();// internal, public - результат такой же
 
@@ -202,7 +141,7 @@ namespace Richter
             #endregion
 
             //Console.WriteLine("\n*** Расширяемость асинхронных функций ***");
-            Go();
+            //Go();
 
             //Console.WriteLine("\n*** Другие возможности асинхронных функций ***");
             //Threading.GoAnother();
@@ -213,9 +152,9 @@ namespace Richter
 
             //ConcurrentExclusiveSchedulerDemo();
 
-            AccessResourceViaAsyncSynchronizationWrapper(new AsyncOneManyLock());
-            
-            threading.MainConsumeItems();
+            //AccessResourceViaAsyncSynchronizationWrapper(new AsyncOneManyLock());
+
+            //threading.MainConsumeItems();
             #endregion
 
             Console.ReadLine();
@@ -236,7 +175,7 @@ namespace Richter
         //}
 
         // Сигнатура метода должна совпадать с сигнатурой делегата ParameterizedThreadStart
-        private static void ComputeBoundOp(Object state)
+        private static void ComputeBoundOp(Object state) // параметр 5 берётся из Start
         {
             // Метод, выполняемый выделенным потоком
             Console.WriteLine("In ComputeBoundOp: state={0}", state);
