@@ -6,11 +6,9 @@ using System.IO.Pipes;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static Richter.Threading;
 
 namespace Richter
 {
@@ -53,49 +51,51 @@ namespace Richter
             //}
 
             #region
-            var tsd = new ThreadsSharingDataAleek();
-            var tMain1 = 100; // TODO поиграть с паузами
-            var tMain2 = 100;
-            var tT1 = 0;
-            var tT2 = 0;
-            for (int i = 0; i < 50; i++)
-            {
-                i_ = i;
-                // порядок Console.WriteLine здесь и в Thread1() иногда нарушается. почему иногда? новый поток может опередить главный (вызывающий) поток. как синхронизировать?
-                
-                //Console.Write($"t1_main_{DateTime.Now.Second}:{DateTime.Now.Millisecond}    ");
-                Console.Write($"t1_main_    ");
-                Thread.Sleep(tMain1); // синхронизация. чем больше таймаут (на время создания потока), тем лучше работает. инкапсулировать в Synchronise() (проверить инспектором потоков корректное использвание Thread.Sleep).    
-                new Thread(() => tsd.Thread1(tT1)).Start();
-                
-                //Console.Write($"t2_main_{DateTime.Now.Second}:{DateTime.Now.Millisecond}    ");
-                Console.Write($"t2_main_    ");
-                Thread.Sleep(tMain2); // синхронизация
-                new Thread(() => tsd.Thread2(tT2)).Start();
+            //var tsd = new ThreadsSharingDataAleek();
+            //// TODO поиграть с паузами
+            //var tBeforeT1 = 100;
+            //var tBeforeT2 = 100;
+            //// 0 - детерминированность, 100 - разнобой почему?
+            //// порядок Console.Write здесь и в Thread1() иногда нарушается. почему иногда? новый поток может опередить главный поток. как синхронизировать?
+            //var tT1 = 0;
+            //var tT2 = 0;
+            //// 100 - детерминированность, 0 - разнобой почему?
+            //var tAfterT1T2 = 100;
 
-                //new Thread(() => tsd.Thread2()).Start(); // чаще у Console.WriteLine порядок именно такой, иногда обратный
-                //new Thread(() => tsd.Thread1()).Start();
-
-                //tsd.Thread1();
-                //tsd.Thread2();
-
-                Thread.Sleep(100);
-                Console.WriteLine(/*"\n-------------------------"*/);
-            }
-            #endregion
-            #region
-            //var ts2 = new ThreadsSharingData2();
-            //// иногда между итерациями логируется большее кол-во потоков, чем в теле цикла. лишние - с других итераций. гонка итерация <-> поток
-            //// поставить брейкпоинты у Thread1, Thread2, в цикле
-            //// всего д.б. число Console.WriteLine("Thread = макс счётчик * кол-во потоков в теле цикла
             //for (int i = 0; i < 10; i++)
             //{
             //    i_ = i;
-            //    new Thread(() => ts2.Thread1()).Start(); // поменять местами
-            //    new Thread(() => ts2.Thread2()).Start();
-            //    //Thread.Sleep(100); // синхронизация, устранение гонки итерация <-> поток
-            //    Console.WriteLine("--------------" + i);
+            //    //Console.Write($"t1_main_{DateTime.Now.Second}:{DateTime.Now.Millisecond}    ");
+            //    Console.Write($"t1 main    ");
+            //    Thread.Sleep(tBeforeT1); // синхронизация. чем больше таймаут (на время создания потока), тем лучше работает. инкапсулировать в Synchronise() (проверить инспектором потоков корректное использвание Thread.Sleep)
+            //    new Thread(() => tsd.Thread1(tT1)).Start();
+
+            //    //Console.Write($"t2_main_{DateTime.Now.Second}:{DateTime.Now.Millisecond}    ");
+            //    Console.Write($"t2 main    ");
+            //    Thread.Sleep(tBeforeT2); // синхронизация
+            //    new Thread(() => tsd.Thread2(tT2)).Start();
+
+            //    //new Thread(() => tsd.Thread2()).Start(); // чаще у Console.WriteLine порядок именно такой, иногда обратный
+            //    //new Thread(() => tsd.Thread1()).Start();
+            //    //tsd.Thread1();
+            //    //tsd.Thread2();
+            //    Thread.Sleep(tAfterT1T2);
+            //    Console.WriteLine();
             //}
+            #endregion
+            #region
+            var ts2 = new ThreadsSharingData2();
+            // иногда между итерациями логируется большее кол-во потоков, чем в теле цикла. лишние - с других итераций. гонка итерация <-> поток
+            // поставить брейкпоинты у Thread1, Thread2, в цикле
+            // всего д.б. число Console.WriteLine("Thread = макс счётчик * кол-во потоков в теле цикла
+            for (int i = 0; i < 10; i++)
+            {
+                i_ = i;
+                new Thread(() => ts2.Thread1()).Start(); // поменять местами
+                new Thread(() => ts2.Thread2()).Start();
+                //Thread.Sleep(100); // синхронизация, устранение гонки итерация <-> поток
+                Console.WriteLine("--------------" + i);
+            }
             #endregion
             #region
             //var ts3 = new ThreadsSharingData3();
@@ -980,22 +980,20 @@ namespace Richter
             }
         }
 
-        // Thread1, Thread2 - всегда детерминированный порядок var tMain1 = 100; var tMain2 = 100; var tT1 = 0; var tT2 = 0;
         internal sealed class ThreadsSharingDataAleek
         {
             private Int32 m_flag = 0;
             private Int32 m_value = 0;
-            // Этот метод исполняется одним потоком
+
             public void Thread1(int timeout)
             {
                 if (timeout > 0) Thread.Sleep(timeout); // случайность
 
-                // ПРИМЕЧАНИЕ. Они могут выполняться в обратном порядке
                 m_value = 5;
                 m_flag = 1;
 
                 //Console.Write($"t1_in_{DateTime.Now.Second}:{DateTime.Now.Millisecond}    "/* + i_*/);
-                Console.Write($"t1_in_    "/* + i_*/);
+                Console.Write($"t1_in    "/* + i_*/);
             }
 
             // Этот метод исполняется другим потоком
@@ -1003,34 +1001,31 @@ namespace Richter
             {
                 if (timeout > 0) Thread.Sleep(timeout); // случайность
 
-                // ПРИМЕЧАНИЕ. Поле m_value может быть прочитано раньше, чем m_flag
                 if (m_flag == 1)
                     //Console.Write($"t2_in_/*{DateTime.Now.Second}:{DateTime.Now.Millisecond}*/    " /*+ i_ + " " + m_value*/);
-                    Console.Write($"t2_in_    " /*+ i_ + " " + m_value*/);
+                    Console.Write($"t2_in    " /*+ i_ + " " + m_value*/);
                 // i иногда дублируются, некоторые пропадают.
             }
         }
 
-        internal sealed class ThreadsSharingData2
+        internal sealed class ThreadsSharingData2 // aleek
         {
             private Int32 m_flag = 0;
             private Int32 m_value = 0;
 
-            // Этот метод выполняется одним потоком
             public void Thread1()
             {
-                // ПРИМЕЧАНИЕ. 5 нужно записать в m_value до записи 1 в m_flag. зачем для этого Volatile.Write?
-                m_value = 5;
+                // ПРИМЕЧАНИЕ. 5 нужно записать в m_value до записи 1 в m_flag
+                m_value = 5; // почему запись без volatile?
                 Volatile.Write(ref m_flag, 1);
                 Console.WriteLine("Thread1 " + i_ + " " + m_value);
             }
 
-            // Этот метод выполняется вторым потоком
             public void Thread2()
             {
                 // ПРИМЕЧАНИЕ. Поле m_value должно быть прочитано после m_flag
                 if (Volatile.Read(ref m_flag) == 1)
-                    Console.WriteLine("Thread2 " + i_ + " " + m_value);
+                    Console.WriteLine("Thread2 " + i_ + " " + m_value); // почему чтение без volatile?
             }
         }
 
