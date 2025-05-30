@@ -14,9 +14,12 @@ namespace Richter
 {
     class Threading
     {
-        private static int i_; // почему i_ д.б. static? aleek
+        // static нужен для использования во внутреннем (другом классе) - не может быть экземплярной переменной для более 1-го класса; static значит принадлежит именно классу (не объекту) aleek
+        // TODO static поля - задел на будущее - при создании множества объектов класса память под статическую переменную выделится только 1 раз/ nfr. так же для методов?
+        // TODO зачем сделан геттер/сеттер? всё равно есть доступ к полю. Возможно: - из-за многопоточности - lock в методе, а в переменной нельзя, - из-за особенностей ООП относительно метода
+        private static int i_;
 
-        public Threading() 
+        public Threading()
         {   //Console.WriteLine("\n*** CancelCount ***");
             //CancelCount();
 
@@ -84,18 +87,20 @@ namespace Richter
             //}
             #endregion
             #region
-            var ts2 = new ThreadsSharingData2();
-            // иногда между итерациями логируется большее кол-во потоков, чем в теле цикла. лишние - с других итераций. гонка итерация <-> поток
-            // поставить брейкпоинты у Thread1, Thread2, в цикле
-            // всего д.б. число Console.WriteLine("Thread = макс счётчик * кол-во потоков в теле цикла
-            for (int i = 0; i < 10; i++)
-            {
-                i_ = i;
-                new Thread(() => ts2.Thread1()).Start(); // поменять местами
-                new Thread(() => ts2.Thread2()).Start();
-                //Thread.Sleep(100); // синхронизация, устранение гонки итерация <-> поток
-                Console.WriteLine("--------------" + i);
-            }
+            //var ts2 = new ThreadsSharingData2();
+            //// за одну итерацию д.б. 2 Console.WriteLine у Thread1(), Thread2(). иногда - 3 - с предыдущих итераций. гонка итерация <-> поток
+            //// время выполнения итерации немного меньше отработки метода Thread1() или Thread2() в потоке. пауза в итерации (в главном потоке) позволяет спокойно довыполнится потокам
+            //// может быть ситуация, что время выполнения итерации много меньше отработки потоков. тогда м.б. несколько подряд Console.WriteLine в итерации
+            //// ситуация лог Thread1, лог Thread2, лог итерация не означает, что потоки отработали в этой итерации - м.б. в предыдущих
+            //// TODO диаграммы описания состояния потоков https://rsdn.org/forum/design/4680135.all Visualizing Multithreading, Sequence Diagram, UML
+            //for (int i = 0; i < 10; i++)
+            //{
+            //    i_ = i;
+            //    new Thread(() => ts2.Thread1()).Start(); // поменять местами - так же
+            //    new Thread(() => ts2.Thread2()).Start();
+            //    Console.WriteLine("--------------" + i);
+            //    Thread.Sleep(100); // синхронизация, устранение гонки итерация <-> поток. иногда разнобой. до создания потоков - разнобой
+            //}
             #endregion
             #region
             //var ts3 = new ThreadsSharingData3();
@@ -132,35 +137,34 @@ namespace Richter
 
             //MainSemaphore();
 
-            //ref int a1;
-            //Maximum(a1, 0);
-
-            //int target = 1;
-            //Maximum(ref target, 2);
-            //Morpher<object, object> morpher = null; // падает aleek
-            //Morph(ref target, 2, morpher);
+            int targetMax = 1;
+            int max = Maximum(ref targetMax, 2); // ref обязателен
+            // это ссылка на метод (реализацию). она передаётся в метод как параметр, ссылка() - вызов метода; morphResult объявится в Morph, когда делегат будет вызван
+            Morpher<int, int> morpher = (int startValue, int argument, out int morphResult) => morphResult = 1;
+            int target = 0;
+            var res = Morph<int, int>(ref target, 2, morpher);
             #endregion
             //Events();
             #region
-            using (var swl = new SimpleWaitLock(4)) // сработает Dispose() в SimpleWaitLock после using, т.к. using aleek
-            {
-                // ? эксепшн, т.к. объект создан в главном потоке, а в Enter используется другим потоком. как починить?m_AvailableResources.Dispose() в конструкторе не помогает
-                //new Thread(() => { swl.Enter();}).Start();
-                //new Thread(() => { var swl_ = new SimpleWaitLock(4);  swl_.Enter(); swl_.Leave(); }).Start();
-                swl.Enter(); // ok
-                //swl.Enter();
-                swl.Leave(); // ok
-                //swl.Leave();
+            //using (var swl = new SimpleWaitLock(4)) // сработает Dispose() в SimpleWaitLock после using, т.к. using aleek
+            //{
+            //    // ? эксепшн, т.к. объект создан в главном потоке, а в Enter используется другим потоком. как починить?m_AvailableResources.Dispose() в конструкторе не помогает
+            //    //new Thread(() => { swl.Enter();}).Start();
+            //    //new Thread(() => { var swl_ = new SimpleWaitLock(4);  swl_.Enter(); swl_.Leave(); }).Start();
+            //    swl.Enter(); // ok
+            //    //swl.Enter();
+            //    swl.Leave(); // ok
+            //    //swl.Leave();
 
-                for (int i = 0; i < 10; i++) // ok
-                {
-                    swl.Enter();
-                    swl.Leave();
-                }
+            //    for (int i = 0; i < 10; i++) // ok
+            //    {
+            //        swl.Enter();
+            //        swl.Leave();
+            //    }
                 
-                for (int i = 0; i < 10; i++) // ok
-                    new Thread(() => { var swl_ = new SimpleWaitLock(4); swl_.Enter(); swl_.Leave(); }).Start();
-            }
+            //    for (int i = 0; i < 10; i++) // ok
+            //        new Thread(() => { var swl_ = new SimpleWaitLock(4); swl_.Enter(); swl_.Leave(); }).Start();
+            //}
 
             //var recursiveAutoResetEvent = new RecursiveAutoResetEvent(); // не сработает Dispose(), т.к. нет using aleek
             //recursiveAutoResetEvent.Enter();
@@ -251,7 +255,7 @@ namespace Richter
         #endregion
 
         #region Скоординированная отмена
-        public void CoordinatedCancel()
+        public void CoordinatedCancel() // aleek
         {
             // Создание объекта CancellationTokenSource
             var cts1 = new CancellationTokenSource();
@@ -284,8 +288,8 @@ namespace Richter
             linkedCts.Token.Register(linked);
 
             // Отмена одного из объектов CancellationTokenSource (я выбрал cts2)
-            cts1.Cancel(); // сработает коллбэк linked. потом a1 - обратный call stack. aleek
-            //cts2.Cancel(); // сработает коллбэк linked. потом a2 - обратный call stack. aleek
+            cts1.Cancel(); // сработает коллбэк linked. потом a1 - обратный call stack
+            //cts2.Cancel(); // сработает коллбэк linked. потом a2 - обратный call stack
 
             // Показываем, какой из объектов CancellationTokenSource был отменен
             Console.WriteLine("cts1 canceled={0}, cts2 canceled={1}, linkedCts={2}", cts1.IsCancellationRequested, cts2.IsCancellationRequested, linkedCts.IsCancellationRequested);
@@ -406,7 +410,7 @@ namespace Richter
         #endregion
 
         #region Автоматический запуск задания по завершении предыдущего
-        public void RunTaskAfterEndPrevious()
+        public void RunTaskAfterEndPrevious() // aleek
         {
             // Создание объекта Task с отложенным запуском
             Task<Int32> t = Task.Run(() => Sum(CancellationToken.None, 10));
@@ -415,41 +419,39 @@ namespace Richter
             Task cwt = t.ContinueWith(task => Console.WriteLine("The sum is: " + task.Result)); // получаем результат в continuation или в строках ниже. сработает после t.Wait() aleek
             
             #region
-            // какой смысл когда можно через await получить? видимо, чтобы запустить задачу позже aleek
+            // какой смысл когда можно через await получить? видимо, чтобы запустить задачу позже ~
             // t.ContinueWith(x => x);
             // t.ContinueWith(x => x);
             
             
-            //t.Start(); // System.InvalidOperationException: "Start нельзя вызывать для уже запущенной задачи." aleek
+            //t.Start(); // System.InvalidOperationException: "Start нельзя вызывать для уже запущенной задачи." ~
             t.Wait();
             //Console.WriteLine("The Sum is: " + t.Result); // Значение Int32
             #endregion
         }
 
-        public void RunTaskAfterEndPrevious2()
+        public void RunTaskAfterEndPrevious2() // aleek
         {
             // Создание и запуск задания с продолжением
             Task<Int32> t = Task.Run(() => Sum(10000));
 
-            // срабатывают в зависимости от причин (TaskContinuationOptions) в Sum. aleek
+            // срабатывают в зависимости от причин (TaskContinuationOptions) в Sum ~
 
             // Метод ContinueWith возвращает объект Task, но обычно он не используется
-            // сработает при aleek
+            // сработает при ~
             t.ContinueWith(task => Console.WriteLine("The sum is: " + task.Result), TaskContinuationOptions.OnlyOnRanToCompletion);
 
-            // обернуть в исключение aleek
+            // обернуть в исключение ~
             // не срабатывает при Sum(100000)
             t.ContinueWith(task => Console.WriteLine("Sum threw: " + task.Exception), TaskContinuationOptions.OnlyOnFaulted);
 
-            // отменить задачу. У task нет метода отмены aleek
+            // отменить задачу. У task нет метода отмены ~
             // сработает при CancellationToken .Cancel()
             t.ContinueWith(task => Console.WriteLine("Sum was canceled"), TaskContinuationOptions.OnlyOnCanceled);
             
-            #region aleek
-            //await t; // необходим async в сигнатуре
-            t.Wait(); // условие срабатывания ContinueWith. По дефолту не было
-            //t.IsCanceled = true;
-            #endregion
+            //await t; // необходим async в сигнатуре ~
+            t.Wait(); // условие срабатывания ContinueWith. По дефолту не было ~
+            //t.IsCanceled = true; ~
         }
         #endregion
 
@@ -595,14 +597,14 @@ namespace Richter
         #endregion
 
         #region Расширяемость асинхронных функций
-        public static async Task Go()
+        public static async Task Go() // aleek
         {
             #if DEBUG
                 // Использование TaskLogger приводит к лишним затратам памяти и снижению производительности; включить для отладочной версии
                 TaskLogger.LogLevel = TaskLogger.TaskLogLevel.Pending;
             #endif
 
-            // Запускаем 3 задачи; для тестирования TaskLogger их продолжительность задается явно. пока не запущены aleek
+            // Запускаем 3 задачи; для тестирования TaskLogger их продолжительность задается явно. пока не запущены ~
             var tasks = new List<Task>
             {
                 Task.Delay(2000).Log("2s op"),
@@ -614,7 +616,7 @@ namespace Richter
             {
                 // Ожидание всех задач с отменой через 3 секунды; только одна задача должна завершиться в указанное время.
                 // Примечание: WithCancellation - мой метод расширения, описанный позднее в этой главе.
-                //await Task.WhenAll(tasks).WithCancellation(new CancellationTokenSource(3000).Token); // не работает aleek
+                //await Task.WhenAll(tasks).WithCancellation(new CancellationTokenSource(3000).Token); // не работает ~
                 
             }
             catch (OperationCanceledException)
@@ -1223,12 +1225,11 @@ namespace Richter
         #endregion
 
         #region Реализация простой циклической блокировки
-        // aleek создать конкуренцию из нескольких потоков
-        public sealed class SomeResource
+        public sealed class SomeResource // aleek создать конкуренцию из нескольких потоков
         {
             private SimpleSpinLock m_sl = new SimpleSpinLock();
 
-            public void AccessResource() // вызывается любым потоком
+            public void AccessResource() // вызывается любым потоком ~
             {
                 m_sl.Enter();
                 // Доступ к ресурсу в каждый момент времени имеет только один поток...
@@ -1261,10 +1262,9 @@ namespace Richter
         #endregion
 
         #region Универсальный Interlocked-паттерн
-        // aleek не тестировалось
-        public static Int32 Maximum(ref Int32 target, Int32 value)
+        public static Int32 Maximum(ref Int32 target, Int32 value) // aleek не тестировалось
         {
-            Int32 currentVal = target, startVal, desiredVal;
+            Int32 currentVal = target, startVal, desiredVal; // currentVal инициализируется target-м; startVal, desiredVal объявляются и = 0?;
             // Параметр target может использоваться другим потоком, его трогать не стоит
             do
             {
@@ -1286,13 +1286,13 @@ namespace Richter
             // Возвращаем максимальное значение, когда поток пытается его присвоить
             return desiredVal;
         }
-
-        public delegate Int32 Morpher<TResult, TArgument>(Int32 startValue, TArgument argument, out TResult morphResult);
-        // aleek не тестировалось
-        public static TResult Morph<TResult, TArgument>(ref Int32 target, TArgument argument, Morpher<TResult, TArgument> morpher)
+        // это объявление делегата. Morpher - тип делегата. экземпляр делегата Morpher - это параметр метода Morph
+        public delegate Int32 Morpher<TResult, TArgument>(Int32 startValue, TArgument argument, out TResult morphResult); 
+        
+        public static TResult Morph<TResult, TArgument>(ref Int32 target, TArgument argument, Morpher<TResult, TArgument> morpher) // TODO aleek сделать методы, принимающие делегаты в city move
         {
             TResult morphResult;
-            Int32 currentVal = target, startVal, desiredVal;
+            Int32 currentVal = target, startVal, desiredVal; //  currentVal инициализируется target-м; startVal, desiredVal объявляются и = 0?;
 
             do
             {
@@ -1379,7 +1379,6 @@ namespace Richter
 
         private void M() { }
 
-        // aleek комменты
         public sealed class SimpleWaitLock : IDisposable
         {
             private Semaphore m_AvailableResources;
@@ -1400,7 +1399,7 @@ namespace Richter
                 // Этому потоку доступ больше не нужен; его может получить другой поток
                 m_AvailableResources.Release();
             }
-            // ? по ссылке попадает в Interfaces. вызывается из-за using в SimpleWaitLock
+            // по ссылке попадает в Interfaces. вызывается из-за using в SimpleWaitLock aleek
             public void Dispose()
             { 
                 m_AvailableResources.Close();
@@ -1480,7 +1479,7 @@ namespace Richter
                 }
             }
 
-            public void Dispose() // не вызывается, т.к. не обёрнут в using aleek
+            public void Dispose() // не вызывается, т.к. не обёрнут в using. см. ссылку текущего класса aleek
             { 
                 m_lock.Dispose(); 
             }
