@@ -18,3 +18,4 @@ packages/
 fancybox/
 .vs/
 Content/
+obj/
