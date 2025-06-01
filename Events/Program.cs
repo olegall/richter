@@ -1,5 +1,4 @@
 ﻿using System;
-using WrapTwoInterfaceEvents;
 
 namespace Events
 {
@@ -16,11 +15,6 @@ namespace Events
 
             // Проверяем работоспособность
             twle.SimulateFoo();
-
-            Shape shape = new Shape();
-            Subscriber1 sub = new Subscriber1(shape);
-            Subscriber2 sub2 = new Subscriber2(shape);
-            shape.Draw();
 
             // Keep the console window open in debug mode.
             Console.WriteLine("Press any key to exit.");
